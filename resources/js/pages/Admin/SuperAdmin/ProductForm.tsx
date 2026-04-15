@@ -1,0 +1,59 @@
+import { useForm } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AdminLayout from '@/layouts/AdminLayout';
+
+interface ProductPayload {
+    id?: number;
+    name?: string;
+    description?: string;
+    status?: string;
+    cover_duration_options?: number[];
+    fields?: unknown[];
+}
+
+export default function ProductForm({ product }: { product?: ProductPayload }) {
+    const { data, setData, post, patch } = useForm({
+        name: product?.name ?? '',
+        description: product?.description ?? '',
+        status: product?.status ?? 'active',
+        cover_duration_options: product?.cover_duration_options ?? [12],
+        fields: product?.fields ?? [],
+    });
+
+    const submit = () => {
+        if (product?.id) patch(route('admin.products.update', product.id));
+        else post(route('admin.products.store'));
+    };
+
+    return (
+        <AdminLayout title={product ? 'Edit Product' : 'Create Product'}>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">{product ? 'Update product details' : 'Create a new product'}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="product-name">Name</Label>
+                        <Input id="product-name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Name" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="product-description">Description</Label>
+                        <textarea
+                            id="product-description"
+                            className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                            placeholder="Description"
+                        />
+                    </div>
+                    <Button type="button" className="bg-slate-900 hover:bg-slate-800" onClick={submit}>
+                        Save
+                    </Button>
+                </CardContent>
+            </Card>
+        </AdminLayout>
+    );
+}
