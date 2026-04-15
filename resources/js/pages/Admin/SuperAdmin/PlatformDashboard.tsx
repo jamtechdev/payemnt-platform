@@ -35,10 +35,10 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
         <AdminLayout title="Platform overview">
             <div className="space-y-5">
                 <WelcomeBanner name={auth.user?.name} />
-                <h2 className="text-lg font-semibold text-slate-800">System overview</h2>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">System overview</h2>
                 <div className="grid gap-4 lg:grid-cols-4">
                     <MetricCard label="Active users" value={props.activeUsers} />
-                    <div className="rounded-lg border bg-white p-4 shadow-sm">
+                    <div className="rounded-lg border bg-card p-4 shadow-sm">
                         <div className="text-sm text-slate-500">Product Status Count</div>
                         <div className="mt-2 grid grid-cols-2 gap-2">
                             <div className="rounded bg-emerald-600 p-3 text-white">
@@ -51,7 +51,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-lg border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                         <div className="text-sm text-slate-500">Customer Cover Summary</div>
                         <div className="mt-2 space-y-1 text-sm">
                             <div className="flex justify-between"><span>Total</span><span>{props.totalCustomers}</span></div>
@@ -59,7 +59,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                             <div className="flex justify-between"><span>Not covered</span><span>{props.notCoveredCustomers}</span></div>
                         </div>
                     </div>
-                    <div className="rounded-lg border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                         <div className="text-sm text-slate-500">Payments (This Month)</div>
                         <div className="mt-2 h-28">
                             <ResponsiveContainer width="100%" height="100%">
@@ -75,7 +75,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="rounded-lg border bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md lg:col-span-2">
+                    <div className="rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md lg:col-span-2">
                         <div className="mb-2 text-sm font-semibold text-slate-700">Recent System Activity</div>
                         <table className="w-full text-left text-sm">
                             <thead>
@@ -95,7 +95,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                         </table>
                     </div>
                     <div className="space-y-4">
-                        <div className="rounded-lg border bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md">
+                        <div className="rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md">
                             <div className="mb-2 text-sm font-semibold text-slate-700">Database Health</div>
                             <div className="space-y-1 text-sm">
                                 {Object.entries(props.dbHealth).map(([key, value]) => (
@@ -106,13 +106,13 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                 ))}
                             </div>
                         </div>
-                        <div className="rounded-lg border bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md">
+                        <div className="rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md">
                             <div className="mb-2 text-sm font-semibold text-slate-700">Dynamic Fields Usage</div>
                             <div className="flex flex-wrap gap-1">
-                                <span className="rounded bg-slate-100 px-2 py-1 text-xs">customer_data</span>
-                                <span className="rounded bg-slate-100 px-2 py-1 text-xs">cover_start</span>
-                                <span className="rounded bg-slate-100 px-2 py-1 text-xs">cover_end</span>
-                                <span className="rounded bg-slate-100 px-2 py-1 text-xs">custom_rest</span>
+                                <span className="rounded bg-slate-100 px-2 py-1 text-xs dark:bg-gray-800">customer_data</span>
+                                <span className="rounded bg-slate-100 px-2 py-1 text-xs dark:bg-gray-800">cover_start</span>
+                                <span className="rounded bg-slate-100 px-2 py-1 text-xs dark:bg-gray-800">cover_end</span>
+                                <span className="rounded bg-slate-100 px-2 py-1 text-xs dark:bg-gray-800">custom_rest</span>
                             </div>
                         </div>
                     </div>

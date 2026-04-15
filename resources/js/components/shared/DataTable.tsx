@@ -40,14 +40,14 @@ export default function DataTable<T extends object>({
     });
 
     return (
-        <div className="rounded border bg-white">
+        <div className="rounded border border-slate-200 bg-white dark:bg-gray-800 dark:border-slate-700">
             <table className="w-full text-sm">
                 {showHeader && (
                     <thead>
                         {table.getHeaderGroups().map((group) => (
-                            <tr key={group.id} className="border-b">
+                            <tr key={group.id} className="border-b border-slate-200 dark:border-slate-700">
                                 {group.headers.map((header) => (
-                                    <th key={header.id} className="px-3 py-2 text-left">
+                                    <th key={header.id} className="px-3 py-2 text-center">
                                         {header.isPlaceholder ? null : (
                                             <button className="inline-flex items-center gap-1" onClick={header.column.getToggleSortingHandler()}>
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
@@ -74,7 +74,7 @@ export default function DataTable<T extends object>({
                             onClick={() => (clickableRows ? onRowClick?.(row.original) : undefined)}
                         >
                             {row.getVisibleCells().map((cell) => (
-                                <td key={cell.id} className="px-3 py-2">
+                                <td key={cell.id} className="px-3 py-2 text-center">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </td>
                             ))}

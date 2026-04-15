@@ -32,7 +32,7 @@ export default function PartnerList({ partners }: { partners: unknown }) {
             cell: (info) => {
                 const id = Number(info.row.original.id ?? 0);
                 return (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                         <button className="text-[#0e9f84] hover:underline" onClick={() => router.visit(route('admin.partners.show', id))}>
                             View
                         </button>

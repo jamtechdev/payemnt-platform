@@ -95,7 +95,7 @@ export default function AdminSidebar({ url, navItems, collapsed }: AdminSidebarP
                 </Link>
             </div>
             <Separator className="bg-white/10" />
-            <nav className="flex-1 space-y-5 overflow-hidden px-3 py-4">
+            <nav className="flex-1 space-y-5 overflow-auto px-3 py-4 sidebar-panal">
                 {Object.entries(groupedItems).map(([section, items]) => (
                     <div key={section} className="space-y-1.5">
                         {!collapsed && <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{section}</p>}

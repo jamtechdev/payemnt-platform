@@ -35,8 +35,8 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                     content: (
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="font-medium text-slate-900">{String(row.name ?? 'Unknown')}</p>
-                                <p className="text-sm text-slate-500">{String(row.email ?? '-')}</p>
+                                <p className="font-medium text-slate-900 dark:text-slate-100">{String(row.name ?? 'Unknown')}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{String(row.email ?? '-')}</p>
                             </div>
                             <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
                             <div className="flex items-center gap-2">
@@ -79,8 +79,8 @@ export default function UserManagement({ users, roles, permissions }: { users: u
             />
 
             {isSuperAdmin && (
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
-                    <h3 className="mb-3 text-base font-semibold text-slate-900">Role & Permission section</h3>
+                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <h3 className="mb-3 text-base font-semibold text-slate-900 dark:text-slate-100">Role & Permission section</h3>
                     <div className="space-y-4">
                         {rows.map((row, idx) => {
                             const userId = Number(row.id ?? 0);
@@ -93,13 +93,13 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                     : [];
 
                             return (
-                                <div key={String(row.id ?? idx)} className="rounded-lg border border-slate-200 p-3">
-                                    <div className="mb-2 text-sm font-medium text-slate-800">{String(row.name ?? 'Unknown')}</div>
+                                <div key={String(row.id ?? idx)} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700">
+                                    <div className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">{String(row.name ?? 'Unknown')}</div>
                                     <div className="grid gap-2 md:grid-cols-2">
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-slate-600">Role</label>
+                                            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Role</label>
                                             <select
-                                                className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm"
+                                                className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                                 defaultValue={roleName}
                                                 onChange={(e) =>
                                                     router.patch(route('admin.users.access-control.update', userId), {
@@ -117,13 +117,13 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-slate-600">Permissions</label>
-                                            <div className="max-h-36 overflow-y-auto rounded-md border border-slate-200 p-2">
+                                            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Permissions</label>
+                                            <div className="max-h-36 overflow-y-auto rounded-md border border-slate-200 p-2 dark:border-slate-600 dark:bg-slate-800">
                                                 <div className="grid grid-cols-1 gap-1">
                                                     {permissionOptions.map((perm) => {
                                                         const checked = userPerms.includes(perm);
                                                         return (
-                                                            <label key={perm} className="flex items-center gap-2 text-xs text-slate-700">
+                                                            <label key={perm} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
                                                                 <input
                                                                     type="checkbox"
                                                                     defaultChecked={checked}
@@ -136,6 +136,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                                                             permissions: next,
                                                                         });
                                                                     }}
+                                                                    className="accent-blue-500"
                                                                 />
                                                                 <span>{perm}</span>
                                                             </label>

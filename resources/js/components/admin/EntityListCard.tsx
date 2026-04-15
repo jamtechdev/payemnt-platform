@@ -16,7 +16,7 @@ export default function EntityListCard({ title, emptyText, items }: EntityListCa
             <CardContent className="space-y-3">
                 {items.length === 0 && <p className="text-sm text-slate-500">{emptyText}</p>}
                 {items.map((item) => (
-                    <div key={item.key} className="rounded-lg border p-3 transition-colors hover:bg-slate-50">
+                    <div key={item.key} className="rounded-lg border p-3 transition-colors hover:bg-slate-50 dark:bg-slate-700">
                         {item.content}
                     </div>
                 ))}

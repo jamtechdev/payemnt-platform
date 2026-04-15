@@ -115,7 +115,7 @@
 .dark {
     --background: hsl(0, 0%, 3.9%);
     --foreground: hsl(0, 0%, 98%);
-    --card: hsl(0, 0%, 3.9%);
+    --card: hsl(230, 20%, 15%);
     --card-foreground: hsl(0, 0%, 98%);
     --popover: hsl(0, 0%, 3.9%);
     --popover-foreground: hsl(0, 0%, 98%);
@@ -175,4 +175,26 @@
     [aria-disabled='true'] {
         cursor: not-allowed;
     }
+}
+
+
+
+
+.sidebar-panal::-webkit-scrollbar {
+    width: 10px; 
+}
+
+.sidebar-panal::-webkit-scrollbar-track {
+    background: #e0e0e0; 
+    border-radius: 1px;
+}
+
+.sidebar-panal::-webkit-scrollbar-thumb {
+    background-color: #0e9f84; 
+    border-radius: 1px;
+    border: 1px solid #e0e0e0;
+}
+
+.sidebar-panal::-webkit-scrollbar-thumb:hover {
+    background-color: #555; 
 }

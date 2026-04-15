@@ -59,7 +59,7 @@ export default function AdminProfile({ profile, apiTokens }: Props) {
                     </Button>
                 </div>
             )}
-            <div className="max-w-2xl space-y-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="max-w-2xl space-y-8 rounded-xl border border-slate-600 bg-card p-8 shadow-sm">
                 <form onSubmit={submit} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
