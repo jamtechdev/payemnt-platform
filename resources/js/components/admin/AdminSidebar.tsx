@@ -98,7 +98,7 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                         </div>
                     )}
                 </Link>
-            </div>
+            
             <Separator className="bg-white/10" />
             <nav className="flex-1 space-y-5 overflow-auto px-3 py-4 sidebar-panal">
                 {Object.entries(groupedItems).map(([section, items]) => (
@@ -139,6 +139,7 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                 ))}
             </nav>
             <Separator className="bg-white/10" />
+            </div>
         </aside>
     );
 }
