@@ -40,16 +40,16 @@ export default function DataTable<T extends object>({
     });
 
     return (
-        <div className="rounded border border-slate-200 bg-white dark:bg-gray-800 dark:border-slate-700">
+        <div className="rounded border border-slate-200 bg-white dark:bg-gray-800 dark:border-slate-700 overflow-auto">
             <table className="w-full text-sm">
                 {showHeader && (
                     <thead>
                         {table.getHeaderGroups().map((group) => (
-                            <tr key={group.id} className="border-b border-slate-200 dark:border-slate-700">
+                            <tr key={group.id} className="border-b bg-[#0e9f84]/25 text-[#0e9f84]">
                                 {group.headers.map((header) => (
                                     <th key={header.id} className="px-3 py-2 text-center">
                                         {header.isPlaceholder ? null : (
-                                            <button className="inline-flex items-center gap-1" onClick={header.column.getToggleSortingHandler()}>
+                                            <button className="inline-flex items-center gap-1 text-xs md:text-md" onClick={header.column.getToggleSortingHandler()}>
                                                 {flexRender(header.column.columnDef.header, header.getContext())}
                                             </button>
                                         )}

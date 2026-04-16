@@ -33,7 +33,7 @@ export default function ProductList({ products }: { products: unknown }) {
                 const row = info.row.original;
                 const id = Number(row.id ?? 0);
                 return (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                         <Link className="text-[#0e9f84] hover:underline" href={route('admin.products.edit', id)}>
                             Edit
                         </Link>
