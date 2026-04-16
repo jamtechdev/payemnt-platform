@@ -5,10 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Api\V1\BaseApiController;
+use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\StorePartnerRequest;
 use App\Http\Requests\Admin\StoreProductRequest;
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Http\Requests\Admin\UpdatePartnerRequest;
+use App\Http\Requests\Admin\UpdatePartnerProductAccessRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Http\Requests\Admin\UpdateSettingsRequest;
+use App\Http\Requests\Admin\UpdateUserAccessControlRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Models\Partner;
@@ -20,7 +27,6 @@ use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -33,16 +39,13 @@ class AdminController extends BaseApiController
     #[OA\Get(path: '/api/v1/platform-overview', summary: 'Platform overview', security: [['sanctum' => []]], tags: ['Dashboard'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function platformOverview(): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'active_users' => User::query()->where('is_active', true)->count(),
-                'customers_total' => Customer::query()->count(),
-                'partners_total' => Partner::query()->count(),
-                'products_total' => Product::query()->count(),
-                'payments_total' => (float) Payment::query()->sum('amount'),
-                'recent_audit_logs' => AuditLog::query()->latest()->limit(10)->get(),
-            ],
+        return $this->success([
+            'active_users' => User::query()->where('is_active', true)->count(),
+            'customers_total' => Customer::query()->count(),
+            'partners_total' => Partner::query()->count(),
+            'products_total' => Product::query()->count(),
+            'payments_total' => (float) Payment::query()->sum('amount'),
+            'recent_audit_logs' => AuditLog::query()->latest()->limit(10)->get(),
         ]);
     }
 
@@ -68,13 +71,17 @@ class AdminController extends BaseApiController
             });
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $query->paginate((int) $request->integer('per_page', 15)),
-        ]);
+        return $this->paginated($query->paginate((int) $request->integer('per_page', 15)));
     }
 
-    #[OA\Get(path: '/api/v1/customers/{uuid}', summary: 'Show customer', security: [['sanctum' => []]], tags: ['Customers'], responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 404, description: 'Not found')])]
+    #[OA\Get(
+        path: '/api/v1/customers/{uuid}',
+        summary: 'Show customer',
+        security: [['sanctum' => []]],
+        tags: ['Customers'],
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 404, description: 'Not found')]
+    )]
     public function customer(string $uuid): JsonResponse
     {
         $customer = Customer::query()
@@ -83,7 +90,7 @@ class AdminController extends BaseApiController
             ->first();
 
         if (! $customer) {
-            return response()->json(['status' => 'error', 'message' => 'Customer not found.'], 404);
+            return $this->error('CUSTOMER_NOT_FOUND', 'Customer not found.', status: 404);
         }
 
         $actor = request()->user();
@@ -96,7 +103,106 @@ class AdminController extends BaseApiController
             }));
         }
 
-        return response()->json(['status' => 'success', 'data' => $customer]);
+        return $this->success($customer);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/customers/admin',
+        summary: 'Create customer',
+        security: [['sanctum' => []]],
+        tags: ['Customers'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['partner_id', 'product_id', 'first_name', 'last_name', 'email', 'cover_start_date', 'cover_duration_months'],
+                properties: [
+                    new OA\Property(property: 'partner_id', type: 'integer'),
+                    new OA\Property(property: 'product_id', type: 'integer'),
+                    new OA\Property(property: 'first_name', type: 'string'),
+                    new OA\Property(property: 'last_name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'phone', type: 'string', nullable: true),
+                    new OA\Property(property: 'cover_start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'cover_duration_months', type: 'integer'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'expired', 'cancelled']),
+                    new OA\Property(property: 'submitted_data', type: 'object', additionalProperties: true),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
+    public function storeCustomer(StoreCustomerRequest $request): JsonResponse
+    {
+        $this->ensureAdminActor($request);
+
+        $customer = Customer::query()->create([
+            ...$request->validated(),
+            'submitted_data' => $request->validated('submitted_data', []),
+        ]);
+        $customer->syncRoles(['customer']);
+
+        return $this->success($customer->fresh(['partner', 'product']), 201);
+    }
+
+    #[OA\Patch(
+        path: '/api/v1/customers/{uuid}',
+        summary: 'Update customer',
+        security: [['sanctum' => []]],
+        tags: ['Customers'],
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'partner_id', type: 'integer'),
+                    new OA\Property(property: 'product_id', type: 'integer'),
+                    new OA\Property(property: 'first_name', type: 'string'),
+                    new OA\Property(property: 'last_name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'phone', type: 'string', nullable: true),
+                    new OA\Property(property: 'cover_start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'cover_duration_months', type: 'integer'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'expired', 'cancelled']),
+                    new OA\Property(property: 'submitted_data', type: 'object', additionalProperties: true),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 404, description: 'Not found')]
+    )]
+    public function updateCustomer(UpdateCustomerRequest $request, string $uuid): JsonResponse
+    {
+        $this->ensureAdminActor($request);
+
+        $customer = Customer::query()->where('uuid', $uuid)->first();
+        if (! $customer) {
+            return $this->error('CUSTOMER_NOT_FOUND', 'Customer not found.', status: 404);
+        }
+
+        $customer->update($request->validated());
+
+        return $this->success($customer->fresh(['partner', 'product']));
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/customers/{uuid}',
+        summary: 'Delete customer',
+        security: [['sanctum' => []]],
+        tags: ['Customers'],
+        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string', format: 'uuid'))],
+        responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 404, description: 'Not found')]
+    )]
+    public function deleteCustomer(Request $request, string $uuid): JsonResponse
+    {
+        $this->ensureAdminActor($request);
+
+        $customer = Customer::query()->where('uuid', $uuid)->first();
+        if (! $customer) {
+            return $this->error('CUSTOMER_NOT_FOUND', 'Customer not found.', status: 404);
+        }
+
+        $customer->delete();
+
+        return $this->success(['message' => 'Customer deleted.']);
     }
 
     #[OA\Get(path: '/api/v1/payments', summary: 'List payments', security: [['sanctum' => []]], tags: ['Payments'], responses: [new OA\Response(response: 200, description: 'OK')])]
@@ -114,19 +220,20 @@ class AdminController extends BaseApiController
             $query->where('payment_status', (string) $request->string('status'));
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $query->paginate((int) $request->integer('per_page', 20)),
-        ]);
+        return $this->paginated($query->paginate((int) $request->integer('per_page', 20)));
     }
 
-    #[OA\Get(path: '/api/v1/payments/{payment}', summary: 'Show payment', security: [['sanctum' => []]], tags: ['Payments'], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(
+        path: '/api/v1/payments/{payment}',
+        summary: 'Show payment',
+        security: [['sanctum' => []]],
+        tags: ['Payments'],
+        parameters: [new OA\Parameter(name: 'payment', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
     public function payment(Payment $payment): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => $payment->load(['customer', 'partner']),
-        ]);
+        return $this->success($payment->load(['customer', 'partner']));
     }
 
     #[OA\Get(path: '/api/v1/reports/customer-acquisition', summary: 'Customer acquisition report', security: [['sanctum' => []]], tags: ['Reports'], responses: [new OA\Response(response: 200, description: 'OK')])]
@@ -145,7 +252,7 @@ class AdminController extends BaseApiController
             ->orderBy('bucket')
             ->get();
 
-        return response()->json(['status' => 'success', 'data' => $rows]);
+        return $this->success($rows);
     }
 
     #[OA\Get(path: '/api/v1/reports/revenue-by-product', summary: 'Revenue by product report', security: [['sanctum' => []]], tags: ['Reports'], responses: [new OA\Response(response: 200, description: 'OK')])]
@@ -157,19 +264,48 @@ class AdminController extends BaseApiController
             ->groupBy('users.product_id')
             ->get();
 
-        return response()->json(['status' => 'success', 'data' => $rows]);
+        return $this->success($rows);
     }
 
     #[OA\Get(path: '/api/v1/products', summary: 'List products', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function products(Request $request): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => Product::query()->with('fields')->paginate((int) $request->integer('per_page', 15)),
-        ]);
+        return $this->paginated(Product::query()->with('fields')->paginate((int) $request->integer('per_page', 15)));
     }
 
-    #[OA\Post(path: '/api/v1/products', summary: 'Create product', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 201, description: 'Created')])]
+    #[OA\Post(
+        path: '/api/v1/products',
+        summary: 'Create product',
+        security: [['sanctum' => []]],
+        tags: ['Products'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'status', 'cover_duration_options'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive']),
+                    new OA\Property(property: 'cover_duration_options', type: 'array', items: new OA\Items(type: 'integer')),
+                    new OA\Property(
+                        property: 'fields',
+                        type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'name', type: 'string'),
+                                new OA\Property(property: 'label', type: 'string'),
+                                new OA\Property(property: 'type', type: 'string'),
+                                new OA\Property(property: 'is_required', type: 'boolean'),
+                                new OA\Property(property: 'options', type: 'array', items: new OA\Items(type: 'string')),
+                            ],
+                            type: 'object'
+                        )
+                    ),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
     public function storeProduct(StoreProductRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -207,10 +343,29 @@ class AdminController extends BaseApiController
             return $product->load('fields');
         });
 
-        return response()->json(['status' => 'success', 'data' => $product], 201);
+        return $this->success($product, 201);
     }
 
-    #[OA\Patch(path: '/api/v1/products/{product}', summary: 'Update product', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'Updated')])]
+    #[OA\Patch(
+        path: '/api/v1/products/{product}',
+        summary: 'Update product',
+        security: [['sanctum' => []]],
+        tags: ['Products'],
+        parameters: [new OA\Parameter(name: 'product', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'slug', type: 'string'),
+                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive']),
+                    new OA\Property(property: 'cover_duration_options', type: 'array', items: new OA\Items(type: 'integer')),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated')]
+    )]
     public function updateProduct(UpdateProductRequest $request, Product $product): JsonResponse
     {
         $validated = $request->validated();
@@ -239,49 +394,58 @@ class AdminController extends BaseApiController
             ]);
         });
 
-        return response()->json(['status' => 'success', 'data' => $product->fresh(['fields'])]);
+        return $this->success($product->fresh(['fields']));
     }
 
     #[OA\Delete(path: '/api/v1/products/{product}', summary: 'Delete product', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 422, description: 'Validation')])]
     public function deleteProduct(Product $product): JsonResponse
     {
         if ($product->customers()->where('status', 'active')->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'PRODUCT_HAS_ACTIVE_CUSTOMERS',
-                'message' => 'Cannot delete product with active customers.',
-            ], 422);
+            return $this->error('PRODUCT_HAS_ACTIVE_CUSTOMERS', 'Cannot delete product with active customers.', status: 422);
         }
 
         $product->delete();
 
-        return response()->json(['status' => 'success', 'message' => 'Product deleted.']);
+        return $this->success(['message' => 'Product deleted.']);
     }
 
     #[OA\Get(path: '/api/v1/products/{product}/versions', summary: 'Product version history', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function productVersions(Product $product): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => ProductVersion::query()
-                ->where('product_id', $product->id)
-                ->orderByDesc('version_number')
-                ->get(),
-        ]);
+        return $this->success(ProductVersion::query()
+            ->where('product_id', $product->id)
+            ->orderByDesc('version_number')
+            ->get());
     }
 
     #[OA\Get(path: '/api/v1/partners', summary: 'List partners', security: [['sanctum' => []]], tags: ['Partners'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function partners(Request $request): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => Partner::query()->latest('id')->paginate((int) $request->integer('per_page', 15)),
-        ]);
+        return $this->paginated(Partner::query()->latest('id')->paginate((int) $request->integer('per_page', 15)));
     }
 
-    #[OA\Post(path: '/api/v1/partners', summary: 'Create partner', security: [['sanctum' => []]], tags: ['Partners'], responses: [new OA\Response(response: 201, description: 'Created')])]
+    #[OA\Post(
+        path: '/api/v1/partners',
+        summary: 'Create partner',
+        security: [['sanctum' => []]],
+        tags: ['Partners'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'phone', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
     public function storePartner(StorePartnerRequest $request): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $partner = Partner::query()->create([
             ...$request->validated(),
             'slug' => Str::slug($request->string('name')->toString()),
@@ -289,39 +453,74 @@ class AdminController extends BaseApiController
         ]);
         $partner->syncRoles(['partner']);
 
-        return response()->json(['status' => 'success', 'data' => $partner], 201);
+        return $this->success($partner, 201);
     }
 
-    #[OA\Patch(path: '/api/v1/partners/{partner}', summary: 'Update partner', security: [['sanctum' => []]], tags: ['Partners'], responses: [new OA\Response(response: 200, description: 'Updated')])]
+    #[OA\Patch(
+        path: '/api/v1/partners/{partner}',
+        summary: 'Update partner',
+        security: [['sanctum' => []]],
+        tags: ['Partners'],
+        parameters: [new OA\Parameter(name: 'partner', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'phone', type: 'string', nullable: true),
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive']),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated')]
+    )]
     public function updatePartner(UpdatePartnerRequest $request, Partner $partner): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $partner->update($request->validated());
 
-        return response()->json(['status' => 'success', 'data' => $partner->fresh()]);
+        return $this->success($partner->fresh());
     }
 
     #[OA\Delete(path: '/api/v1/partners/{partner}', summary: 'Delete partner', security: [['sanctum' => []]], tags: ['Partners'], responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 422, description: 'Validation')])]
-    public function deletePartner(Partner $partner): JsonResponse
+    public function deletePartner(Request $request, Partner $partner): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         if ($partner->customers()->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'PARTNER_HAS_CUSTOMERS',
-                'message' => 'Cannot delete partner with customer records.',
-            ], 422);
+            return $this->error('PARTNER_HAS_CUSTOMERS', 'Cannot delete partner with customer records.', status: 422);
         }
 
         $partner->delete();
 
-        return response()->json(['status' => 'success', 'message' => 'Partner deleted.']);
+        return $this->success(['message' => 'Partner deleted.']);
     }
 
-    #[OA\Patch(path: '/api/v1/partners/{partner}/products/{product}/access', summary: 'Activate or deactivate product access for a partner', security: [['sanctum' => []]], tags: ['Partners'], responses: [new OA\Response(response: 200, description: 'Updated')])]
-    public function updatePartnerProductAccess(Request $request, Partner $partner, Product $product): JsonResponse
+    #[OA\Patch(
+        path: '/api/v1/partners/{partner}/products/{product}/access',
+        summary: 'Activate or deactivate product access for a partner',
+        security: [['sanctum' => []]],
+        tags: ['Partners'],
+        parameters: [
+            new OA\Parameter(name: 'partner', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'product', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['status'],
+                properties: [new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'])]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated')]
+    )]
+    public function updatePartnerProductAccess(UpdatePartnerProductAccessRequest $request, Partner $partner, Product $product): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => ['required', 'in:active,inactive'],
-        ]);
+        $this->ensureAdminActor($request);
+
+        $validated = $request->validated();
 
         $status = $validated['status'];
         $payload = [
@@ -341,34 +540,45 @@ class AdminController extends BaseApiController
             'status' => $status,
         ], $request->user());
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'partner_id' => $partner->id,
-                'product_id' => $product->id,
-                'status' => $status,
-            ],
+        return $this->success([
+            'partner_id' => $partner->id,
+            'partner_uuid' => $partner->uuid,
+            'product_id' => $product->id,
+            'product_uuid' => $product->uuid,
+            'status' => $status,
         ]);
     }
 
     #[OA\Get(path: '/api/v1/users', summary: 'List users', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function users(Request $request): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => User::query()->with(['roles', 'profile'])->paginate((int) $request->integer('per_page', 15)),
-        ]);
+        return $this->paginated(User::query()->with(['roles', 'profile'])->paginate((int) $request->integer('per_page', 15)));
     }
 
-    #[OA\Post(path: '/api/v1/users', summary: 'Create user', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 201, description: 'Created')])]
-    public function storeUser(Request $request): JsonResponse
+    #[OA\Post(
+        path: '/api/v1/users',
+        summary: 'Create user',
+        security: [['sanctum' => []]],
+        tags: ['Users'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['name', 'email', 'role'],
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'role', type: 'string'),
+                    new OA\Property(property: 'password', type: 'string', nullable: true),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
+    public function storeUser(StoreUserRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(Role::query()->pluck('name')->all())],
-            'password' => ['nullable', 'string', 'min:12'],
-        ]);
+        $this->ensureAdminActor($request);
+
+        $validated = $request->validated();
 
         $user = User::query()->create([
             'name' => $validated['name'],
@@ -382,18 +592,33 @@ class AdminController extends BaseApiController
             'assigned_role' => $validated['role'],
         ], $request->user());
 
-        return response()->json(['status' => 'success', 'data' => $user->load('roles', 'profile')], 201);
+        return $this->success($user->load('roles', 'profile'), 201);
     }
 
-    #[OA\Patch(path: '/api/v1/users/{user}', summary: 'Update user', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 200, description: 'Updated')])]
-    public function updateUser(Request $request, User $user): JsonResponse
+    #[OA\Patch(
+        path: '/api/v1/users/{user}',
+        summary: 'Update user',
+        security: [['sanctum' => []]],
+        tags: ['Users'],
+        parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'role', type: 'string'),
+                    new OA\Property(property: 'is_active', type: 'boolean'),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated')]
+    )]
+    public function updateUser(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $this->ensureAdminActor($request);
+
+        $validated = $request->validated();
 
         $old = $user->only(['name', 'email', 'is_active']);
         $user->update($validated);
@@ -407,24 +632,22 @@ class AdminController extends BaseApiController
             'role' => $user->getRoleNames()->first(),
         ], $request->user());
 
-        return response()->json(['status' => 'success', 'data' => $user->fresh(['roles', 'profile'])]);
+        return $this->success($user->fresh(['roles', 'profile']));
     }
 
     #[OA\Delete(path: '/api/v1/users/{user}', summary: 'Delete user', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 403, description: 'Forbidden')])]
     public function deleteUser(Request $request, User $user): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $actor = $request->user();
         if ($actor && (int) $actor->id === (int) $user->id) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'SELF_DELETE_FORBIDDEN',
-                'message' => 'You cannot delete your own account.',
-            ], 403);
+            return $this->error('SELF_DELETE_FORBIDDEN', 'You cannot delete your own account.', status: 403);
         }
 
         $user->delete();
 
-        return response()->json(['status' => 'success', 'message' => 'User deleted.']);
+        return $this->success(['message' => 'User deleted.']);
     }
 
     #[OA\Get(path: '/api/v1/access-control', summary: 'List roles and permissions', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 200, description: 'OK')])]
@@ -433,85 +656,87 @@ class AdminController extends BaseApiController
         $roles = Role::query()->with('permissions')->orderBy('name')->get();
         $permissions = Permission::query()->orderBy('name')->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'roles' => $roles,
-                'permissions' => $permissions,
-            ],
+        return $this->success([
+            'roles' => $roles,
+            'permissions' => $permissions,
         ]);
     }
 
-    #[OA\Patch(path: '/api/v1/users/{user}/access-control', summary: 'Assign role and permissions to user', security: [['sanctum' => []]], tags: ['Users'], responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 403, description: 'Forbidden')])]
-    public function updateUserAccessControl(Request $request, User $user): JsonResponse
+    #[OA\Patch(
+        path: '/api/v1/users/{user}/access-control',
+        summary: 'Assign role to user',
+        security: [['sanctum' => []]],
+        tags: ['Users'],
+        parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['role'],
+                properties: [new OA\Property(property: 'role', type: 'string')]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 403, description: 'Forbidden')]
+    )]
+    public function updateUserAccessControl(UpdateUserAccessControlRequest $request, User $user): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $actor = $request->user();
-
-        $validated = $request->validate([
-            'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => [Rule::in(Permission::query()->pluck('name')->all())],
-        ]);
-
-        if (! $actor->hasRole('super_admin')) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Only super admin can manage roles and permissions.',
-            ], 403);
-        }
+        $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $user): void {
-            if (array_key_exists('role', $validated) && ! empty($validated['role'])) {
-                $user->syncRoles([$validated['role']]);
-            }
-
-            if (array_key_exists('permissions', $validated)) {
-                $user->syncPermissions($validated['permissions'] ?? []);
-            }
+            $user->syncRoles([$validated['role']]);
+            $user->syncPermissions([]);
         });
         AuditLog::record('admin_user_access_control_updated', $user, [], [
             'role' => $user->getRoleNames()->first(),
             'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
         ], $actor);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $user->fresh(['roles', 'permissions', 'profile']),
-        ]);
+        return $this->success($user->fresh(['roles', 'permissions', 'profile']));
     }
 
     #[OA\Get(path: '/api/v1/audit-logs', summary: 'List audit logs', security: [['sanctum' => []]], tags: ['Audit Logs'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function auditLogs(Request $request): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => AuditLog::query()->latest('id')->paginate((int) $request->integer('per_page', 20)),
-        ]);
+        return $this->paginated(AuditLog::query()->latest('id')->paginate((int) $request->integer('per_page', 20)));
     }
 
     #[OA\Get(path: '/api/v1/settings', summary: 'List settings', security: [['sanctum' => []]], tags: ['Settings'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function settings(): JsonResponse
     {
-        return response()->json([
-            'status' => 'success',
-            'data' => Setting::query()->orderBy('key')->get(),
-        ]);
+        return $this->success(Setting::query()->orderBy('key')->get());
     }
 
-    #[OA\Patch(path: '/api/v1/settings', summary: 'Upsert settings', security: [['sanctum' => []]], tags: ['Settings'], responses: [new OA\Response(response: 200, description: 'Updated')])]
-    public function updateSettings(Request $request): JsonResponse
+    #[OA\Patch(
+        path: '/api/v1/settings',
+        summary: 'Upsert settings',
+        security: [['sanctum' => []]],
+        tags: ['Settings'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['settings'],
+                properties: [new OA\Property(property: 'settings', type: 'object', additionalProperties: true)]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'Updated')]
+    )]
+    public function updateSettings(UpdateSettingsRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'settings' => ['required', 'array'],
-        ]);
+        $this->ensureAdminActor($request);
+
+        $validated = $request->validated();
 
         foreach ($validated['settings'] as $key => $value) {
             Setting::setValue((string) $key, $value);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => Setting::query()->orderBy('key')->get(),
-        ]);
+        return $this->success(Setting::query()->orderBy('key')->get());
+    }
+
+    private function ensureAdminActor(Request $request): void
+    {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
     }
 }

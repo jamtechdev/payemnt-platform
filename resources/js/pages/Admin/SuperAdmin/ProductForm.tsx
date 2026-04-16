@@ -1,9 +1,10 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/AdminLayout';
+import { PageProps } from '@/Types';
 
 interface ProductPayload {
     id?: number;
@@ -11,11 +12,23 @@ interface ProductPayload {
     description?: string;
     status?: string;
     cover_duration_options?: number[];
-    fields?: unknown[];
+    fields?: Record<string, string | number | boolean | null | string[]>[];
+}
+
+interface ProductFormData {
+    name: string;
+    description: string;
+    status: string;
+    cover_duration_options: number[];
+    fields: Record<string, string | number | boolean | null | string[]>[];
 }
 
 export default function ProductForm({ product }: { product?: ProductPayload }) {
-    const { data, setData, post, patch } = useForm({
+    const { auth } = usePage<PageProps>().props;
+    const canSubmit = product
+        ? auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? '')
+        : auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const { data, setData, post, patch } = useForm<ProductFormData>({
         name: product?.name ?? '',
         description: product?.description ?? '',
         status: product?.status ?? 'active',
@@ -24,6 +37,7 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
     });
 
     const submit = () => {
+        if (!canSubmit) return;
         if (product?.id) patch(route('admin.products.update', product.id));
         else post(route('admin.products.store'));
     };
@@ -49,7 +63,7 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                             placeholder="Description"
                         />
                     </div>
-                    <Button type="button" className="bg-slate-900 hover:bg-slate-800" onClick={submit}>
+                    <Button type="button" className="bg-slate-900 hover:bg-slate-800" onClick={submit} disabled={!canSubmit}>
                         Save
                     </Button>
                 </CardContent>

@@ -50,9 +50,18 @@ Route::prefix('v1')
         Route::get('/customers', [AdminController::class, 'customers'])
             ->middleware('permission:customers.view_list')
             ->name('customers.index');
+        Route::post('/customers/admin', [AdminController::class, 'storeCustomer'])
+            ->middleware(['permission:customers.create', 'role:admin|super_admin'])
+            ->name('customers.store');
         Route::get('/customers/{uuid}', [AdminController::class, 'customer'])
             ->middleware('permission:customers.view_detail')
             ->name('customers.show');
+        Route::patch('/customers/{uuid}', [AdminController::class, 'updateCustomer'])
+            ->middleware(['permission:customers.edit', 'role:admin|super_admin'])
+            ->name('customers.update');
+        Route::delete('/customers/{uuid}', [AdminController::class, 'deleteCustomer'])
+            ->middleware(['permission:customers.delete', 'role:admin|super_admin'])
+            ->name('customers.delete');
         Route::get('/payments', [AdminController::class, 'payments'])
             ->middleware('permission:customers.view_payment_amount')
             ->name('payments.index');

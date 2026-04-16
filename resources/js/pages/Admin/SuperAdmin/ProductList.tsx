@@ -1,8 +1,9 @@
 import DataTable from '@/components/shared/DataTable';
 import StatusBadge from '@/components/shared/StatusBadge';
+import { PageProps } from '@/Types';
 import AdminLayout from '@/layouts/AdminLayout';
 import { Button } from '@/components/ui/button';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { createColumnHelper } from '@tanstack/react-table';
 
 type LooseRecord = Record<string, unknown>;
@@ -17,6 +18,10 @@ function asArray(input: unknown): LooseRecord[] {
 
 export default function ProductList({ products }: { products: unknown }) {
     const rows = asArray(products);
+    const { auth } = usePage<PageProps>().props;
+    const canCreate = auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const canEdit = auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const canDelete = auth.permissions.includes('products.delete') && ['admin', 'super_admin'].includes(auth.role ?? '');
     const columnHelper = createColumnHelper<LooseRecord>();
     const columns = [
         columnHelper.accessor((row) => String(row.name ?? '-'), { id: 'name', header: 'Name' }),
@@ -34,13 +39,13 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <Link className="text-[#0e9f84] hover:underline" href={route('admin.products.edit', id)}>
+                        <Link className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`} href={route('admin.products.edit', id)}>
                             Edit
                         </Link>
                         <Link className="text-[#0e9f84] hover:underline" href={route('admin.products.versions', id)}>
                             Versions
                         </Link>
-                        <button className="text-red-600 hover:underline" onClick={() => router.delete(route('admin.products.destroy', id))}>
+                        <button className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.products.destroy', id))} disabled={!canDelete}>
                             Delete
                         </button>
                     </div>
@@ -52,8 +57,8 @@ export default function ProductList({ products }: { products: unknown }) {
     return (
         <AdminLayout title="Products">
             <div className="mb-4 flex justify-end">
-                <Link href={route('admin.products.create')}>
-                    <Button className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]">Create Product</Button>
+                <Link href={route('admin.products.create')} className={!canCreate ? 'pointer-events-none opacity-50' : ''}>
+                    <Button className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]" disabled={!canCreate}>Create Product</Button>
                 </Link>
             </div>
             <DataTable columns={columns} data={rows} stripedRows showRowCount clickableRows={false} emptyMessage="No products found." />

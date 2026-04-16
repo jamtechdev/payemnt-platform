@@ -36,8 +36,11 @@ class Partner extends User
         });
 
         static::creating(function (Partner $partner): void {
+            if (! $partner->uuid) {
+                $partner->uuid = (string) Str::uuid();
+            }
             if (! $partner->slug) {
-                $partner->slug = Str::slug($partner->name);
+                $partner->slug = Str::slug($partner->name.'-'.$partner->uuid);
             }
             if (! $partner->password) {
                 $partner->password = bcrypt(Str::random(24));

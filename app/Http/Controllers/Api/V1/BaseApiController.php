@@ -9,11 +9,12 @@ use Illuminate\Http\JsonResponse;
 
 class BaseApiController extends Controller
 {
-    protected function success(array $data = [], int $status = 200): JsonResponse
+    protected function success(mixed $data = [], int $status = 200, array $meta = []): JsonResponse
     {
         return response()->json([
             'status' => 'success',
             'data' => $data,
+            'meta' => (object) $meta,
         ], $status);
     }
 
@@ -24,6 +25,24 @@ class BaseApiController extends Controller
             'error_code' => $errorCode,
             'message' => $message,
             'details' => $details,
+        ], $status);
+    }
+
+    protected function paginated(\Illuminate\Contracts\Pagination\LengthAwarePaginator $paginator, int $status = 200): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data' => $paginator->items(),
+            'meta' => [
+                'pagination' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                    'from' => $paginator->firstItem(),
+                    'to' => $paginator->lastItem(),
+                ],
+            ],
         ], $status);
     }
 }

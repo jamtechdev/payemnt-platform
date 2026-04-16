@@ -16,14 +16,12 @@ function asArray(input: unknown): LooseRecord[] {
     return [];
 }
 
-export default function UserManagement({ users, roles, permissions }: { users: unknown; roles: unknown; permissions: unknown }) {
+export default function UserManagement({ users, roles }: { users: unknown; roles: unknown }) {
     const rows = asArray(users);
     const roleRows = asArray(roles);
-    const permissionRows = asArray(permissions);
     const { auth } = usePage<PageProps>().props;
-    const isSuperAdmin = auth.role === 'super_admin';
+    const canManageUsers = auth.permissions.includes('users.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
     const roleOptions = useMemo(() => roleRows.map((r) => String(r.name ?? '')).filter(Boolean), [roleRows]);
-    const permissionOptions = useMemo(() => permissionRows.map((p) => String(p.name ?? '')).filter(Boolean), [permissionRows]);
 
     return (
         <AdminLayout title="User management">
@@ -44,7 +42,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                     type="button"
                                     variant="outline"
                                     onClick={() => router.patch(route('admin.users.update', Number(row.id ?? 0)), { role: 'admin' })}
-                                    disabled={!isSuperAdmin}
+                                    disabled={!canManageUsers}
                                 >
                                     Make Admin
                                 </Button>
@@ -52,7 +50,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                     type="button"
                                     variant="outline"
                                     onClick={() => router.patch(route('admin.users.update', Number(row.id ?? 0)), { role: 'customer_service' })}
-                                    disabled={!isSuperAdmin}
+                                    disabled={!canManageUsers}
                                 >
                                     Make CS
                                 </Button>
@@ -60,7 +58,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                     type="button"
                                     variant="outline"
                                     onClick={() => router.patch(route('admin.users.update', Number(row.id ?? 0)), { role: 'reconciliation_admin' })}
-                                    disabled={!isSuperAdmin}
+                                    disabled={!canManageUsers}
                                 >
                                     Make Recon
                                 </Button>
@@ -68,7 +66,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                     type="button"
                                     variant="outline"
                                     onClick={() => router.delete(route('admin.users.destroy', Number(row.id ?? 0)))}
-                                    disabled={!isSuperAdmin}
+                                    disabled={!canManageUsers}
                                 >
                                     Delete
                                 </Button>
@@ -78,35 +76,25 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                 }))}
             />
 
-            {isSuperAdmin && (
+            {canManageUsers && (
                 <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-                    <h3 className="mb-3 text-base font-semibold text-slate-900 dark:text-slate-100">Role & Permission section</h3>
+                    <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">Role assignment</h3>
+                    <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Permissions now come from the assigned role, so every user with the same role inherits the same access.</p>
                     <div className="space-y-4">
                         {rows.map((row, idx) => {
                             const userId = Number(row.id ?? 0);
                             const roleName = Array.isArray(row.roles) && row.roles[0] && typeof row.roles[0] === 'object' ? String((row.roles[0] as LooseRecord).name ?? '') : '';
-                            const userPerms =
-                                Array.isArray(row.permissions) && row.permissions.length > 0
-                                    ? row.permissions
-                                          .map((p) => (typeof p === 'object' ? String((p as LooseRecord).name ?? '') : ''))
-                                          .filter(Boolean)
-                                    : [];
 
                             return (
                                 <div key={String(row.id ?? idx)} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700">
                                     <div className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">{String(row.name ?? 'Unknown')}</div>
-                                    <div className="grid gap-2 md:grid-cols-2">
+                                    <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                                         <div>
                                             <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Role</label>
                                             <select
                                                 className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                                 defaultValue={roleName}
-                                                onChange={(e) =>
-                                                    router.patch(route('admin.users.access-control.update', userId), {
-                                                        role: e.target.value,
-                                                        permissions: userPerms,
-                                                    })
-                                                }
+                                                onChange={(e) => router.patch(route('admin.users.access-control.update', userId), { role: e.target.value })}
                                             >
                                                 <option value="">Select role</option>
                                                 {roleOptions.map((r) => (
@@ -116,35 +104,7 @@ export default function UserManagement({ users, roles, permissions }: { users: u
                                                 ))}
                                             </select>
                                         </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300">Permissions</label>
-                                            <div className="max-h-36 overflow-y-auto rounded-md border border-slate-200 p-2 dark:border-slate-600 dark:bg-slate-800">
-                                                <div className="grid grid-cols-1 gap-1">
-                                                    {permissionOptions.map((perm) => {
-                                                        const checked = userPerms.includes(perm);
-                                                        return (
-                                                            <label key={perm} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    defaultChecked={checked}
-                                                                    onChange={(e) => {
-                                                                        const next = e.target.checked
-                                                                            ? [...new Set([...userPerms, perm])]
-                                                                            : userPerms.filter((p) => p !== perm);
-                                                                        router.patch(route('admin.users.access-control.update', userId), {
-                                                                            role: roleName,
-                                                                            permissions: next,
-                                                                        });
-                                                                    }}
-                                                                    className="accent-blue-500"
-                                                                />
-                                                                <span>{perm}</span>
-                                                            </label>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Role-based permissions only</p>
                                     </div>
                                 </div>
                             );

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Api\V1\AddPaymentRequest;
 use App\Http\Requests\Api\V1\SubmitCustomerRequest;
+use App\Http\Requests\Api\V1\UpdateCustomerStatusRequest;
 use App\Models\Customer;
 use App\Models\Payment;
 use Illuminate\Http\Request;
@@ -19,6 +21,28 @@ class CustomerController extends BaseApiController
         summary: 'Submit customer',
         security: [['sanctum' => []]],
         tags: ['Customers'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['partner_id', 'product_id', 'customer_data', 'payment'],
+                properties: [
+                    new OA\Property(property: 'partner_id', type: 'integer'),
+                    new OA\Property(property: 'product_id', type: 'integer'),
+                    new OA\Property(property: 'customer_data', type: 'object', additionalProperties: true),
+                    new OA\Property(
+                        property: 'payment',
+                        type: 'object',
+                        required: ['amount', 'currency', 'payment_date', 'transaction_reference'],
+                        properties: [
+                            new OA\Property(property: 'amount', type: 'number', format: 'float'),
+                            new OA\Property(property: 'currency', type: 'string'),
+                            new OA\Property(property: 'payment_date', type: 'string', format: 'date-time'),
+                            new OA\Property(property: 'transaction_reference', type: 'string'),
+                        ]
+                    ),
+                ]
+            )
+        ),
         responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 422, description: 'Validation error')]
     )]
     public function store(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
@@ -27,21 +51,13 @@ class CustomerController extends BaseApiController
             $partner = $request->attributes->get('partner');
             $customer = $ingestionService->createCustomer($request->validated(), $partner);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'customer_id' => $customer->uuid,
-                    'customer_uuid' => $customer->uuid,
-                    'message' => 'Customer record created successfully',
-                ],
+            return $this->success([
+                'customer_id' => $customer->uuid,
+                'customer_uuid' => $customer->uuid,
+                'message' => 'Customer record created successfully',
             ], 201);
         } catch (\Throwable $exception) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'INTERNAL_ERROR',
-                'message' => 'Unable to create customer record.',
-                'details' => ['exception' => $exception->getMessage()],
-            ], 500);
+            return $this->error('INTERNAL_ERROR', 'Unable to create customer record.', ['exception' => $exception->getMessage()], 500);
         }
     }
 
@@ -64,36 +80,31 @@ class CustomerController extends BaseApiController
             ->first();
 
         if (! $customer) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'NOT_FOUND',
-                'message' => 'Customer not found',
-            ], 404);
+            return $this->error('NOT_FOUND', 'Customer not found', status: 404);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'customer_id' => $customer->uuid,
-                'full_name' => $customer->full_name,
-                'email' => $customer->email,
-                'phone' => $customer->phone,
-                'status' => $customer->status,
-                'cover_start_date' => optional($customer->cover_start_date)->toDateString(),
-                'cover_end_date' => optional($customer->cover_end_date)->toDateString(),
-                'cover_duration_months' => $customer->cover_duration_months,
-                'customer_since' => optional($customer->customer_since)->toDateString(),
-                'submitted_data' => $customer->submitted_data,
-                'last_payment_date' => optional($customer->payments->first()?->payment_date)->toDateTimeString(),
-                'total_lifetime_value' => (float) $customer->payments->sum('amount'),
-                'payments' => $customer->payments->map(fn (Payment $payment): array => [
-                    'transaction_reference' => $payment->transaction_reference,
-                    'payment_date' => optional($payment->payment_date)->toDateTimeString(),
-                    'payment_status' => $payment->payment_status,
-                    'currency' => $payment->currency,
-                    'amount' => (float) $payment->amount,
-                ])->values(),
-            ],
+        return $this->success([
+            'customer_id' => $customer->uuid,
+            'customer_uuid' => $customer->uuid,
+            'full_name' => $customer->full_name,
+            'email' => $customer->email,
+            'phone' => $customer->phone,
+            'status' => $customer->status,
+            'cover_start_date' => optional($customer->cover_start_date)->toDateString(),
+            'cover_end_date' => optional($customer->cover_end_date)->toDateString(),
+            'cover_duration_months' => $customer->cover_duration_months,
+            'customer_since' => optional($customer->customer_since)->toDateString(),
+            'submitted_data' => $customer->submitted_data,
+            'last_payment_date' => optional($customer->payments->first()?->payment_date)->toDateTimeString(),
+            'total_lifetime_value' => (float) $customer->payments->sum('amount'),
+            'payments' => $customer->payments->map(fn (Payment $payment): array => [
+                'payment_uuid' => $payment->uuid,
+                'transaction_reference' => $payment->transaction_reference,
+                'payment_date' => optional($payment->payment_date)->toDateTimeString(),
+                'payment_status' => $payment->payment_status,
+                'currency' => $payment->currency,
+                'amount' => (float) $payment->amount,
+            ])->values(),
         ]);
     }
 
@@ -115,11 +126,9 @@ class CustomerController extends BaseApiController
         ),
         responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 404, description: 'Not found')]
     )]
-    public function updateStatus(Request $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
+    public function updateStatus(UpdateCustomerStatusRequest $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => ['required', 'in:active,expired,cancelled'],
-        ]);
+        $validated = $request->validated();
 
         $partner = $request->attributes->get('partner');
         $customer = Customer::query()
@@ -128,16 +137,12 @@ class CustomerController extends BaseApiController
             ->first();
 
         if (! $customer) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'NOT_FOUND',
-                'message' => 'Customer not found',
-            ], 404);
+            return $this->error('NOT_FOUND', 'Customer not found', status: 404);
         }
 
         $updated = $transactionService->updateCustomerStatus($customer, $validated['status']);
 
-        return response()->json(['status' => 'success', 'data' => $updated]);
+        return $this->success($updated);
     }
 
     #[OA\Post(
@@ -162,15 +167,9 @@ class CustomerController extends BaseApiController
         ),
         responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 404, description: 'Not found')]
     )]
-    public function addPayment(Request $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
+    public function addPayment(AddPaymentRequest $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
     {
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0'],
-            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'payment_date' => ['required', 'date'],
-            'transaction_reference' => ['required', 'string', 'unique:payments,transaction_reference'],
-            'payment_status' => ['nullable', 'string', 'in:success,pending,failed,cancelled'],
-        ]);
+        $validated = $request->validated();
 
         $partner = $request->attributes->get('partner');
         $customer = Customer::query()
@@ -179,11 +178,7 @@ class CustomerController extends BaseApiController
             ->first();
 
         if (! $customer) {
-            return response()->json([
-                'status' => 'error',
-                'error_code' => 'NOT_FOUND',
-                'message' => 'Customer not found',
-            ], 404);
+            return $this->error('NOT_FOUND', 'Customer not found', status: 404);
         }
 
         $payment = $transactionService->appendPayment($customer, $partner, $validated, [
@@ -192,7 +187,7 @@ class CustomerController extends BaseApiController
             'payment' => $validated,
         ]);
 
-        return response()->json(['status' => 'success', 'data' => $payment], 201);
+        return $this->success($payment, 201);
     }
 
     #[OA\Get(
@@ -212,15 +207,13 @@ class CustomerController extends BaseApiController
         $paymentsAmount = (float) Payment::query()->where('partner_id', $partner->id)->sum('amount');
         $lastSubmission = Customer::query()->where('partner_id', $partner->id)->latest('created_at')->value('created_at');
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'partner_id' => $partner->id,
-                'customers_submitted' => $customersCount,
-                'payments_recorded' => $paymentsCount,
-                'total_payment_amount' => $paymentsAmount,
-                'last_submission_at' => $lastSubmission,
-            ],
+        return $this->success([
+            'partner_id' => $partner->id,
+            'partner_uuid' => $partner->uuid,
+            'customers_submitted' => $customersCount,
+            'payments_recorded' => $paymentsCount,
+            'total_payment_amount' => $paymentsAmount,
+            'last_submission_at' => $lastSubmission,
         ]);
     }
 }

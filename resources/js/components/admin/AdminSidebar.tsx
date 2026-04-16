@@ -14,12 +14,15 @@ import {
     UserSquare2,
 } from 'lucide-react';
 import { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 import { NavItem } from './SidebarShell';
 
 interface AdminSidebarProps {
     url: string;
     navItems: NavItem[];
     collapsed: boolean;
+    className?: string;
+    onNavigate?: () => void;
 }
 
 const iconMap: Record<string, ReactNode> = {
@@ -50,7 +53,7 @@ const sectionMap: Record<string, string> = {
     'My profile': 'Account',
 };
 
-export default function AdminSidebar({ url, navItems, collapsed }: AdminSidebarProps) {
+export default function AdminSidebar({ url, navItems, collapsed, className, onNavigate }: AdminSidebarProps) {
     const currentPath = typeof url === 'string' && url.length > 0 ? url : window.location.pathname;
 
     const isItemActive = (href: string): boolean => {
@@ -71,9 +74,11 @@ export default function AdminSidebar({ url, navItems, collapsed }: AdminSidebarP
 
     return (
         <aside
-            className={`hidden h-screen shrink-0 border-r border-slate-200/70 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-slate-100 transition-all duration-300 lg:flex lg:flex-col ${
-                collapsed ? 'w-20' : 'w-72'
-            }`}
+            className={cn(
+                'h-screen shrink-0 border-r border-slate-200/70 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-slate-100 transition-all duration-300 lg:flex lg:flex-col',
+                collapsed ? 'w-20' : 'w-72',
+                className,
+            )}
         >
             <div className="px-4 py-5">
                 <Link href={navItems[0]?.href ?? route('login')} className="block rounded-xl border border-white/10 bg-white/5 px-3 py-3 shadow-sm">
@@ -105,6 +110,7 @@ export default function AdminSidebar({ url, navItems, collapsed }: AdminSidebarP
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    onClick={onNavigate}
                                     className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                                         active
                                             ? 'bg-[#0e9f84]/25 text-[#b8ffef] ring-1 ring-[#0e9f84]/40'

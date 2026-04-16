@@ -23,6 +23,8 @@ class PartnerController extends Controller
 
     public function store(StorePartnerRequest $request): RedirectResponse
     {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         Partner::query()->create([
             'name' => $request->string('name')->toString(),
             'slug' => Str::slug($request->string('name')->toString()),
@@ -41,8 +43,15 @@ class PartnerController extends Controller
         ]);
     }
 
+    public function edit(Partner $partner): Response
+    {
+        return $this->show($partner);
+    }
+
     public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse
     {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         $partner->update($request->only(['name', 'email', 'phone', 'status']));
 
         return back()->with('success', 'Partner updated.');
@@ -50,6 +59,8 @@ class PartnerController extends Controller
 
     public function toggleStatus(Partner $partner): RedirectResponse
     {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         $partner->update(['status' => $partner->status === 'active' ? 'inactive' : 'active']);
 
         return back()->with('success', 'Status toggled.');
@@ -57,6 +68,8 @@ class PartnerController extends Controller
 
     public function destroy(Partner $partner): RedirectResponse
     {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         if ($partner->customers()->exists()) {
             return back()->with('error', 'Cannot delete partner with customer records.');
         }

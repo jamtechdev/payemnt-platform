@@ -1,4 +1,5 @@
 import FlashMessage from '@/components/shared/FlashMessage';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { PageProps } from '@/Types';
 import { ReactNode, useEffect, useState } from 'react';
 import AdminFooter from './AdminFooter';
@@ -20,6 +21,7 @@ interface SidebarShellProps {
 
 export default function SidebarShell({ auth, url, title, navItems, children }: SidebarShellProps) {
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem('admin.sidebar.collapsed');
@@ -37,10 +39,16 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
     return (
         <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-[#f2fffb] to-slate-100">
             <div className="flex h-full">
-                <AdminSidebar url={url} navItems={navItems} collapsed={collapsed} />
+                <AdminSidebar url={url} navItems={navItems} collapsed={collapsed} className="hidden" />
 
                 <div className="flex h-full min-w-0 flex-1 flex-col">
-                    <AdminHeader title={title} auth={auth} sidebarCollapsed={collapsed} onToggleSidebar={toggleSidebar} />
+                    <AdminHeader
+                        title={title}
+                        auth={auth}
+                        sidebarCollapsed={collapsed}
+                        onToggleSidebar={toggleSidebar}
+                        onOpenMobileNav={() => setMobileNavOpen(true)}
+                    />
 
                     <main className="flex-1 overflow-y-auto animate-in fade-in-0 duration-300 px-4 py-6 lg:px-8 dark:bg-gray-900">
                         <FlashMessage />
@@ -50,6 +58,15 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
                     <AdminFooter />
                 </div>
             </div>
+
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <SheetContent side="left" className="w-[88vw] max-w-xs border-r-0 bg-transparent p-0 shadow-none">
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>Navigation</SheetTitle>
+                    </SheetHeader>
+                    <AdminSidebar url={url} navItems={navItems} collapsed={false} className="flex w-full max-w-none border-r-0" onNavigate={() => setMobileNavOpen(false)} />
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

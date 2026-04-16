@@ -32,6 +32,8 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         DB::transaction(function () use ($request): void {
             $product = Product::query()->create([
                 'name' => $request->string('name')->toString(),
@@ -61,6 +63,8 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         $product->update($request->only(['name', 'slug', 'description', 'status', 'cover_duration_options']));
 
         foreach ((array) $request->input('fields', []) as $i => $field) {
@@ -75,6 +79,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         if ($product->customers()->where('status', 'active')->exists()) {
             return back()->with('error', 'Cannot delete product with active customers.');
         }
@@ -85,6 +91,8 @@ class ProductController extends Controller
 
     public function togglePartnerAccess(Request $request, Product $product): RedirectResponse
     {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
         $partnerId = (int) $request->integer('partner_id');
         $existing = DB::table('partner_products')->where('partner_id', $partnerId)->where('product_id', $product->id)->first();
         $status = $existing && $existing->status === 'active' ? 'inactive' : 'active';

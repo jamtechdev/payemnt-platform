@@ -65,9 +65,24 @@ Route::prefix('admin')
                 ->middleware('permission:reports.partner_performance')
                 ->name('reports.partner-performance');
 
-            Route::resource('products', ProductController::class)
+            Route::get('products', [ProductController::class, 'index'])
                 ->middleware('permission:products.view')
-                ->names('products');
+                ->name('products.index');
+            Route::get('products/create', [ProductController::class, 'create'])
+                ->middleware('permission:products.create')
+                ->name('products.create');
+            Route::post('products', [ProductController::class, 'store'])
+                ->middleware('permission:products.create')
+                ->name('products.store');
+            Route::get('products/{product}/edit', [ProductController::class, 'edit'])
+                ->middleware('permission:products.edit')
+                ->name('products.edit');
+            Route::patch('products/{product}', [ProductController::class, 'update'])
+                ->middleware('permission:products.edit')
+                ->name('products.update');
+            Route::delete('products/{product}', [ProductController::class, 'destroy'])
+                ->middleware('permission:products.delete')
+                ->name('products.destroy');
             Route::post('products/{product}/toggle-partner-access', [ProductController::class, 'togglePartnerAccess'])
                 ->middleware('permission:products.manage_partner_access')
                 ->name('products.toggle-partner-access');
@@ -75,20 +90,42 @@ Route::prefix('admin')
                 ->middleware('permission:products.view')
                 ->name('products.versions');
 
-            Route::resource('partners', PartnerController::class)
+            Route::get('partners', [PartnerController::class, 'index'])
                 ->middleware('permission:partners.view')
-                ->except(['create'])
-                ->names('partners');
+                ->name('partners.index');
+            Route::post('partners', [PartnerController::class, 'store'])
+                ->middleware('permission:partners.create')
+                ->name('partners.store');
+            Route::get('partners/{partner}', [PartnerController::class, 'show'])
+                ->middleware('permission:partners.view')
+                ->name('partners.show');
+            Route::get('partners/{partner}/edit', [PartnerController::class, 'edit'])
+                ->middleware('permission:partners.edit')
+                ->name('partners.edit');
+            Route::patch('partners/{partner}', [PartnerController::class, 'update'])
+                ->middleware('permission:partners.edit')
+                ->name('partners.update');
+            Route::delete('partners/{partner}', [PartnerController::class, 'destroy'])
+                ->middleware('permission:partners.delete')
+                ->name('partners.destroy');
             Route::post('partners/{partner}/toggle-status', [PartnerController::class, 'toggleStatus'])
                 ->middleware('permission:partners.edit')
                 ->name('partners.toggle-status');
 
-            Route::resource('users', UserManagementController::class)
+            Route::get('users', [UserManagementController::class, 'index'])
                 ->middleware('permission:users.view')
-                ->except(['show', 'create', 'edit'])
-                ->names('users');
+                ->name('users.index');
+            Route::post('users', [UserManagementController::class, 'store'])
+                ->middleware('permission:users.create')
+                ->name('users.store');
+            Route::patch('users/{user}', [UserManagementController::class, 'update'])
+                ->middleware('permission:users.edit')
+                ->name('users.update');
+            Route::delete('users/{user}', [UserManagementController::class, 'destroy'])
+                ->middleware('permission:users.deactivate')
+                ->name('users.destroy');
             Route::patch('users/{user}/access-control', [UserManagementController::class, 'updateAccessControl'])
-                ->middleware(['permission:users.assign_roles', 'role:super_admin'])
+                ->middleware(['permission:users.assign_roles', 'role:admin|super_admin'])
                 ->name('users.access-control.update');
             Route::post('users/{user}/deactivate', [UserManagementController::class, 'deactivate'])
                 ->middleware('permission:users.deactivate')
