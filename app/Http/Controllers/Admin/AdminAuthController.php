@@ -14,6 +14,13 @@ use Inertia\Response;
 
 class AdminAuthController extends Controller
 {
+    /**
+     * Only these staff roles can access admin panel login.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_LOGIN_ROLES = ['admin', 'super_admin'];
+
     public function showLogin(): Response
     {
         return Inertia::render('auth/login');
@@ -61,15 +68,13 @@ class AdminAuthController extends Controller
 
         $user = User::query()->where('email', $credentials['email'])->first();
 
-        // ❌ first check: user exists + role allowed
-        if (!$user || !($user->hasRole('admin') || $user->hasRole('super_admin'))) {
+        if (! $user || ! $user->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
             return back()->withErrors([
                 'email' => 'You are not allowed to access admin panel.',
             ]);
         }
 
-        // ❌ auth attempt
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             if ($user) {
                 $user->incrementLoginAttempts();
             }
@@ -89,13 +94,12 @@ class AdminAuthController extends Controller
 
         AuditLog::record('login', null, [], ['event' => 'login'], $loggedUser);
 
-        // ✅ ONLY ADMIN & SUPER ADMIN ALLOWED
-        if ($loggedUser->hasRole('super_admin') || $loggedUser->hasRole('admin')) {
+        if ($loggedUser->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
             return redirect()->route('admin.platform.dashboard');
         }
 
-        // ❌ fallback (extra safety)
         Auth::logout();
+
         return redirect()->route('login')->with('error', 'Unauthorized access.');
     }
 

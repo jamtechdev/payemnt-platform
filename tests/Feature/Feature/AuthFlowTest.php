@@ -34,4 +34,21 @@ class AuthFlowTest extends TestCase
 
         $response->assertRedirect(route('admin.platform.dashboard'));
     }
+
+    public function test_non_admin_user_cannot_login_to_admin_panel(): void
+    {
+        Role::query()->firstOrCreate(['name' => 'customer_service', 'guard_name' => 'web']);
+        $user = User::factory()->create(['password' => bcrypt('ChangeMe12345!')]);
+        $user->assignRole('customer_service');
+
+        $response = $this->from('/login')->post('/login', [
+            'email' => $user->email,
+            'password' => 'ChangeMe12345!',
+        ]);
+
+        $response
+            ->assertRedirect('/login')
+            ->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
 }
