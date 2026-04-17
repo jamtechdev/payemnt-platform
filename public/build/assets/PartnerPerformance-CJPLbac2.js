@@ -1,0 +1,1 @@
+import{j as r}from"./app-D9psMSDc.js";import{A as e}from"./AdminLayout-CrmHWAmg.js";import"./index-iUqOoHxU.js";import"./createLucideIcon-J4hrrU_2.js";function m(){return r.jsx(e,{title:"Partner Performance",children:r.jsx("div",{className:"rounded bg-card p-4 shadow",children:"Partner performance report."})})}export{m as default};
