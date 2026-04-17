@@ -50,7 +50,6 @@ export default function Login() {
                                 className="h-11 bg-background/80 pl-10"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                placeholder="Enter Email.."
                             />
                         </div>
                         {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
@@ -67,7 +66,6 @@ export default function Login() {
                                 className="h-11 bg-background/80 px-10"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder="Enter Password"
                             />
                             <button
                                 type="button"
