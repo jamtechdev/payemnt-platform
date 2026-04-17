@@ -183,7 +183,7 @@ class UserManagementController extends Controller
         $rows = $permissions->map(function (string $permission) use ($roles): array {
             $allowed = [];
             foreach ($roles as $role) {
-                $allowed[$role->name] = $role->hasPermissionTo($permission);
+                $allowed[$role->name] = $role->permissions->pluck('name')->contains($permission);
             }
 
             return [

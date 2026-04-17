@@ -711,7 +711,7 @@ class AdminController extends BaseApiController
         $matrix = $permissionNames->map(function (string $permission) use ($roles): array {
             $allowed = [];
             foreach ($roles as $role) {
-                $allowed[$role->name] = $role->hasPermissionTo($permission);
+                $allowed[$role->name] = $role->permissions->pluck('name')->contains($permission);
             }
 
             return [
