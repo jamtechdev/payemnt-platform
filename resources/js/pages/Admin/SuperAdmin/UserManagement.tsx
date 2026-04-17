@@ -92,7 +92,12 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => router.delete(route('admin.users.destroy', userId))}
+                                            onClick={() => {
+                                                const ok = window.confirm('Are you sure you want to delete this user? This action cannot be undone.');
+                                                if (!ok) return;
+
+                                                router.delete(route('admin.users.destroy', userId));
+                                            }}
                                             disabled={!canManageTargetUser(row)}
                                         >
                                             Delete
