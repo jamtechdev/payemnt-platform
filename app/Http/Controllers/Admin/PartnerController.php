@@ -21,19 +21,43 @@ class PartnerController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/PartnerCreate');
+    }
+
+    // public function store(StorePartnerRequest $request): RedirectResponse
+    // {
+    //     abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+    //     Partner::query()->create([
+    //         'name' => $request->string('name')->toString(),
+    //         'slug' => Str::slug($request->string('name')->toString()),
+    //         'email' => $request->string('email')->toString(),
+    //         'phone' => $request->input('phone'),
+    //         'status' => 'active',
+    //     ])->syncRoles(['partner']);
+
+    //     return redirect()->route('admin.partners.index')->with('success', 'Partner created.');
+    // }
     public function store(StorePartnerRequest $request): RedirectResponse
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        Partner::query()->create([
+        $partner = Partner::create([
             'name' => $request->string('name')->toString(),
             'slug' => Str::slug($request->string('name')->toString()),
             'email' => $request->string('email')->toString(),
             'phone' => $request->input('phone'),
             'status' => 'active',
-        ])->syncRoles(['partner']);
+        ]);
 
-        return redirect()->route('admin.partners.index')->with('success', 'Partner created.');
+        // Role assign alag se karo (safe way)
+        $partner->assignRole('partner');
+
+        return redirect()
+            ->route('admin.partners.index')
+            ->with('success', 'Partner created.');
     }
 
     public function show(Partner $partner): Response
@@ -45,16 +69,34 @@ class PartnerController extends Controller
 
     public function edit(Partner $partner): Response
     {
-        return $this->show($partner);
+        return Inertia::render('Admin/SuperAdmin/PartnerEdit', [
+            'partner' => $partner,
+        ]);
     }
+
+    // public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse
+    // {
+    //     abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+    //     $partner->update($request->only(['name', 'email', 'phone', 'status']));
+
+    //     return back()->with('success', 'Partner updated.');
+    // }
 
     public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $partner->update($request->only(['name', 'email', 'phone', 'status']));
+        $partner->update([
+            'name' => $request->string('name')->toString(),
+            'email' => $request->string('email')->toString(),
+            'phone' => $request->input('phone'),
+            'status' => $request->input('status', 'inactive'),
+        ]);
 
-        return back()->with('success', 'Partner updated.');
+        return redirect()
+            ->route('admin.partners.index')
+            ->with('success', 'Partner updated successfully.');
     }
 
     public function toggleStatus(Partner $partner): RedirectResponse

@@ -93,6 +93,7 @@ Route::prefix('admin')
             Route::get('partners', [PartnerController::class, 'index'])
                 ->middleware('permission:partners.view')
                 ->name('partners.index');
+            Route::get('/partners/create', [PartnerController::class, 'create'])->middleware('permission:partners.create')->name('partners.create');
             Route::post('partners', [PartnerController::class, 'store'])
                 ->middleware('permission:partners.create')
                 ->name('partners.store');

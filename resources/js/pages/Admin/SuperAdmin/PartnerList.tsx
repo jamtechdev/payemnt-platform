@@ -41,10 +41,26 @@ export default function PartnerList({ partners }: { partners: unknown }) {
                         <button className="text-[#0e9f84] hover:underline" onClick={() => router.visit(route('admin.partners.show', id))}>
                             View
                         </button>
-                        <button className="text-[#0e9f84] hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.visit(route('admin.partners.edit', id))} disabled={!canEdit}>
+                        <button
+                            className="text-[#0e9f84] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => router.visit(route('admin.partners.edit', id))}
+                            disabled={!canEdit}
+                        >
                             Edit
                         </button>
-                        <button className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.partners.destroy', id))} disabled={!canDelete}>
+                        <button
+                            className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => {
+                                const confirmed = confirm('Are you sure you want to delete this partner? This action cannot be undone.');
+
+                                if (!confirmed) return;
+
+                                router.delete(route('admin.partners.destroy', id), {
+                                    preserveScroll: true,
+                                });
+                            }}
+                            disabled={!canDelete}
+                        >
                             Delete
                         </button>
                     </div>
@@ -56,8 +72,12 @@ export default function PartnerList({ partners }: { partners: unknown }) {
     return (
         <AdminLayout title="Partners">
             <div className="mb-4 flex justify-end">
-                <Button className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]" onClick={() => router.post(route('admin.partners.store'), { name: 'New Partner', email: `partner${Date.now()}@local.test`, phone: null })} disabled={!canCreate}>
-                    Quick Create Partner
+                <Button
+                    className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]"
+                    onClick={() => router.visit(route('admin.partners.create'))}
+                    disabled={!canCreate}
+                >
+                    Create Partner
                 </Button>
             </div>
             <DataTable columns={columns} data={rows} stripedRows showRowCount emptyMessage="No partners yet." />

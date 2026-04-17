@@ -30,7 +30,7 @@ export default function ForgotPassword() {
                 >
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" autoComplete="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
+                        <Input id="email" type="email" autoComplete="email" value={data.email} onChange={(e) => setData('email', e.target.value)} placeholder="Enter Email" />
                         {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
                     </div>
                     <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={processing}>

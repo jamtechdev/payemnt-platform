@@ -39,13 +39,26 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <Link className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`} href={route('admin.products.edit', id)}>
+                        <Link
+                            className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`}
+                            href={route('admin.products.edit', id)}
+                        >
                             Edit
                         </Link>
                         <Link className="text-[#0e9f84] hover:underline" href={route('admin.products.versions', id)}>
                             Versions
                         </Link>
-                        <button className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.products.destroy', id))} disabled={!canDelete}>
+                        <button
+                            className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => {
+                                if (confirm('Are you sure you want to delete this product?')) {
+                                    router.delete(route('admin.products.destroy', id), {
+                                        preserveScroll: true,
+                                    });
+                                }
+                            }}
+                            disabled={!canDelete}
+                        >
                             Delete
                         </button>
                     </div>

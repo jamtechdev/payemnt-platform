@@ -31,13 +31,13 @@ export default function UserManagement({ users, roles }: { users: unknown; roles
                 items={rows.map((row, idx) => ({
                     key: String(row.id ?? idx),
                     content: (
-                        <div className="flex md:items-center items-start justify-between flex-col md:flex-row gap-4">
+                        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                             <div>
                                 <p className="font-medium text-slate-900 dark:text-slate-100">{String(row.name ?? 'Unknown')}</p>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">{String(row.email ?? '-')}</p>
                             </div>
                             <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
-                            <div className="flex md:items-center items-start gap-2 flex-col md:flex-row">
+                            <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -65,7 +65,15 @@ export default function UserManagement({ users, roles }: { users: unknown; roles
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() => router.delete(route('admin.users.destroy', Number(row.id ?? 0)))}
+                                    onClick={() => {
+                                        const confirmed = confirm('Are you sure you want to delete this user? This action cannot be undone.');
+
+                                        if (!confirmed) return;
+
+                                        router.delete(route('admin.users.destroy', Number(row.id ?? 0)), {
+                                            preserveScroll: true,
+                                        });
+                                    }}
                                     disabled={!canManageUsers}
                                 >
                                     Delete
@@ -79,14 +87,22 @@ export default function UserManagement({ users, roles }: { users: unknown; roles
             {canManageUsers && (
                 <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                     <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">Role assignment</h3>
-                    <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Permissions now come from the assigned role, so every user with the same role inherits the same access.</p>
+                    <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                        Permissions now come from the assigned role, so every user with the same role inherits the same access.
+                    </p>
                     <div className="space-y-4">
                         {rows.map((row, idx) => {
                             const userId = Number(row.id ?? 0);
-                            const roleName = Array.isArray(row.roles) && row.roles[0] && typeof row.roles[0] === 'object' ? String((row.roles[0] as LooseRecord).name ?? '') : '';
+                            const roleName =
+                                Array.isArray(row.roles) && row.roles[0] && typeof row.roles[0] === 'object'
+                                    ? String((row.roles[0] as LooseRecord).name ?? '')
+                                    : '';
 
                             return (
-                                <div key={String(row.id ?? idx)} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700">
+                                <div
+                                    key={String(row.id ?? idx)}
+                                    className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700"
+                                >
                                     <div className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">{String(row.name ?? 'Unknown')}</div>
                                     <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                                         <div>
@@ -94,7 +110,9 @@ export default function UserManagement({ users, roles }: { users: unknown; roles
                                             <select
                                                 className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                                 defaultValue={roleName}
-                                                onChange={(e) => router.patch(route('admin.users.access-control.update', userId), { role: e.target.value })}
+                                                onChange={(e) =>
+                                                    router.patch(route('admin.users.access-control.update', userId), { role: e.target.value })
+                                                }
                                             >
                                                 <option value="">Select role</option>
                                                 {roleOptions.map((r) => (
