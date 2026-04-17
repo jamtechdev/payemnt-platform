@@ -11,6 +11,7 @@ const applyTheme = (appearance: Appearance) => {
 };
 
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+let isSystemThemeListenerBound = false;
 
 const handleSystemThemeChange = () => {
     const currentAppearance = localStorage.getItem('appearance') as Appearance;
@@ -22,8 +23,10 @@ export function initializeTheme() {
 
     applyTheme(savedAppearance);
 
-    // Add the event listener for system theme changes...
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    if (!isSystemThemeListenerBound) {
+        mediaQuery.addEventListener('change', handleSystemThemeChange);
+        isSystemThemeListenerBound = true;
+    }
 }
 
 export function useAppearance() {
@@ -38,8 +41,6 @@ export function useAppearance() {
     useEffect(() => {
         const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
         updateAppearance(savedAppearance || 'system');
-
-        return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
     }, []);
 
     return { appearance, updateAppearance };

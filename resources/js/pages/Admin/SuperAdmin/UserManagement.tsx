@@ -54,6 +54,25 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
 
     return (
         <AdminLayout title="User management">
+            <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm dark:border-blue-500/25 dark:bg-blue-500/10">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total users</p>
+                    <p className="mt-1 text-2xl font-semibold text-foreground">{rows.length}</p>
+                </div>
+                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 shadow-sm dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Active users</p>
+                    <p className="mt-1 text-2xl font-semibold text-emerald-600">{rows.filter((row) => row.is_active !== false).length}</p>
+                </div>
+                <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm dark:border-violet-500/25 dark:bg-violet-500/10">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Role options</p>
+                    <p className="mt-1 text-2xl font-semibold text-foreground">{roleOptions.length}</p>
+                </div>
+                <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Access control</p>
+                    <p className="mt-1 text-sm font-medium text-muted-foreground">Role-based permissions in one place</p>
+                </div>
+            </div>
+
             <EntityListCard
                 title="Admin users"
                 emptyText="No users found."
@@ -68,11 +87,11 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                             <div className="space-y-4">
                                 <div className="flex md:items-center items-start justify-between flex-col md:flex-row gap-4">
                                     <div>
-                                        <p className="font-medium text-slate-900 dark:text-slate-100">{String(row.name ?? 'Unknown')}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{String(row.email ?? '-')}</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Role: {roleName || '-'}</p>
+                                        <p className="font-medium text-foreground">{String(row.name ?? 'Unknown')}</p>
+                                        <p className="text-sm text-muted-foreground">{String(row.email ?? '-')}</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">Role: {roleName || '-'}</p>
                                     </div>
-                                    <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
+                                    <Badge variant="outline" className="w-fit border-primary/25 bg-primary/10 text-primary">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
                                     <div className="flex md:items-center items-start gap-2 flex-col md:flex-row">
                                         <Button
                                             type="button"
@@ -101,8 +120,8 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                 </div>
 
                                 {openRoleUserId === userId && (
-                                    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700/40">
-                                        <p className="mb-2 text-xs text-slate-500 dark:text-slate-300">Change role using quick buttons:</p>
+                                    <div className="rounded-lg border border-border p-3 bg-background/60">
+                                        <p className="mb-2 text-xs text-muted-foreground">Change role using quick buttons:</p>
                                         <div className="flex flex-wrap gap-2">
                                             {roleOptions.map((option) => (
                                                 <Button
@@ -121,9 +140,9 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                 )}
 
                                 {openPermissionUserId === userId && (
-                                    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700/40">
-                                        <p className="text-sm font-medium text-slate-800 dark:text-slate-100 mb-2">Effective permissions</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                                    <div className="rounded-lg border border-border p-3 bg-background/60">
+                                        <p className="mb-2 text-sm font-medium text-foreground">Effective permissions</p>
+                                        <p className="mb-3 text-xs text-muted-foreground">
                                             Showing permissions for role <span className="font-semibold">{roleName || '-'}</span>.
                                         </p>
                                         <div className="overflow-x-auto">

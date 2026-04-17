@@ -75,35 +75,35 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
     return (
         <aside
             className={cn(
-                'h-screen shrink-0 border-r border-slate-200/70 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-slate-100 transition-all duration-300 lg:flex lg:flex-col',
+                'h-screen shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 lg:flex lg:flex-col',
                 collapsed ? 'w-20' : 'w-72',
                 className,
             )}
         >
             <div className="px-4 py-5">
-                <Link href={navItems[0]?.href ?? route('login')} className="block rounded-xl border border-white/10 bg-white/5 px-3 py-3 shadow-sm">
+                <Link href={navItems[0]?.href ?? route('login')} className="block rounded-xl border border-sidebar-border/80 bg-sidebar-accent/40 px-3 py-3 shadow-sm">
                     {collapsed ? (
-                        <span className="text-lg font-bold text-[#7bf2da]">PS</span>
+                        <span className="text-lg font-bold text-sidebar-primary">PS</span>
                     ) : (
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#0e9f84]/25 text-[#7bf2da]">
+                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary/20 text-sidebar-primary">
                                     <Bolt className="h-4 w-4" />
                                 </span>
-                                <p className="text-base font-semibold tracking-tight text-white">
-                                    Partner<span className="text-[#7bf2da]">Sales</span>
+                                <p className="text-base font-semibold tracking-tight text-sidebar-foreground">
+                                    Partner<span className="text-sidebar-primary">Sales</span>
                                 </p>
                             </div>
-                            <p className="text-[11px] uppercase tracking-wide text-slate-300">Admin command center</p>
+                            <p className="text-[11px] uppercase tracking-wide text-sidebar-foreground/60">Admin command center</p>
                         </div>
                     )}
                 </Link>
-            
-            <Separator className="bg-white/10" />
-            <nav className="flex-1 space-y-5 overflow-auto px-3 py-4 sidebar-panal">
+
+            <Separator className="bg-sidebar-border/80" />
+            <nav className="sidebar-panal flex-1 space-y-5 overflow-auto px-3 py-4">
                 {Object.entries(groupedItems).map(([section, items]) => (
                     <div key={section} className="space-y-1.5">
-                        {!collapsed && <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{section}</p>}
+                        {!collapsed && <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/70">{section}</p>}
                         {items.map((item, index) => {
                             const active = isItemActive(item.href);
                             return (
@@ -113,15 +113,15 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                                     onClick={onNavigate}
                                     className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                                         active
-                                            ? 'bg-[#0e9f84]/25 text-[#b8ffef] ring-1 ring-[#0e9f84]/40'
-                                            : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                                            ? 'bg-sidebar-primary/14 text-sidebar-primary ring-1 ring-sidebar-primary/30'
+                                            : 'text-sidebar-foreground/85 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
                                     }`}
                                     style={{ animationDelay: `${index * 35}ms` }}
                                     title={collapsed ? item.label : undefined}
                                 >
                                     <span
                                         className={`inline-flex h-7 w-7 items-center justify-center rounded-lg transition ${
-                                            active ? 'bg-[#0e9f84]/20 text-[#b8ffef]' : 'bg-white/5 text-slate-300 group-hover:bg-white/10'
+                                            active ? 'bg-sidebar-primary/18 text-sidebar-primary' : 'bg-sidebar-accent/90 text-sidebar-foreground/75 group-hover:bg-sidebar-accent'
                                         }`}
                                     >
                                         {iconMap[item.label] ?? <FileText className="h-4 w-4" />}
@@ -138,7 +138,7 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                     </div>
                 ))}
             </nav>
-            <Separator className="bg-white/10" />
+            <Separator className="bg-sidebar-border/80" />
             </div>
         </aside>
     );

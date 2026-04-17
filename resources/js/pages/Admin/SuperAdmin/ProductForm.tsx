@@ -454,7 +454,7 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                 {data.fields.map((field, index) => (
                                     <div key={`preview-${field.id ?? index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                         <div className="mb-2 flex items-center justify-between gap-2">
-                                            <p className="text-sm font-medium text-slate-900">{field.label || `Field ${index + 1}`}</p>
+                                            <p className="text-sm font-medium text-slate-900  dark:text-white">{field.label || `Field ${index + 1}`}</p>
                                             {field.is_required && (
                                                 <Badge className="border-red-200 bg-red-50 text-red-600" variant="outline">
                                                     Required
@@ -481,21 +481,21 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
                                     <CheckCircle2 className={cn('mt-0.5 h-4 w-4', data.name.trim() ? 'text-emerald-600' : 'text-slate-300')} />
                                     <div>
-                                        <p className="font-medium text-slate-900">Product identity added</p>
+                                        <p className="font-medium text-slate-900  dark:text-white">Product identity added</p>
                                         <p className="text-slate-500">Use a clear product name and short explanation.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
                                     <CheckCircle2 className={cn('mt-0.5 h-4 w-4', data.cover_duration_options.length > 0 ? 'text-emerald-600' : 'text-slate-300')} />
                                     <div>
-                                        <p className="font-medium text-slate-900">Coverage plans selected</p>
+                                        <p className="font-medium text-slate-900  dark:text-white">Coverage plans selected</p>
                                         <p className="text-slate-500">At least one duration must be available.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
                                     <CheckCircle2 className={cn('mt-0.5 h-4 w-4', activeFieldCount > 0 ? 'text-emerald-600' : 'text-slate-300')} />
                                     <div>
-                                        <p className="font-medium text-slate-900">Submission fields configured</p>
+                                        <p className="font-medium text-slate-900  dark:text-white">Submission fields configured</p>
                                         <p className="text-slate-500">Partners need these fields when submitting customers.</p>
                                     </div>
                                 </div>

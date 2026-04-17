@@ -23,7 +23,7 @@ export default function AuditLog({ logs }: { logs: unknown }) {
                     key: String(row.id ?? idx),
                     content: (
                         <div className="space-y-1 text-sm">
-                            <p className="font-medium text-slate-900">{String(row.action ?? 'event')}</p>
+                            <p className="font-medium text-slate-900  dark:text-white">{String(row.action ?? 'event')}</p>
                             <p className="text-slate-500">
                                 {String(row.model_type ?? '-')} #{String(row.model_id ?? '-')}
                             </p>

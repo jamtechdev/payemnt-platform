@@ -24,7 +24,7 @@ export default function ProductVersions({ product, versions }: { product: LooseR
                     content: (
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <p className="font-medium text-slate-900">Version #{String(row.version_number ?? '-')}</p>
+                                <p className="font-medium text-slate-900  dark:text-white">Version #{String(row.version_number ?? '-')}</p>
                                 <p className="text-xs text-slate-500">Created at {String(row.created_at ?? '-')}</p>
                             </div>
                             <span className="text-xs text-slate-600">Snapshot saved</span>

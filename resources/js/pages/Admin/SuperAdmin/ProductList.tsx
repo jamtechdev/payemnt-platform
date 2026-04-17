@@ -5,6 +5,7 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Link, router, usePage } from '@inertiajs/react';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Layers, Pencil, Trash2 } from 'lucide-react';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -39,14 +40,14 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <Link className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`} href={route('admin.products.edit', id)}>
-                            Edit
+                        <Link className={`inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70 ${!canEdit ? 'pointer-events-none opacity-50' : ''}`} href={route('admin.products.edit', id)} aria-label="Edit product" title="Edit">
+                            <Pencil className="h-3.5 w-3.5" />
                         </Link>
-                        <Link className="text-[#0e9f84] hover:underline" href={route('admin.products.versions', id)}>
-                            Versions
+                        <Link className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70" href={route('admin.products.versions', id)} aria-label="Product versions" title="Versions">
+                            <Layers className="h-3.5 w-3.5" />
                         </Link>
-                        <button className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.products.destroy', id))} disabled={!canDelete}>
-                            Delete
+                        <button className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.products.destroy', id))} disabled={!canDelete} aria-label="Delete product" title="Delete">
+                            <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     </div>
                 );
@@ -58,10 +59,10 @@ export default function ProductList({ products }: { products: unknown }) {
         <AdminLayout title="Products">
             <div className="mb-4 flex justify-end">
                 <Link href={route('admin.products.create')} className={!canCreate ? 'pointer-events-none opacity-50' : ''}>
-                    <Button className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]" disabled={!canCreate}>Create Product</Button>
+                    <Button disabled={!canCreate}>Create Product</Button>
                 </Link>
             </div>
-            <DataTable columns={columns} data={rows} stripedRows showRowCount clickableRows={false} emptyMessage="No products found." />
+            <DataTable columns={columns} data={rows} stripedRows showRowCount clickableRows={false} emptyMessage="No products found." stickyHeader compact />
         </AdminLayout>
     );
 }

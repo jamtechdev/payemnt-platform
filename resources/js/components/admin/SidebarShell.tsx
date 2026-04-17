@@ -38,7 +38,7 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
     };
 
     return (
-        <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-[#f2fffb] to-slate-100">
+        <div className="h-screen overflow-hidden bg-gradient-to-br from-background via-background to-muted/30">
             <Toaster richColors position="top-right" closeButton />
             <div className="flex h-full">
                 <AdminSidebar url={url} navItems={navItems} collapsed={collapsed} className="hidden" />
@@ -52,9 +52,9 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
                         onOpenMobileNav={() => setMobileNavOpen(true)}
                     />
 
-                    <main className="flex-1 overflow-y-auto animate-in fade-in-0 duration-300 px-4 py-6 lg:px-8 dark:bg-gray-900">
+                    <main className="animate-in fade-in-0 flex-1 overflow-y-auto px-4 py-6 duration-300 lg:px-8">
                         <FlashMessage />
-                        <div className="rounded-2xl border border-slate-200/70 bg-white/95 dark:border-slate-700/70 dark:bg-gray-800/95 p-4 shadow-[0_8px_30px_rgba(2,6,23,0.04)] lg:p-6">{children}</div>
+                        <div className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-sm backdrop-blur-sm lg:p-6">{children}</div>
                     </main>
 
                     <AdminFooter />

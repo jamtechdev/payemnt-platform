@@ -5,6 +5,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { router, usePage } from '@inertiajs/react';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -38,14 +39,14 @@ export default function PartnerList({ partners }: { partners: unknown }) {
                 const id = Number(info.row.original.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <button className="text-[#0e9f84] hover:underline" onClick={() => router.visit(route('admin.partners.show', id))}>
-                            View
+                        <button className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70" onClick={() => router.visit(route('admin.partners.show', id))} aria-label="View partner" title="View">
+                            <Eye className="h-3.5 w-3.5" />
                         </button>
-                        <button className="text-[#0e9f84] hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.visit(route('admin.partners.edit', id))} disabled={!canEdit}>
-                            Edit
+                        <button className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.visit(route('admin.partners.edit', id))} disabled={!canEdit} aria-label="Edit partner" title="Edit">
+                            <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.partners.destroy', id))} disabled={!canDelete}>
-                            Delete
+                        <button className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.partners.destroy', id))} disabled={!canDelete} aria-label="Delete partner" title="Delete">
+                            <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     </div>
                 );
@@ -56,11 +57,11 @@ export default function PartnerList({ partners }: { partners: unknown }) {
     return (
         <AdminLayout title="Partners">
             <div className="mb-4 flex justify-end">
-                <Button className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]" onClick={() => router.post(route('admin.partners.store'), { name: 'New Partner', email: `partner${Date.now()}@local.test`, phone: null })} disabled={!canCreate}>
+                <Button onClick={() => router.post(route('admin.partners.store'), { name: 'New Partner', email: `partner${Date.now()}@local.test`, phone: null })} disabled={!canCreate}>
                     Quick Create Partner
                 </Button>
             </div>
-            <DataTable columns={columns} data={rows} stripedRows showRowCount emptyMessage="No partners yet." />
+            <DataTable columns={columns} data={rows} stripedRows showRowCount emptyMessage="No partners yet." stickyHeader compact />
         </AdminLayout>
     );
 }
