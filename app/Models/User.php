@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -21,6 +22,23 @@ class User extends Authenticatable
     use Notifiable;
 
     protected string $guard_name = 'web';
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (empty($user->uuid)) {
+                $user->uuid = (string) Str::uuid();
+            }
+            if (
+                ! is_a($user, \App\Models\Partner::class, true)
+                && ! is_a($user, \App\Models\Customer::class, true)
+                && empty($user->slug)
+                && ! empty($user->name)
+            ) {
+                $user->slug = Str::slug($user->name).'-'.substr((string) $user->uuid, 0, 8);
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.

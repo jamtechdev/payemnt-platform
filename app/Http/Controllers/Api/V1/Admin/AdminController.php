@@ -205,7 +205,19 @@ class AdminController extends BaseApiController
         return $this->success(['message' => 'Customer deleted.']);
     }
 
-    #[OA\Get(path: '/api/v1/payments', summary: 'List payments', security: [['sanctum' => []]], tags: ['Payments'], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(
+        path: '/api/v1/payments',
+        summary: 'List payments',
+        security: [['sanctum' => []]],
+        tags: ['Payments'],
+        parameters: [
+            new OA\Parameter(name: 'partner_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'customer_uuid', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 20)),
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
     public function payments(Request $request): JsonResponse
     {
         $query = Payment::query()->with(['customer:id,uuid,first_name,last_name', 'partner:id,name'])->latest('id');
@@ -228,12 +240,24 @@ class AdminController extends BaseApiController
         summary: 'Show payment',
         security: [['sanctum' => []]],
         tags: ['Payments'],
-        parameters: [new OA\Parameter(name: 'payment', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [new OA\Parameter(name: 'payment', in: 'path', required: true, description: 'Payment database id', schema: new OA\Schema(type: 'integer'))],
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
     public function payment(Payment $payment): JsonResponse
     {
-        return $this->success($payment->load(['customer', 'partner']));
+        $payment->load(['customer', 'partner']);
+
+        return $this->success([
+            'id' => $payment->id,
+            'payment_uuid' => $payment->uuid,
+            'amount' => (float) $payment->amount,
+            'currency' => $payment->currency,
+            'payment_date' => optional($payment->payment_date)->toIso8601String(),
+            'transaction_reference' => $payment->transaction_reference,
+            'payment_status' => $payment->payment_status,
+            'customer_uuid' => $payment->customer?->uuid,
+            'partner_id' => $payment->partner_id,
+        ]);
     }
 
     #[OA\Get(path: '/api/v1/reports/customer-acquisition', summary: 'Customer acquisition report', security: [['sanctum' => []]], tags: ['Reports'], responses: [new OA\Response(response: 200, description: 'OK')])]
@@ -259,9 +283,17 @@ class AdminController extends BaseApiController
     public function revenueByProductReport(): JsonResponse
     {
         $rows = Payment::query()
-            ->selectRaw('users.product_id, sum(amount) as total')
-            ->join('users', 'users.id', '=', 'payments.customer_id')
-            ->groupBy('users.product_id')
+            ->selectRaw('customers.product_id, sum(payments.amount) as total')
+            ->join('users as customers', 'customers.id', '=', 'payments.customer_id')
+            ->whereExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('model_has_roles')
+                    ->whereColumn('model_has_roles.model_id', 'customers.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->where('roles.name', 'customer');
+            })
+            ->groupBy('customers.product_id')
             ->get();
 
         return $this->success($rows);
@@ -308,6 +340,8 @@ class AdminController extends BaseApiController
     )]
     public function storeProduct(StoreProductRequest $request): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $validated = $request->validated();
 
         $product = DB::transaction(function () use ($validated) {
@@ -368,6 +402,8 @@ class AdminController extends BaseApiController
     )]
     public function updateProduct(UpdateProductRequest $request, Product $product): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         $validated = $request->validated();
 
         DB::transaction(function () use ($validated, $product): void {
@@ -398,8 +434,10 @@ class AdminController extends BaseApiController
     }
 
     #[OA\Delete(path: '/api/v1/products/{product}', summary: 'Delete product', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 422, description: 'Validation')])]
-    public function deleteProduct(Product $product): JsonResponse
+    public function deleteProduct(Request $request, Product $product): JsonResponse
     {
+        $this->ensureAdminActor($request);
+
         if ($product->customers()->where('status', 'active')->exists()) {
             return $this->error('PRODUCT_HAS_ACTIVE_CUSTOMERS', 'Cannot delete product with active customers.', status: 422);
         }
@@ -578,7 +616,11 @@ class AdminController extends BaseApiController
     {
         $this->ensureAdminActor($request);
 
+        $actor = $request->user();
         $validated = $request->validated();
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return $this->error('ROLE_ASSIGNMENT_FORBIDDEN', 'Admins cannot assign the super_admin role.', status: 403);
+        }
 
         $user = User::query()->create([
             'name' => $validated['name'],
@@ -618,7 +660,15 @@ class AdminController extends BaseApiController
     {
         $this->ensureAdminActor($request);
 
+        $actor = $request->user();
+        if (! $this->canManageUser($actor, $user)) {
+            return $this->error('USER_UPDATE_FORBIDDEN', 'You are not allowed to update this user.', status: 403);
+        }
+
         $validated = $request->validated();
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return $this->error('ROLE_ASSIGNMENT_FORBIDDEN', 'Admins cannot assign the super_admin role.', status: 403);
+        }
 
         $old = $user->only(['name', 'email', 'is_active']);
         $user->update($validated);
@@ -641,8 +691,8 @@ class AdminController extends BaseApiController
         $this->ensureAdminActor($request);
 
         $actor = $request->user();
-        if ($actor && (int) $actor->id === (int) $user->id) {
-            return $this->error('SELF_DELETE_FORBIDDEN', 'You cannot delete your own account.', status: 403);
+        if (! $this->canManageUser($actor, $user)) {
+            return $this->error('USER_DELETE_FORBIDDEN', 'You are not allowed to delete this user.', status: 403);
         }
 
         $user->delete();
@@ -655,10 +705,32 @@ class AdminController extends BaseApiController
     {
         $roles = Role::query()->with('permissions')->orderBy('name')->get();
         $permissions = Permission::query()->orderBy('name')->get();
+        $permissionNames = collect(config('admin_portal.permissions', []))
+            ->filter(fn ($permission): bool => is_string($permission) && $permission !== '')
+            ->values();
+        $matrix = $permissionNames->map(function (string $permission) use ($roles): array {
+            $allowed = [];
+            foreach ($roles as $role) {
+                $allowed[$role->name] = $role->hasPermissionTo($permission);
+            }
+
+            return [
+                'permission' => $permission,
+                'function' => str_replace(['.', '_'], ' ', $permission),
+                'allowed' => $allowed,
+            ];
+        })->values();
 
         return $this->success([
             'roles' => $roles,
             'permissions' => $permissions,
+            'permission_matrix' => [
+                'roles' => $roles->map(fn (Role $role): array => [
+                    'name' => $role->name,
+                    'label' => (string) data_get(config('admin_portal.roles'), "{$role->name}.label", str_replace('_', ' ', $role->name)),
+                ])->values(),
+                'rows' => $matrix,
+            ],
         ]);
     }
 
@@ -682,7 +754,14 @@ class AdminController extends BaseApiController
         $this->ensureAdminActor($request);
 
         $actor = $request->user();
+        if (! $this->canManageUser($actor, $user)) {
+            return $this->error('ACCESS_CONTROL_FORBIDDEN', 'You are not allowed to change access control for this user.', status: 403);
+        }
+
         $validated = $request->validated();
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return $this->error('ROLE_ASSIGNMENT_FORBIDDEN', 'Admins cannot assign the super_admin role.', status: 403);
+        }
 
         DB::transaction(function () use ($validated, $user): void {
             $user->syncRoles([$validated['role']]);
@@ -690,7 +769,7 @@ class AdminController extends BaseApiController
         });
         AuditLog::record('admin_user_access_control_updated', $user, [], [
             'role' => $user->getRoleNames()->first(),
-            'permissions' => $user->getAllPermissions()->pluck('name')->values()->all(),
+            'permissions' => $user->getPermissionsViaRoles()->pluck('name')->unique()->values()->all(),
         ], $actor);
 
         return $this->success($user->fresh(['roles', 'permissions', 'profile']));
@@ -738,5 +817,30 @@ class AdminController extends BaseApiController
     private function ensureAdminActor(Request $request): void
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+    }
+
+    private function canManageUser(?User $actor, User $target): bool
+    {
+        if (! $actor) {
+            return false;
+        }
+        if ((int) $actor->id === (int) $target->id) {
+            return false;
+        }
+
+        if ($actor->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($actor->hasRole('admin')) {
+            return ! $target->hasRole('super_admin');
+        }
+
+        return false;
+    }
+
+    private function isAdminButNotSuperAdmin(?User $actor): bool
+    {
+        return (bool) ($actor?->hasRole('admin') && ! $actor?->hasRole('super_admin'));
     }
 }

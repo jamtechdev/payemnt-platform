@@ -16,44 +16,70 @@ use OpenApi\Attributes as OA;
 class CustomerController extends BaseApiController
 {
     #[OA\Post(
-        path: '/api/v1/customers',
-        operationId: 'partnerCustomerStore',
-        summary: 'Submit customer',
+        path: '/api/v1/partner/customers',
+        operationId: 'partnerSubmitCustomer',
+        summary: 'Submit customer (partner API)',
+        description: 'Preferred partner endpoint. Uses Bearer token from a partner Sanctum token.',
         security: [['sanctum' => []]],
         tags: ['Customers'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['partner_id', 'product_id', 'customer_data', 'payment'],
-                properties: [
-                    new OA\Property(property: 'partner_id', type: 'integer'),
-                    new OA\Property(property: 'product_id', type: 'integer'),
-                    new OA\Property(property: 'customer_data', type: 'object', additionalProperties: true),
-                    new OA\Property(
-                        property: 'payment',
-                        type: 'object',
-                        required: ['amount', 'currency', 'payment_date', 'transaction_reference'],
-                        properties: [
-                            new OA\Property(property: 'amount', type: 'number', format: 'float'),
-                            new OA\Property(property: 'currency', type: 'string'),
-                            new OA\Property(property: 'payment_date', type: 'string', format: 'date-time'),
-                            new OA\Property(property: 'transaction_reference', type: 'string'),
-                        ]
-                    ),
-                ]
-            )
-        ),
-        responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 422, description: 'Validation error')]
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PartnerSubmitCustomer'),
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Created',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(property: 'customer_uuid', type: 'string', format: 'uuid'),
+                                new OA\Property(property: 'customer_id', type: 'string', description: 'Same as customer_uuid (stable external id)'),
+                                new OA\Property(property: 'message', type: 'string'),
+                            ],
+                            type: 'object'
+                        ),
+                        new OA\Property(property: 'meta', type: 'object'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
     )]
-    public function store(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
+    public function storePartnerCustomer(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
+    {
+        return $this->submitCustomer($request, $ingestionService);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/customers',
+        operationId: 'partnerSubmitCustomerAlias',
+        summary: 'Submit customer (alias path)',
+        deprecated: true,
+        description: 'Same behavior as POST /api/v1/partner/customers. Prefer the /partner/customers path.',
+        security: [['sanctum' => []]],
+        tags: ['Customers'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PartnerSubmitCustomer'),
+        responses: [
+            new OA\Response(response: 201, description: 'Created'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    public function storePartnerCustomerAlias(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
+    {
+        return $this->submitCustomer($request, $ingestionService);
+    }
+
+    private function submitCustomer(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
     {
         try {
             $partner = $request->attributes->get('partner');
             $customer = $ingestionService->createCustomer($request->validated(), $partner);
+            $customer->refresh();
 
             return $this->success([
-                'customer_id' => $customer->uuid,
                 'customer_uuid' => $customer->uuid,
+                'customer_id' => $customer->uuid,
                 'message' => 'Customer record created successfully',
             ], 201);
         } catch (\Throwable $exception) {
@@ -186,8 +212,17 @@ class CustomerController extends BaseApiController
             'source' => 'partner_api',
             'payment' => $validated,
         ]);
+        $payment->refresh();
 
-        return $this->success($payment, 201);
+        return $this->success([
+            'payment_uuid' => $payment->uuid,
+            'customer_uuid' => $customer->uuid,
+            'transaction_reference' => $payment->transaction_reference,
+            'amount' => (float) $payment->amount,
+            'currency' => $payment->currency,
+            'payment_date' => optional($payment->payment_date)->toIso8601String(),
+            'payment_status' => $payment->payment_status,
+        ], 201);
     }
 
     #[OA\Get(

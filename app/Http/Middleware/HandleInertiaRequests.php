@@ -55,7 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'avatar_url' => $avatarUrl,
                 ] : null,
                 'role' => $role,
-                'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values()->all() : [],
+                'permissions' => $user ? $user->getPermissionsViaRoles()->pluck('name')->unique()->values()->all() : [],
                 'modules' => $role ? config("admin_portal.modules.{$role}", []) : [],
             ],
             'flash' => [

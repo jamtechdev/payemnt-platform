@@ -16,9 +16,12 @@ function asArray(input: unknown): LooseRecord[] {
     return [];
 }
 
-export default function UserManagement({ users, roles }: { users: unknown; roles: unknown }) {
+export default function UserManagement({ users, roles, permissionMatrix }: { users: unknown; roles: unknown; permissionMatrix?: unknown }) {
     const rows = asArray(users);
     const roleRows = asArray(roles);
+    const matrix = (permissionMatrix && typeof permissionMatrix === 'object' ? (permissionMatrix as LooseRecord) : {}) as LooseRecord;
+    const matrixRoles = asArray(matrix.roles);
+    const matrixRows = asArray(matrix.rows);
     const { auth } = usePage<PageProps>().props;
     const canManageUsers = auth.permissions.includes('users.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
     const roleOptions = useMemo(() => roleRows.map((r) => String(r.name ?? '')).filter(Boolean), [roleRows]);
@@ -109,6 +112,50 @@ export default function UserManagement({ users, roles }: { users: unknown; roles
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {matrixRows.length > 0 && matrixRoles.length > 0 && (
+                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <h3 className="mb-2 text-base font-semibold text-slate-900 dark:text-slate-100">Roles & Permissions Matrix</h3>
+                    <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Each row is a permission and each column is a role. Users inherit these permissions from their assigned role.</p>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full border-collapse text-sm">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-900/40">
+                                    <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Permission</th>
+                                    <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Function</th>
+                                    {matrixRoles.map((role, idx) => (
+                                        <th key={String(role.name ?? idx)} className="border border-slate-200 px-3 py-2 text-center font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                            {String(role.label ?? role.name ?? '-')}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {matrixRows.map((item, idx) => {
+                                    const allowed = (item.allowed && typeof item.allowed === 'object' ? (item.allowed as LooseRecord) : {}) as LooseRecord;
+                                    return (
+                                        <tr key={String(item.permission ?? idx)} className="odd:bg-white even:bg-slate-50/50 dark:odd:bg-slate-800 dark:even:bg-slate-800/60">
+                                            <td className="border border-slate-200 px-3 py-2 text-slate-800 dark:border-slate-700 dark:text-slate-100">{String(item.permission ?? '-')}</td>
+                                            <td className="border border-slate-200 px-3 py-2 text-slate-600 dark:border-slate-700 dark:text-slate-300">{String(item.function ?? '-')}</td>
+                                            {matrixRoles.map((role, roleIdx) => {
+                                                const enabled = Boolean(allowed[String(role.name ?? '')]);
+                                                return (
+                                                    <td key={`${String(item.permission ?? idx)}-${String(role.name ?? roleIdx)}`} className="border border-slate-200 px-3 py-2 text-center dark:border-slate-700">
+                                                        <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold ${enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                                            {enabled ? 'Y' : '-'}
+                                                        </span>
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

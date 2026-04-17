@@ -39,9 +39,7 @@ class Partner extends User
             if (! $partner->uuid) {
                 $partner->uuid = (string) Str::uuid();
             }
-            if (! $partner->slug) {
-                $partner->slug = Str::slug($partner->name.'-'.$partner->uuid);
-            }
+            $partner->slug = Str::slug($partner->name.'-'.$partner->uuid);
             if (! $partner->password) {
                 $partner->password = bcrypt(Str::random(24));
             }

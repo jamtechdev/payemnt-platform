@@ -86,7 +86,7 @@ class PartnerApiTest extends TestCase
         $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/partner/customers', $payload)
             ->assertStatus(201)
-            ->assertJsonStructure(['status', 'data' => ['customer_id', 'message']]);
+            ->assertJsonStructure(['status', 'data' => ['customer_id', 'customer_uuid', 'message']]);
     }
 
     public function test_rate_limit_returns_429_with_retry_after_header(): void
