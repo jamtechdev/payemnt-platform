@@ -19,6 +19,14 @@ class SubmitCustomerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $partner = $this->attributes->get('partner');
+        if ($partner && ! $this->filled('partner_id')) {
+            $this->merge(['partner_id' => $partner->id]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -33,7 +41,7 @@ class SubmitCustomerRequest extends FormRequest
                 'required',
                 'integer',
                 Rule::exists('users', 'id'),
-                Rule::in([$partner?->id]),
+                Rule::in([(int) $partner?->id]),
             ],
             'product_id' => [
                 'required',
@@ -47,7 +55,7 @@ class SubmitCustomerRequest extends FormRequest
             'payment' => ['required', 'array'],
             'payment.amount' => ['required', 'numeric', 'min:0'],
             'payment.currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'payment.payment_date' => ['required', 'date', 'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+\-]\d{2}:\d{2})$/'],
+            'payment.payment_date' => ['required', 'date'],
             'payment.transaction_reference' => ['required', 'string', 'unique:payments,transaction_reference'],
         ];
     }

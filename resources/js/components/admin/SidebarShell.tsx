@@ -2,6 +2,7 @@ import FlashMessage from '@/components/shared/FlashMessage';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { PageProps } from '@/Types';
 import { ReactNode, useEffect, useState } from 'react';
+import { Toaster } from 'sonner';
 import AdminFooter from './AdminFooter';
 import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
@@ -38,6 +39,7 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
 
     return (
         <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-[#f2fffb] to-slate-100">
+            <Toaster richColors position="top-right" closeButton />
             <div className="flex h-full">
                 <AdminSidebar url={url} navItems={navItems} collapsed={collapsed} className="hidden" />
 

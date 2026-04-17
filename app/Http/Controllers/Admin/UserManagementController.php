@@ -12,15 +12,22 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
     public function index(): Response
     {
+        $roles = Role::query()->with('permissions:id,name')->orderBy('name')->get(['id', 'name']);
+        $permissions = collect(config('admin_portal.permissions', []))
+            ->filter(fn ($permission): bool => is_string($permission) && $permission !== '')
+            ->values();
+
         return Inertia::render('Admin/SuperAdmin/UserManagement', [
             'users' => User::query()->with(['roles'])->paginate(15),
-            'roles' => Role::query()->orderBy('name')->get(['id', 'name']),
+            'roles' => $roles->map(fn (Role $role) => ['id' => $role->id, 'name' => $role->name])->values(),
+            'permissionMatrix' => $this->buildPermissionMatrix($roles, $permissions),
         ]);
     }
 
@@ -34,6 +41,10 @@ class UserManagementController extends Controller
             'role' => ['required', Rule::in(Role::query()->pluck('name')->all())],
             'password' => ['nullable', 'string', 'min:12'],
         ]);
+        $actor = $request->user();
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return back()->with('error', 'Admins cannot assign the super_admin role.');
+        }
 
         $user = User::query()->create([
             'name' => $validated['name'],
@@ -50,6 +61,10 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $this->ensureAdminActor($request);
+        $actor = $request->user();
+        if (! $this->canManageUser($actor, $user)) {
+            return back()->with('error', 'You are not allowed to update this user.');
+        }
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -57,6 +72,9 @@ class UserManagementController extends Controller
             'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
             'is_active' => ['nullable', 'boolean'],
         ]);
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return back()->with('error', 'Admins cannot assign the super_admin role.');
+        }
 
         $user->update(collect($validated)->except(['role'])->all());
         if (! empty($validated['role'])) {
@@ -79,10 +97,17 @@ class UserManagementController extends Controller
     public function updateAccessControl(Request $request, User $user): RedirectResponse
     {
         $this->ensureAdminActor($request);
+        $actor = $request->user();
+        if (! $this->canManageUser($actor, $user)) {
+            return back()->with('error', 'You are not allowed to change access for this user.');
+        }
 
         $validated = $request->validate([
             'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
         ]);
+        if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
+            return back()->with('error', 'Admins cannot assign the super_admin role.');
+        }
 
         if (! empty($validated['role'])) {
             $user->syncRoles([$validated['role']]);
@@ -101,8 +126,8 @@ class UserManagementController extends Controller
     {
         $this->ensureAdminActor($request);
 
-        if ((int) $request->user()->id === (int) $user->id) {
-            return back()->with('error', 'You cannot delete your own account.');
+        if (! $this->canManageUser($request->user(), $user)) {
+            return back()->with('error', 'You are not allowed to delete this user.');
         }
 
         $user->delete();
@@ -113,5 +138,64 @@ class UserManagementController extends Controller
     private function ensureAdminActor(Request $request): void
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+    }
+
+    private function canManageUser(?User $actor, User $target): bool
+    {
+        if (! $actor) {
+            return false;
+        }
+        if ((int) $actor->id === (int) $target->id) {
+            return false;
+        }
+
+        if ($actor->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($actor->hasRole('admin')) {
+            return ! $target->hasRole('super_admin');
+        }
+
+        return false;
+    }
+
+    private function isAdminButNotSuperAdmin(?User $actor): bool
+    {
+        return (bool) ($actor?->hasRole('admin') && ! $actor?->hasRole('super_admin'));
+    }
+
+    /**
+     * @param Collection<int,Role> $roles
+     * @param Collection<int,string> $permissions
+     * @return array{roles: list<array{name:string,label:string}>, rows: list<array{permission:string,function:string,allowed: array<string,bool>}>}
+     */
+    private function buildPermissionMatrix(Collection $roles, Collection $permissions): array
+    {
+        $roleColumns = $roles
+            ->map(fn (Role $role): array => [
+                'name' => $role->name,
+                'label' => (string) data_get(config('admin_portal.roles'), "{$role->name}.label", str_replace('_', ' ', $role->name)),
+            ])
+            ->values()
+            ->all();
+
+        $rows = $permissions->map(function (string $permission) use ($roles): array {
+            $allowed = [];
+            foreach ($roles as $role) {
+                $allowed[$role->name] = $role->permissions->pluck('name')->contains($permission);
+            }
+
+            return [
+                'permission' => $permission,
+                'function' => (string) str_replace(['.', '_'], ' ', $permission),
+                'allowed' => $allowed,
+            ];
+        })->values()->all();
+
+        return [
+            'roles' => $roleColumns,
+            'rows' => $rows,
+        ];
     }
 }

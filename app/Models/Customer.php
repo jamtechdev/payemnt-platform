@@ -60,7 +60,7 @@ class Customer extends User
         static::creating(function (Customer $customer): void {
             $customer->uuid = $customer->uuid ?? (string) Str::uuid();
             $customer->name = trim(($customer->first_name ?? '').' '.($customer->last_name ?? ''));
-            $customer->slug = $customer->slug ?? Str::slug($customer->name.'-'.$customer->uuid);
+            $customer->slug = Str::slug($customer->name.'-'.$customer->uuid);
             $customer->status = $customer->status ?? 'active';
             if (! $customer->password) {
                 $customer->password = Hash::make(Str::random(24));
