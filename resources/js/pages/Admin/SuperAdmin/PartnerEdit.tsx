@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
+import React from 'react';
 
 export default function PartnerEdit({ partner }: any) {
     const { data, setData, patch, processing, errors } = useForm({
@@ -8,6 +9,10 @@ export default function PartnerEdit({ partner }: any) {
         email: partner.email || '',
         phone: partner.phone || '',
         status: partner.status || 'active',
+
+        // optional password fields
+        password: '',
+        password_confirmation: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -67,6 +72,29 @@ export default function PartnerEdit({ partner }: any) {
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
+                    </div>
+
+                    {/* Password (optional) */}
+                    <div>
+                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">New Password (optional)</label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                        />
+                        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Confirm Password</label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                        />
                     </div>
 
                     {/* Button */}

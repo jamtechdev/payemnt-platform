@@ -1,12 +1,15 @@
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
+import React from 'react';
 
 export default function PartnerCreate() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         phone: '',
+        password: '',
+        password_confirmation: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -52,6 +55,30 @@ export default function PartnerCreate() {
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
+                        />
+                        {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                        />
+                        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
                         />
                     </div>
 

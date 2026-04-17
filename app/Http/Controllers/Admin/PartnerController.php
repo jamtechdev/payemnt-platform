@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
 
 class PartnerController extends Controller
 {
@@ -45,19 +46,19 @@ class PartnerController extends Controller
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         $partner = Partner::create([
-            'name' => $request->string('name')->toString(),
-            'slug' => Str::slug($request->string('name')->toString()),
-            'email' => $request->string('email')->toString(),
-            'phone' => $request->input('phone'),
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
             'status' => 'active',
         ]);
 
-        // Role assign alag se karo (safe way)
         $partner->assignRole('partner');
 
         return redirect()
             ->route('admin.partners.index')
-            ->with('success', 'Partner created.');
+            ->with('success', 'Partner created successfully.');
     }
 
     public function show(Partner $partner): Response
@@ -87,12 +88,19 @@ class PartnerController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $partner->update([
-            'name' => $request->string('name')->toString(),
-            'email' => $request->string('email')->toString(),
-            'phone' => $request->input('phone'),
-            'status' => $request->input('status', 'inactive'),
-        ]);
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'status' => $request->status ?? 'inactive',
+        ];
+
+        // 🔐 ONLY UPDATE IF PASSWORD FILLED
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $partner->update($data);
 
         return redirect()
             ->route('admin.partners.index')
