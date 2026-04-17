@@ -2,8 +2,8 @@ import AuthSplitLayout from '@/components/auth/AuthSplitLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link, useForm, usePage } from '@inertiajs/react';
 import { PageProps } from '@/Types';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,7 +32,7 @@ export default function Login() {
                     </div>
                 )}
                 <form
-                    className="space-y-5 rounded-2xl border border-border/80 bg-card/95 p-6 text-card-foreground shadow-[0_20px_50px_rgba(2,6,23,0.12)] ring-1 ring-primary/5 backdrop-blur md:p-8"
+                    className="space-y-5 rounded-2xl border border-[#cdebe4] border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(2,6,23,0.08)] backdrop-blur dark:bg-gray-800/95"
                     onSubmit={(e) => {
                         e.preventDefault();
                         post(route('login'));
@@ -41,7 +41,7 @@ export default function Login() {
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <div className="relative">
-                            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <Input
                                 id="email"
                                 type="email"
@@ -50,6 +50,7 @@ export default function Login() {
                                 className="h-11 bg-background/80 pl-10"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
+                                placeholder="Enter Email.."
                             />
                         </div>
                         {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
@@ -57,7 +58,7 @@ export default function Login() {
                     <div className="space-y-2">
                         <Label htmlFor="password">Password</Label>
                         <div className="relative">
-                            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Lock className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <Input
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
@@ -66,11 +67,12 @@ export default function Login() {
                                 className="h-11 bg-background/80 px-10"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
+                                placeholder="Enter Password"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword((prev) => !prev)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                             >
                                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

@@ -40,14 +40,27 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <Link className={`inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70 ${!canEdit ? 'pointer-events-none opacity-50' : ''}`} href={route('admin.products.edit', id)} aria-label="Edit product" title="Edit">
-                            <Pencil className="h-3.5 w-3.5" />
+                        <Link
+                            className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`}
+                            href={route('admin.products.edit', id)}
+                        >
+                            Edit
                         </Link>
                         <Link className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70" href={route('admin.products.versions', id)} aria-label="Product versions" title="Versions">
                             <Layers className="h-3.5 w-3.5" />
                         </Link>
-                        <button className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.products.destroy', id))} disabled={!canDelete} aria-label="Delete product" title="Delete">
-                            <Trash2 className="h-3.5 w-3.5" />
+                        <button
+                            className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => {
+                                if (confirm('Are you sure you want to delete this product?')) {
+                                    router.delete(route('admin.products.destroy', id), {
+                                        preserveScroll: true,
+                                    });
+                                }
+                            }}
+                            disabled={!canDelete}
+                        >
+                            Delete
                         </button>
                     </div>
                 );

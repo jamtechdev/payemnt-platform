@@ -74,7 +74,7 @@ class ProductController extends Controller
             );
         }
 
-        return back()->with('success', 'Product updated.');
+        return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -84,9 +84,10 @@ class ProductController extends Controller
         if ($product->customers()->where('status', 'active')->exists()) {
             return back()->with('error', 'Cannot delete product with active customers.');
         }
+
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
+        return back()->with('success', 'Product deleted.');
     }
 
     public function togglePartnerAccess(Request $request, Product $product): RedirectResponse

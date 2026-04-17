@@ -42,11 +42,27 @@ export default function PartnerList({ partners }: { partners: unknown }) {
                         <button className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70" onClick={() => router.visit(route('admin.partners.show', id))} aria-label="View partner" title="View">
                             <Eye className="h-3.5 w-3.5" />
                         </button>
-                        <button className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.visit(route('admin.partners.edit', id))} disabled={!canEdit} aria-label="Edit partner" title="Edit">
-                            <Pencil className="h-3.5 w-3.5" />
+                        <button
+                            className="text-[#0e9f84] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => router.visit(route('admin.partners.edit', id))}
+                            disabled={!canEdit}
+                        >
+                            Edit
                         </button>
-                        <button className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.delete(route('admin.partners.destroy', id))} disabled={!canDelete} aria-label="Delete partner" title="Delete">
-                            <Trash2 className="h-3.5 w-3.5" />
+                        <button
+                            className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => {
+                                const confirmed = confirm('Are you sure you want to delete this partner? This action cannot be undone.');
+
+                                if (!confirmed) return;
+
+                                router.delete(route('admin.partners.destroy', id), {
+                                    preserveScroll: true,
+                                });
+                            }}
+                            disabled={!canDelete}
+                        >
+                            Delete
                         </button>
                     </div>
                 );
@@ -57,8 +73,12 @@ export default function PartnerList({ partners }: { partners: unknown }) {
     return (
         <AdminLayout title="Partners">
             <div className="mb-4 flex justify-end">
-                <Button onClick={() => router.post(route('admin.partners.store'), { name: 'New Partner', email: `partner${Date.now()}@local.test`, phone: null })} disabled={!canCreate}>
-                    Quick Create Partner
+                <Button
+                    className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]"
+                    onClick={() => router.visit(route('admin.partners.create'))}
+                    disabled={!canCreate}
+                >
+                    Create Partner
                 </Button>
             </div>
             <DataTable columns={columns} data={rows} stripedRows showRowCount emptyMessage="No partners yet." stickyHeader compact />

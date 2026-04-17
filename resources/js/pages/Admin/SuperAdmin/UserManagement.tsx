@@ -1,9 +1,9 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import EntityListCard from '@/components/admin/EntityListCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { router, usePage } from '@inertiajs/react';
+import AdminLayout from '@/layouts/AdminLayout';
 import { PageProps } from '@/Types';
+import { router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 type LooseRecord = Record<string, unknown>;
@@ -85,14 +85,14 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                         key: String(row.id ?? idx),
                         content: (
                             <div className="space-y-4">
-                                <div className="flex md:items-center items-start justify-between flex-col md:flex-row gap-4">
+                                <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                                     <div>
-                                        <p className="font-medium text-foreground">{String(row.name ?? 'Unknown')}</p>
-                                        <p className="text-sm text-muted-foreground">{String(row.email ?? '-')}</p>
-                                        <p className="mt-1 text-xs text-muted-foreground">Role: {roleName || '-'}</p>
+                                        <p className="font-medium text-slate-900 dark:text-slate-100">{String(row.name ?? 'Unknown')}</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{String(row.email ?? '-')}</p>
+                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Role: {roleName || '-'}</p>
                                     </div>
-                                    <Badge variant="outline" className="w-fit border-primary/25 bg-primary/10 text-primary">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
-                                    <div className="flex md:items-center items-start gap-2 flex-col md:flex-row">
+                                    <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
+                                    <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -111,7 +111,12 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => router.delete(route('admin.users.destroy', userId))}
+                                            onClick={() => {
+                                                const ok = window.confirm('Are you sure you want to delete this user? This action cannot be undone.');
+                                                if (!ok) return;
+
+                                                router.delete(route('admin.users.destroy', userId));
+                                            }}
                                             disabled={!canManageTargetUser(row)}
                                         >
                                             Delete
@@ -140,23 +145,32 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                 )}
 
                                 {openPermissionUserId === userId && (
-                                    <div className="rounded-lg border border-border p-3 bg-background/60">
-                                        <p className="mb-2 text-sm font-medium text-foreground">Effective permissions</p>
-                                        <p className="mb-3 text-xs text-muted-foreground">
+                                    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700/40">
+                                        <p className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">Effective permissions</p>
+                                        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
                                             Showing permissions for role <span className="font-semibold">{roleName || '-'}</span>.
                                         </p>
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full border-collapse text-sm">
                                                 <thead>
                                                     <tr className="bg-slate-50 dark:bg-slate-900/40">
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Permission</th>
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">Function</th>
+                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                                            Permission
+                                                        </th>
+                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                                            Function
+                                                        </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {rolePermissions.map((permission) => (
-                                                        <tr key={`${userId}-${permission}`} className="odd:bg-white even:bg-slate-50/50 dark:odd:bg-slate-800 dark:even:bg-slate-800/60">
-                                                            <td className="border border-slate-200 px-3 py-2 text-slate-800 dark:border-slate-700 dark:text-slate-100">{permission}</td>
+                                                        <tr
+                                                            key={`${userId}-${permission}`}
+                                                            className="odd:bg-white even:bg-slate-50/50 dark:odd:bg-slate-800 dark:even:bg-slate-800/60"
+                                                        >
+                                                            <td className="border border-slate-200 px-3 py-2 text-slate-800 dark:border-slate-700 dark:text-slate-100">
+                                                                {permission}
+                                                            </td>
                                                             <td className="border border-slate-200 px-3 py-2 text-slate-600 dark:border-slate-700 dark:text-slate-300">
                                                                 {permission.replaceAll('.', ' ').replaceAll('_', ' ')}
                                                             </td>
@@ -164,7 +178,10 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                                     ))}
                                                     {rolePermissions.length === 0 && (
                                                         <tr>
-                                                            <td colSpan={2} className="border border-slate-200 px-3 py-2 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                                            <td
+                                                                colSpan={2}
+                                                                className="border border-slate-200 px-3 py-2 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                                                            >
                                                                 No permissions found for this role.
                                                             </td>
                                                         </tr>

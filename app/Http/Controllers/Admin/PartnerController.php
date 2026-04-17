@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
 
 class PartnerController extends Controller
 {
@@ -21,19 +22,43 @@ class PartnerController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/PartnerCreate');
+    }
+
+    // public function store(StorePartnerRequest $request): RedirectResponse
+    // {
+    //     abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+    //     Partner::query()->create([
+    //         'name' => $request->string('name')->toString(),
+    //         'slug' => Str::slug($request->string('name')->toString()),
+    //         'email' => $request->string('email')->toString(),
+    //         'phone' => $request->input('phone'),
+    //         'status' => 'active',
+    //     ])->syncRoles(['partner']);
+
+    //     return redirect()->route('admin.partners.index')->with('success', 'Partner created.');
+    // }
     public function store(StorePartnerRequest $request): RedirectResponse
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        Partner::query()->create([
-            'name' => $request->string('name')->toString(),
-            'slug' => Str::slug($request->string('name')->toString()),
-            'email' => $request->string('email')->toString(),
-            'phone' => $request->input('phone'),
+        $partner = Partner::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
             'status' => 'active',
-        ])->syncRoles(['partner']);
+        ]);
 
-        return redirect()->route('admin.partners.index')->with('success', 'Partner created.');
+        $partner->assignRole('partner');
+
+        return redirect()
+            ->route('admin.partners.index')
+            ->with('success', 'Partner created successfully.');
     }
 
     public function show(Partner $partner): Response
@@ -45,16 +70,41 @@ class PartnerController extends Controller
 
     public function edit(Partner $partner): Response
     {
-        return $this->show($partner);
+        return Inertia::render('Admin/SuperAdmin/PartnerEdit', [
+            'partner' => $partner,
+        ]);
     }
+
+    // public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse
+    // {
+    //     abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+    //     $partner->update($request->only(['name', 'email', 'phone', 'status']));
+
+    //     return back()->with('success', 'Partner updated.');
+    // }
 
     public function update(UpdatePartnerRequest $request, Partner $partner): RedirectResponse
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $partner->update($request->only(['name', 'email', 'phone', 'status']));
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'status' => $request->status ?? 'inactive',
+        ];
 
-        return back()->with('success', 'Partner updated.');
+        // 🔐 ONLY UPDATE IF PASSWORD FILLED
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $partner->update($data);
+
+        return redirect()
+            ->route('admin.partners.index')
+            ->with('success', 'Partner updated successfully.');
     }
 
     public function toggleStatus(Partner $partner): RedirectResponse
