@@ -50,6 +50,10 @@ Route::prefix('v1')
         Route::get('/customers', [AdminController::class, 'customers'])
             ->middleware('permission:customers.view_list')
             ->name('customers.index');
+        // BRD open question 4: expiring covers — must be BEFORE {uuid} route
+        Route::get('/customers/expiring', [AdminController::class, 'expiringCustomers'])
+            ->middleware('permission:customers.view_list')
+            ->name('customers.expiring');
         Route::post('/customers/admin', [AdminController::class, 'storeCustomer'])
             ->middleware(['permission:customers.create', 'role:admin|super_admin'])
             ->name('customers.store');

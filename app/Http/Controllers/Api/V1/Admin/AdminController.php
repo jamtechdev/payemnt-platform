@@ -260,6 +260,32 @@ class AdminController extends BaseApiController
         ]);
     }
 
+    #[OA\Get(path: '/api/v1/customers/expiring', summary: 'List customers with covers expiring within 30 days', security: [['sanctum' => []]], tags: ['Customers'], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function expiringCustomers(Request $request): JsonResponse
+    {
+        $query = Customer::query()
+            ->expiringSoon()
+            ->with(['partner:id,name,uuid', 'product:id,name,uuid']);
+
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
+        }
+
+        $customers = $query->get()->map(fn (Customer $c) => [
+            'uuid' => $c->uuid,
+            'customer_id' => 'CUST_'.str_pad((string) $c->id, 6, '0', STR_PAD_LEFT),
+            'full_name' => $c->full_name,
+            'email' => $c->email,
+            'phone' => $c->phone,
+            'cover_end_date' => optional($c->cover_end_date)->toDateString(),
+            'days_remaining' => (int) now()->diffInDays($c->cover_end_date, false),
+            'partner_name' => $c->partner?->name,
+            'product_name' => $c->product?->name,
+        ]);
+
+        return $this->success($customers);
+    }
+
     #[OA\Get(path: '/api/v1/reports/customer-acquisition', summary: 'Customer acquisition report', security: [['sanctum' => []]], tags: ['Reports'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function customerAcquisitionReport(Request $request): JsonResponse
     {
@@ -270,33 +296,56 @@ class AdminController extends BaseApiController
             default => '%Y-%m',
         };
 
-        $rows = Customer::query()
-            ->selectRaw("product_id, DATE_FORMAT(created_at, '{$format}') as bucket, count(*) as total")
-            ->groupBy('product_id', 'bucket')
-            ->orderBy('bucket')
-            ->get();
+        $query = Customer::query()
+            ->selectRaw("product_id, partner_id, DATE_FORMAT(created_at, '{$format}') as bucket, count(*) as total")
+            ->groupBy('product_id', 'partner_id', 'bucket')
+            ->orderBy('bucket');
 
-        return $this->success($rows);
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->string('date_from')->toString());
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->string('date_to')->toString());
+        }
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
+        }
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->integer('product_id'));
+        }
+
+        return $this->success($query->get());
     }
 
     #[OA\Get(path: '/api/v1/reports/revenue-by-product', summary: 'Revenue by product report', security: [['sanctum' => []]], tags: ['Reports'], responses: [new OA\Response(response: 200, description: 'OK')])]
-    public function revenueByProductReport(): JsonResponse
+    public function revenueByProductReport(Request $request): JsonResponse
     {
-        $rows = Payment::query()
-            ->selectRaw('customers.product_id, sum(payments.amount) as total')
+        $query = Payment::query()
+            ->selectRaw('customers.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
             ->join('users as customers', 'customers.id', '=', 'payments.customer_id')
-            ->whereExists(function ($query): void {
-                $query->selectRaw('1')
+            ->whereExists(function ($q): void {
+                $q->selectRaw('1')
                     ->from('model_has_roles')
                     ->whereColumn('model_has_roles.model_id', 'customers.id')
                     ->where('model_has_roles.model_type', User::class)
                     ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
                     ->where('roles.name', 'customer');
-            })
-            ->groupBy('customers.product_id')
-            ->get();
+            });
 
-        return $this->success($rows);
+        if ($request->filled('date_from')) {
+            $query->whereDate('payments.payment_date', '>=', $request->string('date_from')->toString());
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('payments.payment_date', '<=', $request->string('date_to')->toString());
+        }
+        if ($request->filled('period') && ! $request->filled('date_from')) {
+            $period = $request->string('period')->toString();
+            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.payment_date', today()))
+                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.payment_date', [now()->startOfWeek(), now()->endOfWeek()]))
+                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.payment_date', now()->month)->whereYear('payments.payment_date', now()->year));
+        }
+
+        return $this->success($query->groupBy('customers.product_id')->get());
     }
 
     #[OA\Get(path: '/api/v1/products', summary: 'List products', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'OK')])]

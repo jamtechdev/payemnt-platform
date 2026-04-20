@@ -19,48 +19,12 @@ class AdminAuthController extends Controller
      *
      * @var list<string>
      */
-    private const ALLOWED_LOGIN_ROLES = ['admin', 'super_admin'];
+    private const ALLOWED_LOGIN_ROLES = ['admin', 'super_admin', 'customer_service', 'reconciliation_admin'];
 
     public function showLogin(): Response
     {
         return Inertia::render('auth/login');
     }
-
-    // public function login(LoginRequest $request): RedirectResponse
-    // {
-    //     $credentials = $request->validated();
-    //     $user = User::query()->where('email', $credentials['email'])->first();
-
-    //     if (! Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password']])) {
-    //         if ($user) {
-    //             $user->incrementLoginAttempts();
-    //         }
-
-    //         return back()->withErrors(['email' => 'Invalid credentials.']);
-    //     }
-
-    //     $request->session()->regenerate();
-    //     /** @var User $loggedUser */
-    //     $loggedUser = Auth::user();
-    //     $loggedUser->resetLoginAttempts();
-    //     $loggedUser->forceFill(['last_login_at' => now()])->save();
-    //     AuditLog::record('login', null, [], ['event' => 'login'], $loggedUser);
-
-    //     if ($loggedUser->hasRole('customer_service')) {
-    //         return redirect()->route('admin.cs.dashboard');
-    //     }
-    //     if ($loggedUser->hasRole('reconciliation_admin')) {
-    //         return redirect()->route('admin.reports.dashboard');
-    //     }
-    //     if ($loggedUser->hasRole('super_admin')) {
-    //         return redirect()->route('admin.platform.dashboard');
-    //     }
-    //     if ($loggedUser->hasRole('admin')) {
-    //         return redirect()->route('admin.platform.dashboard');
-    //     }
-
-    //     return redirect()->route('login')->with('error', 'No valid role assigned.');
-    // }
 
     public function login(LoginRequest $request): RedirectResponse
     {
@@ -74,10 +38,15 @@ class AdminAuthController extends Controller
             ]);
         }
 
+        // AUTH-005: Check account lockout before attempting login
+        if ($user->isLocked()) {
+            return back()->withErrors([
+                'email' => 'Account is locked due to too many failed attempts. Please try again later.',
+            ]);
+        }
+
         if (! Auth::attempt($credentials)) {
-            if ($user) {
-                $user->incrementLoginAttempts();
-            }
+            $user->incrementLoginAttempts();
 
             return back()->withErrors([
                 'email' => 'Invalid credentials.',
@@ -94,13 +63,15 @@ class AdminAuthController extends Controller
 
         AuditLog::record('login', null, [], ['event' => 'login'], $loggedUser);
 
-        if ($loggedUser->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
-            return redirect()->route('admin.platform.dashboard');
+        // Role-based redirect (BRD Section 6.2)
+        if ($loggedUser->hasRole('customer_service')) {
+            return redirect()->route('admin.cs.dashboard');
+        }
+        if ($loggedUser->hasRole('reconciliation_admin')) {
+            return redirect()->route('admin.reports.dashboard');
         }
 
-        Auth::logout();
-
-        return redirect()->route('login')->with('error', 'Unauthorized access.');
+        return redirect()->route('admin.platform.dashboard');
     }
 
     public function logout(Request $request): RedirectResponse

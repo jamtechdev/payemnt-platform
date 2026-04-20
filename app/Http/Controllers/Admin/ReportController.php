@@ -6,7 +6,9 @@ use App\Http\Requests\Admin\ExportReportRequest;
 use App\Jobs\GenerateReportExportJob;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Partner;
 use App\Models\Payment;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +21,7 @@ class ReportController extends Controller
 {
     public function customerAcquisition(Request $request): Response
     {
+        // BRD REC-004: Time period filtering
         $period = $request->string('period', 'monthly')->toString();
         $format = match ($period) {
             'daily' => '%Y-%m-%d',
@@ -26,13 +29,43 @@ class ReportController extends Controller
             default => '%Y-%m',
         };
 
+        $query = Customer::query()
+            ->selectRaw("product_id, partner_id, DATE_FORMAT(created_at, '{$format}') as bucket, count(*) as total")
+            ->groupBy('product_id', 'partner_id', 'bucket')
+            ->orderBy('bucket');
+
+        // BRD REC-004: Custom date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->string('date_from')->toString());
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->string('date_to')->toString());
+        }
+        if ($request->filled('partner_id')) {
+            $query->where('partner_id', $request->integer('partner_id'));
+        }
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->integer('product_id'));
+        }
+
+        $rows = $query->get();
+
+        // Resolve names separately to avoid with() on grouped selectRaw
+        $partnerNames = Partner::query()->pluck('name', 'id');
+        $productNames = Product::query()->pluck('name', 'id');
+
+        $rows = $rows->map(fn ($row) => [
+            'product_id' => $row->product_id,
+            'product_name' => $productNames[$row->product_id] ?? 'Product #'.$row->product_id,
+            'partner_id' => $row->partner_id,
+            'partner_name' => $partnerNames[$row->partner_id] ?? 'Partner #'.$row->partner_id,
+            'bucket' => $row->bucket,
+            'total' => (int) $row->total,
+        ]);
+
         return Inertia::render('Admin/Reconciliation/CustomerAcquisitionReport', [
-            'rows' => Customer::query()
-                ->selectRaw("product_id, DATE_FORMAT(created_at, '{$format}') as bucket, count(*) as total")
-                ->groupBy('product_id', 'bucket')
-                ->orderBy('bucket')
-                ->get(),
-            'filters' => $request->all(),
+            'rows' => $rows,
+            'filters' => $request->only(['period', 'date_from', 'date_to', 'partner_id', 'product_id']),
         ]);
     }
 
@@ -42,10 +75,29 @@ class ReportController extends Controller
             return redirect()->route('admin.reports.dashboard')->with('error', 'Access denied.');
         }
 
+        // BRD REC-004: Time period filtering for revenue
+        $query = Payment::query()
+            ->selectRaw('users.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
+            ->join('users', 'users.id', '=', 'payments.customer_id');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('payments.payment_date', '>=', $request->string('date_from')->toString());
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('payments.payment_date', '<=', $request->string('date_to')->toString());
+        }
+        if ($request->filled('period') && ! $request->filled('date_from')) {
+            $period = $request->string('period')->toString();
+            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.payment_date', today()))
+                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.payment_date', [now()->startOfWeek(), now()->endOfWeek()]))
+                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.payment_date', now()->month)->whereYear('payments.payment_date', now()->year));
+        }
+
+        $rows = $query->groupBy('users.product_id')->get();
+
         return Inertia::render('Admin/Reconciliation/RevenueByProductReport', [
-            'rows' => Payment::query()->selectRaw('users.product_id, sum(amount) as total')
-                ->join('users', 'users.id', '=', 'payments.customer_id')
-                ->groupBy('users.product_id')->get(),
+            'rows' => $rows,
+            'filters' => $request->only(['period', 'date_from', 'date_to']),
         ]);
     }
 

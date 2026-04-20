@@ -49,6 +49,8 @@ Route::prefix('admin')
             Route::get('/customers/{uuid}', [CustomerController::class, 'show'])->name('customers.show');
             Route::post('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
             Route::get('/customers/export/{jobId}', [CustomerController::class, 'downloadExport'])->name('customers.download-export');
+            // BRD open question 4: Download expiring covers per partner
+            Route::get('/customers/export-expiring', [CustomerController::class, 'exportExpiring'])->name('customers.export-expiring');
         });
 
         Route::get('/reports/customer-acquisition', [ReportController::class, 'customerAcquisition'])
