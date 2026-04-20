@@ -17,8 +17,19 @@ class PartnerController extends Controller
 {
     public function index(): Response
     {
+        $partners = Partner::query()
+            ->withCount(['customers', 'products'])
+            ->with('tokens')
+            ->paginate(15);
+
+        // Add API key status to each partner
+        $partners->getCollection()->transform(function ($partner) {
+            $partner->api_key_status = $partner->hasActiveApiKey() ? 'active' : 'inactive';
+            return $partner;
+        });
+
         return Inertia::render('Admin/SuperAdmin/PartnerList', [
-            'partners' => Partner::query()->withCount('customers')->paginate(15),
+            'partners' => $partners,
         ]);
     }
 
@@ -56,6 +67,13 @@ class PartnerController extends Controller
 
         $partner->assignRole('partner');
 
+        // Create partner profile
+        $partner->profile()->create([
+            'company_name' => $request->name,
+            'contact_person' => $request->name,
+            'billing_email' => $request->email,
+        ]);
+
         return redirect()
             ->route('admin.partners.index')
             ->with('success', 'Partner created successfully.');
@@ -63,8 +81,36 @@ class PartnerController extends Controller
 
     public function show(Partner $partner): Response
     {
+        $partner->load([
+            'products' => function ($query) {
+                $query->withPivot(['status', 'activated_at', 'deactivated_at']);
+            },
+            'customers' => function ($query) {
+                $query->latest()->limit(10);
+            },
+            'payments' => function ($query) {
+                $query->latest()->limit(5);
+            }
+        ]);
+
+        // Get API key status
+        $apiKeyStatus = $partner->hasActiveApiKey() ? 'active' : 'inactive';
+        
+        // Get customer and revenue stats
+        $stats = [
+            'total_customers' => $partner->customers()->count(),
+            'active_customers' => $partner->customers()->whereHas('payments', function ($query) {
+                $query->where('created_at', '>=', now()->subDays(30));
+            })->count(),
+            'total_revenue' => $partner->payments()->sum('amount'),
+            'monthly_revenue' => $partner->payments()->where('created_at', '>=', now()->startOfMonth())->sum('amount'),
+            'api_key_status' => $apiKeyStatus,
+            'last_api_activity' => $partner->api_key_last_generated_at?->format('M j, Y g:i A') ?? 'Never'
+        ];
+
         return Inertia::render('Admin/SuperAdmin/PartnerDetail', [
-            'partner' => $partner->load('products'),
+            'partner' => $partner,
+            'stats' => $stats
         ]);
     }
 
@@ -128,4 +174,42 @@ class PartnerController extends Controller
 
         return redirect()->route('admin.partners.index')->with('success', 'Partner deleted.');
     }
+
+    public function generateApiKey(Partner $partner): RedirectResponse
+    {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+        $apiKey = $partner->generateApiKey();
+
+        return back()->with([
+            'success' => 'API key generated successfully.',
+            'api_key' => $apiKey,
+            'show_api_key_modal' => true
+        ]);
+    }
+
+    public function revokeApiKey(Partner $partner): RedirectResponse
+    {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+        $partner->tokens()->delete();
+
+        return back()->with('success', 'API key revoked successfully.');
+    }
+
+    public function toggleProductAccess(Partner $partner, Request $request): RedirectResponse
+    {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+        $productId = $request->input('product_id');
+        $status = $request->input('status', 'active');
+
+        $partner->products()->updateExistingPivot($productId, [
+            'status' => $status,
+            $status === 'active' ? 'activated_at' : 'deactivated_at' => now()
+        ]);
+
+        return back()->with('success', 'Product access updated successfully.');
+    }
+
 }

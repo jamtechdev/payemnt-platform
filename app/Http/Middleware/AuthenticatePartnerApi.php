@@ -36,9 +36,6 @@ class AuthenticatePartnerApi
             if (! $partner) {
                 return $this->unauthorized('Partner account not found.');
             }
-            if (! $partner->hasRole('partner')) {
-                return $this->unauthorized('User does not have partner role.');
-            }
             if (! $partner->is_active || $partner->status !== 'active') {
                 return $this->unauthorized('Partner account is inactive.');
             }

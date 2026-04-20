@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::redirect('/', '/login');
 
@@ -112,6 +113,19 @@ Route::prefix('admin')
             Route::post('partners/{partner}/toggle-status', [PartnerController::class, 'toggleStatus'])
                 ->middleware('permission:partners.edit')
                 ->name('partners.toggle-status');
+            Route::post('partners/{partner}/generate-api-key', [PartnerController::class, 'generateApiKey'])
+                ->middleware('permission:partners.edit')
+                ->name('partners.generate-api-key');
+            Route::delete('partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])
+                ->middleware('permission:partners.edit')
+                ->name('partners.revoke-api-key');
+            Route::post('partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])
+                ->middleware('permission:partners.edit')
+                ->name('partners.toggle-product-access');
+            Route::get('api-documentation', function () {
+                return Inertia::render('Admin/SuperAdmin/ApiDocumentation');
+            })->middleware('permission:dashboard.platform_overview')
+                ->name('api-documentation');
 
             Route::get('users', [UserManagementController::class, 'index'])
                 ->middleware('permission:users.view')

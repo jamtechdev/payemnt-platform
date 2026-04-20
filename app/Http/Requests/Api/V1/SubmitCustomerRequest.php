@@ -23,7 +23,7 @@ class SubmitCustomerRequest extends FormRequest
     {
         $partner = $this->attributes->get('partner');
         if ($partner && ! $this->filled('partner_id')) {
-            $this->merge(['partner_id' => $partner->id]);
+            $this->merge(['partner_id' => $partner->partner_id]); // Use formatted partner_id
         }
     }
 
