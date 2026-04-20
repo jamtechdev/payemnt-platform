@@ -8,6 +8,7 @@ use App\Events\CustomerCreated;
 use App\Models\Customer;
 use App\Models\Partner;
 use App\Models\Payment;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -21,7 +22,7 @@ class PartnerTransactionService
     public function createCustomerWithInitialPayment(array $validated, Partner $partner): Customer
     {
         return DB::transaction(function () use ($validated, $partner): Customer {
-            $customerData = $validated['customer_data'];
+            $customerData = $this->enrichBeneficiaryData($validated['customer_data']);
 
             $customer = Customer::query()->create([
                 'partner_id' => $partner->id,
@@ -76,5 +77,24 @@ class PartnerTransactionService
             'payment_status' => (string) Arr::get($payment, 'payment_status', 'success'),
             'raw_payload' => $rawPayload,
         ]);
+    }
+
+    /**
+     * Ensure beneficiary age is always derived from date of birth.
+     */
+    private function enrichBeneficiaryData(array $customerData): array
+    {
+        $dob = Arr::get($customerData, 'beneficiary_date_of_birth');
+        if (! is_string($dob) || trim($dob) === '') {
+            return $customerData;
+        }
+
+        try {
+            $customerData['beneficiary_age'] = Carbon::parse($dob)->age;
+        } catch (\Throwable) {
+            // Validation layer handles malformed DOB values.
+        }
+
+        return $customerData;
     }
 }

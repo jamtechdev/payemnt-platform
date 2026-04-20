@@ -15,6 +15,8 @@ class UpdatePartnerProductAccessRequest extends FormRequest
     {
         return [
             'status' => ['required', 'in:active,inactive'],
+            'partner_price' => ['nullable', 'numeric', 'min:0'],
+            'partner_currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
         ];
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\V1;
 
 use App\Models\Product;
+use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -25,6 +27,29 @@ class SubmitCustomerRequest extends FormRequest
         if ($partner && ! $this->filled('partner_id')) {
             $this->merge(['partner_id' => $partner->id]);
         }
+
+        $customerData = (array) $this->input('customer_data', []);
+        $duration = Arr::get($customerData, 'cover_duration');
+        if (! isset($customerData['cover_duration_months']) && is_string($duration)) {
+            $normalized = strtolower(trim($duration));
+            if ($normalized === 'monthly') {
+                $customerData['cover_duration_months'] = 1;
+            }
+            if ($normalized === 'annual') {
+                $customerData['cover_duration_months'] = 12;
+            }
+        }
+
+        $dob = Arr::get($customerData, 'beneficiary_date_of_birth');
+        if (is_string($dob) && trim($dob) !== '') {
+            try {
+                $customerData['beneficiary_age'] = Carbon::parse($dob)->age;
+            } catch (\Throwable) {
+                // Invalid dates are handled in validation.
+            }
+        }
+
+        $this->merge(['customer_data' => $customerData]);
     }
 
     /**
@@ -83,7 +108,8 @@ class SubmitCustomerRequest extends FormRequest
             foreach ($product->fields as $field) {
                 $key = "customer_data.{$field->name}";
                 $value = $payload[$field->name] ?? null;
-                if ($field->is_required && $value === null) {
+                $isAutoCalculatedAge = $field->name === 'beneficiary_age';
+                if ($field->is_required && $value === null && ! $isAutoCalculatedAge) {
                     $validator->errors()->add($key, 'This field is required.');
                     continue;
                 }

@@ -23,7 +23,7 @@ use OpenApi\Attributes as OA;
                 property: 'customer_data',
                 type: 'object',
                 additionalProperties: true,
-                description: 'Dynamic fields from the product definition (e.g. first_name, last_name, email, cover_start_date, cover_duration_months)'
+                description: 'Dynamic fields from product definition (e.g. beneficiary_first_name, beneficiary_surname, beneficiary_date_of_birth, beneficiary_gender, beneficiary_address, cover_start_date, cover_duration monthly/annual, first_name, last_name, email). beneficiary_age is auto-calculated from beneficiary_date_of_birth.'
             ),
             new OA\Property(
                 property: 'payment',

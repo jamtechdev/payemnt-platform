@@ -63,8 +63,21 @@ class PartnerController extends Controller
 
     public function show(Partner $partner): Response
     {
+        $viewer = request()->user();
+        $canViewPartnerPricing = (bool) $viewer?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
+        $partner->load('products');
+        if (! $canViewPartnerPricing) {
+            $partner->products->each(function ($product): void {
+                if ($product->pivot) {
+                    $product->pivot->partner_price = null;
+                    $product->pivot->partner_currency = null;
+                }
+            });
+        }
+
         return Inertia::render('Admin/SuperAdmin/PartnerDetail', [
-            'partner' => $partner->load('products'),
+            'partner' => $partner,
+            'canViewPartnerPricing' => $canViewPartnerPricing,
         ]);
     }
 

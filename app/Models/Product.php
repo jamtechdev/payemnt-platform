@@ -50,7 +50,7 @@ class Product extends Model
     public function partners(): BelongsToMany
     {
         return $this->belongsToMany(Partner::class, 'partner_products')
-            ->withPivot(['status', 'activated_at', 'deactivated_at'])
+            ->withPivot(['status', 'partner_price', 'partner_currency', 'activated_at', 'deactivated_at'])
             ->withTimestamps();
     }
 

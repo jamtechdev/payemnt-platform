@@ -30,6 +30,7 @@ Route::prefix('v1')
     ->middleware(['auth.partner', 'throttle:partner_api'])
     ->group(function (): void {
         Route::post('/partner/customers', [CustomerController::class, 'storePartnerCustomer'])->name('partner.customers.store');
+        Route::post('/partner/purchases', [CustomerController::class, 'storePartnerCustomer'])->name('partner.purchases.store');
         Route::post('/customers', [CustomerController::class, 'storePartnerCustomerAlias'])->name('customers.partner-submit');
         Route::get('/partner/customers/{uuid}', [CustomerController::class, 'show'])->name('partner.customers.show');
         Route::patch('/partner/customers/{uuid}/status', [CustomerController::class, 'updateStatus'])->name('partner.customers.update-status');

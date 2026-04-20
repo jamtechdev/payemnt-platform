@@ -302,7 +302,24 @@ class AdminController extends BaseApiController
     #[OA\Get(path: '/api/v1/products', summary: 'List products', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function products(Request $request): JsonResponse
     {
-        return $this->paginated(Product::query()->with('fields')->paginate((int) $request->integer('per_page', 15)));
+        $actor = $request->user();
+        $canViewPartnerPricing = $this->canViewPartnerPricing($actor);
+        $paginator = Product::query()->with(['fields', 'partners'])->paginate((int) $request->integer('per_page', 15));
+        $paginator->getCollection()->transform(function (Product $product) use ($canViewPartnerPricing) {
+            $serialized = $product->toArray();
+            $serialized['partners'] = collect($serialized['partners'] ?? [])->map(function (array $partner) use ($canViewPartnerPricing): array {
+                if (! $canViewPartnerPricing && isset($partner['pivot']) && is_array($partner['pivot'])) {
+                    $partner['pivot']['partner_price'] = null;
+                    $partner['pivot']['partner_currency'] = null;
+                }
+
+                return $partner;
+            })->all();
+
+            return $serialized;
+        });
+
+        return $this->paginated($paginator);
     }
 
     #[OA\Post(
@@ -549,7 +566,11 @@ class AdminController extends BaseApiController
             required: true,
             content: new OA\JsonContent(
                 required: ['status'],
-                properties: [new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'])]
+                properties: [
+                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive']),
+                    new OA\Property(property: 'partner_price', type: 'number', format: 'float', nullable: true),
+                    new OA\Property(property: 'partner_currency', type: 'string', nullable: true, example: 'NGN'),
+                ]
             )
         ),
         responses: [new OA\Response(response: 200, description: 'Updated')]
@@ -563,6 +584,8 @@ class AdminController extends BaseApiController
         $status = $validated['status'];
         $payload = [
             'status' => $status,
+            'partner_price' => $validated['partner_price'] ?? null,
+            'partner_currency' => $validated['partner_currency'] ?? null,
             'activated_at' => $status === 'active' ? now() : null,
             'deactivated_at' => $status === 'inactive' ? now() : null,
             'updated_at' => now(),
@@ -584,6 +607,8 @@ class AdminController extends BaseApiController
             'product_id' => $product->id,
             'product_uuid' => $product->uuid,
             'status' => $status,
+            'partner_price' => $payload['partner_price'],
+            'partner_currency' => $payload['partner_currency'],
         ]);
     }
 
@@ -842,5 +867,10 @@ class AdminController extends BaseApiController
     private function isAdminButNotSuperAdmin(?User $actor): bool
     {
         return (bool) ($actor?->hasRole('admin') && ! $actor?->hasRole('super_admin'));
+    }
+
+    private function canViewPartnerPricing(?User $actor): bool
+    {
+        return (bool) $actor?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
     }
 }

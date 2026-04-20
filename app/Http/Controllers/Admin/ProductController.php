@@ -94,12 +94,26 @@ class ProductController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
+        $validated = $request->validate([
+            'partner_id' => ['required', 'integer', 'exists:users,id'],
+            'partner_price' => ['nullable', 'numeric', 'min:0'],
+            'partner_currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+        ]);
+
         $partnerId = (int) $request->integer('partner_id');
         $existing = DB::table('partner_products')->where('partner_id', $partnerId)->where('product_id', $product->id)->first();
         $status = $existing && $existing->status === 'active' ? 'inactive' : 'active';
         DB::table('partner_products')->updateOrInsert(
             ['partner_id' => $partnerId, 'product_id' => $product->id],
-            ['status' => $status, 'activated_at' => $status === 'active' ? now() : null, 'deactivated_at' => $status === 'inactive' ? now() : null, 'updated_at' => now(), 'created_at' => now()]
+            [
+                'status' => $status,
+                'partner_price' => $validated['partner_price'] ?? null,
+                'partner_currency' => $validated['partner_currency'] ?? null,
+                'activated_at' => $status === 'active' ? now() : null,
+                'deactivated_at' => $status === 'inactive' ? now() : null,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
         );
 
         return back()->with('success', 'Partner access updated.');

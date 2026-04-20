@@ -2,10 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\Partner;
+use App\Models\Product;
+use App\Models\ProductField;
 use App\Models\User;
 use App\Models\UserProfile;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -206,6 +211,98 @@ class AdminPortalBootstrapSeeder extends Seeder
                 ['user_id' => $user->id],
                 ['job_title' => $payload['job_title'] ?? null]
             );
+        }
+
+        $this->seedBeneficiaryProducts();
+    }
+
+    private function seedBeneficiaryProducts(): void
+    {
+        $products = [
+            [
+                'name' => 'Nigerian Beneficiary Community Product',
+                'slug' => 'nigerian-beneficiary-community-product',
+                'description' => 'Community policy for Nigerian beneficiaries.',
+                'partner_currency' => 'NGN',
+            ],
+            [
+                'name' => 'Ghana Beneficiary Community Product',
+                'slug' => 'ghana-beneficiary-community-product',
+                'description' => 'Community policy for Ghanaian beneficiaries.',
+                'partner_currency' => 'GHS',
+            ],
+        ];
+
+        $fieldDefinitions = [
+            ['name' => 'beneficiary_first_name', 'label' => 'Beneficiary First Name', 'type' => 'text', 'is_required' => true, 'options' => null],
+            ['name' => 'beneficiary_surname', 'label' => 'Beneficiary Surname', 'type' => 'text', 'is_required' => true, 'options' => null],
+            ['name' => 'beneficiary_date_of_birth', 'label' => 'Beneficiary Date of Birth', 'type' => 'date', 'is_required' => true, 'options' => null],
+            ['name' => 'beneficiary_age', 'label' => 'Beneficiary Age', 'type' => 'number', 'is_required' => true, 'options' => null],
+            ['name' => 'beneficiary_gender', 'label' => 'Beneficiary Gender', 'type' => 'dropdown', 'is_required' => true, 'options' => ['male', 'female', 'other']],
+            ['name' => 'beneficiary_address', 'label' => 'Beneficiary Address', 'type' => 'textarea', 'is_required' => true, 'options' => null],
+            ['name' => 'cover_start_date', 'label' => 'Cover Start Date', 'type' => 'date', 'is_required' => true, 'options' => null],
+            ['name' => 'cover_duration', 'label' => 'Cover Duration', 'type' => 'dropdown', 'is_required' => true, 'options' => ['monthly', 'annual']],
+            ['name' => 'cover_duration_months', 'label' => 'Cover Duration Months', 'type' => 'number', 'is_required' => false, 'options' => null],
+            ['name' => 'first_name', 'label' => 'Customer First Name', 'type' => 'text', 'is_required' => true, 'options' => null],
+            ['name' => 'last_name', 'label' => 'Customer Last Name', 'type' => 'text', 'is_required' => true, 'options' => null],
+            ['name' => 'email', 'label' => 'Customer Email', 'type' => 'email', 'is_required' => true, 'options' => null],
+        ];
+
+        /** @var Partner|null $swapCircle */
+        $swapCircle = Partner::query()->where('email', 'partner.swapcircle@local.test')->first();
+
+        foreach ($products as $definition) {
+            $product = Product::query()->firstOrCreate(
+                ['slug' => $definition['slug']],
+                [
+                    'uuid' => (string) Str::uuid(),
+                    'name' => $definition['name'],
+                    'description' => $definition['description'],
+                    'status' => 'active',
+                    'cover_duration_options' => [1, 12],
+                ]
+            );
+            $product->update([
+                'name' => $definition['name'],
+                'description' => $definition['description'],
+                'status' => 'active',
+                'cover_duration_options' => [1, 12],
+            ]);
+
+            foreach ($fieldDefinitions as $index => $field) {
+                ProductField::query()->updateOrCreate(
+                    [
+                        'product_id' => $product->id,
+                        'name' => $field['name'],
+                    ],
+                    [
+                        'label' => $field['label'],
+                        'type' => $field['type'],
+                        'is_required' => $field['is_required'],
+                        'options' => $field['options'],
+                        'sort_order' => $index,
+                        'validation_rules' => null,
+                    ]
+                );
+            }
+
+            if ($swapCircle) {
+                DB::table('partner_products')->updateOrInsert(
+                    [
+                        'partner_id' => $swapCircle->id,
+                        'product_id' => $product->id,
+                    ],
+                    [
+                        'status' => 'active',
+                        'partner_price' => null,
+                        'partner_currency' => $definition['partner_currency'],
+                        'activated_at' => now(),
+                        'deactivated_at' => null,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            }
         }
     }
 }
