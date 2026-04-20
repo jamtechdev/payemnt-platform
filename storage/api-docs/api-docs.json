@@ -53,7 +53,7 @@
                 "tags": [
                     "Customers"
                 ],
-                "summary": "Submit customer (alias path)",
+                "summary": "Submit customer (alias — use /partner/customers instead)",
                 "description": "Same behavior as POST /api/v1/partner/customers. Prefer the /partner/customers path.",
                 "operationId": "partnerSubmitCustomerAlias",
                 "requestBody": {
@@ -67,7 +67,6 @@
                         "description": "Validation error"
                     }
                 },
-                "deprecated": true,
                 "security": [
                     {
                         "sanctum": []
@@ -372,6 +371,25 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/customers/expiring": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "List customers with covers expiring within 30 days",
+                "operationId": "3fb404101a13dda43ac3495fc41e1adb",
                 "responses": {
                     "200": {
                         "description": "OK"

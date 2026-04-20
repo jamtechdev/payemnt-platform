@@ -54,8 +54,7 @@ class CustomerController extends BaseApiController
     #[OA\Post(
         path: '/api/v1/customers',
         operationId: 'partnerSubmitCustomerAlias',
-        summary: 'Submit customer (alias path)',
-        deprecated: true,
+        summary: 'Submit customer (alias — use /partner/customers instead)',
         description: 'Same behavior as POST /api/v1/partner/customers. Prefer the /partner/customers path.',
         security: [['sanctum' => []]],
         tags: ['Customers'],
@@ -79,7 +78,7 @@ class CustomerController extends BaseApiController
 
             return $this->success([
                 'customer_uuid' => $customer->uuid,
-                'customer_id' => $customer->uuid,
+                'customer_id' => 'CUST_'.str_pad((string) $customer->id, 6, '0', STR_PAD_LEFT),
                 'message' => 'Customer record created successfully',
             ], 201);
         } catch (\Throwable $exception) {

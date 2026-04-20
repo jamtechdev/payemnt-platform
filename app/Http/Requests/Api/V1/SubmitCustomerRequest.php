@@ -24,8 +24,23 @@ class SubmitCustomerRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $partner = $this->attributes->get('partner');
+
+        // BRD API payload uses string partner_id like "PARTNER_001" — resolve to integer
         if ($partner && ! $this->filled('partner_id')) {
             $this->merge(['partner_id' => $partner->id]);
+        } elseif ($this->filled('partner_id') && is_string($this->input('partner_id'))) {
+            $raw = $this->input('partner_id');
+            if (preg_match('/^PARTNER_(\d+)$/i', (string) $raw, $matches)) {
+                $this->merge(['partner_id' => (int) $matches[1]]);
+            }
+        }
+
+        // BRD API payload uses string product_id like "PROD_123" — resolve to integer
+        if ($this->filled('product_id') && is_string($this->input('product_id'))) {
+            $raw = $this->input('product_id');
+            if (preg_match('/^PROD_(\d+)$/i', (string) $raw, $matches)) {
+                $this->merge(['product_id' => (int) $matches[1]]);
+            }
         }
 
         $customerData = (array) $this->input('customer_data', []);
@@ -64,7 +79,6 @@ class SubmitCustomerRequest extends FormRequest
         return [
             'partner_id' => [
                 'required',
-                'integer',
                 Rule::exists('users', 'id'),
                 Rule::in([(int) $partner?->id]),
             ],

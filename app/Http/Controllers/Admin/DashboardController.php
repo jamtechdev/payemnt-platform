@@ -15,19 +15,73 @@ class DashboardController extends Controller
 {
     public function customerServiceDashboard(): Response
     {
+        // BRD CS-001: Dashboard showing customer count per partner
+        $partnerIds = Customer::query()->distinct()->pluck('partner_id')->filter();
+        $partnerNames = Partner::query()->whereIn('id', $partnerIds)->pluck('name', 'id');
+
+        $customersByPartner = Customer::query()
+            ->selectRaw('partner_id, count(*) as total')
+            ->groupBy('partner_id')
+            ->get()
+            ->map(fn ($row) => [
+                'partner_id' => $row->partner_id,
+                'partner_name' => $partnerNames[$row->partner_id] ?? 'Unknown',
+                'total' => (int) $row->total,
+            ]);
+
+        // BRD open question 4: flag expiring covers
+        $expiringSoon = Customer::query()
+            ->expiringSoon()
+            ->with(['partner:id,name', 'product:id,name'])
+            ->get()
+            ->map(fn (Customer $c) => [
+                'uuid' => $c->uuid,
+                'full_name' => $c->full_name,
+                'email' => $c->email,
+                'cover_end_date' => optional($c->cover_end_date)->toDateString(),
+                'partner_name' => $c->partner?->name,
+                'product_name' => $c->product?->name,
+            ]);
+
         return Inertia::render('Admin/CustomerService/Dashboard', [
             'totalCustomers' => Customer::query()->count(),
             'activeCustomers' => Customer::query()->active()->count(),
-            'expiringSoon' => Customer::query()->expiringSoon()->with(['partner', 'product'])->get(),
             'newThisWeek' => Customer::query()->whereDate('created_at', '>=', now()->subDays(7))->count(),
+            'customersByPartner' => $customersByPartner,
+            'expiringSoon' => $expiringSoon,
+            'expiringSoonCount' => $expiringSoon->count(),
         ]);
     }
 
     public function reconciliationDashboard(): Response
     {
+        // BRD REC-001: Customer count per product — resolve product names separately
+        $productIds = Customer::query()->distinct()->pluck('product_id')->filter();
+        $productNames = \App\Models\Product::query()->whereIn('id', $productIds)->pluck('name', 'id');
+
+        $customersByProduct = Customer::query()
+            ->selectRaw('product_id, count(*) as total')
+            ->groupBy('product_id')
+            ->get()
+            ->map(fn ($row) => [
+                'product_id' => $row->product_id,
+                'product_name' => $productNames[$row->product_id] ?? 'Unknown',
+                'total' => (int) $row->total,
+            ]);
+
+        // BRD REC-003: Income per product line
+        $revenueByProduct = Payment::query()
+            ->selectRaw('users.product_id, SUM(payments.amount) as total_revenue')
+            ->join('users', 'users.id', '=', 'payments.customer_id')
+            ->whereMonth('payments.payment_date', now()->month)
+            ->groupBy('users.product_id')
+            ->get();
+
         return Inertia::render('Admin/Reconciliation/Dashboard', [
             'monthlyCustomers' => Customer::query()->whereMonth('created_at', now()->month)->count(),
-            'monthlyRevenue' => Payment::query()->whereMonth('payment_date', now()->month)->sum('amount'),
+            'monthlyRevenue' => (float) Payment::query()->whereMonth('payment_date', now()->month)->sum('amount'),
+            'customersByProduct' => $customersByProduct,
+            'revenueByProduct' => $revenueByProduct,
         ]);
     }
 

@@ -20,6 +20,19 @@ class UpdatePartnerRequest extends FormRequest
             'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email,'.$partnerId],
             'phone' => ['nullable', 'string', 'max:40'],
             'status' => ['sometimes', 'in:active,inactive'],
+            'password' => [
+                'nullable', 
+                'string', 
+                'min:12',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
         ];
     }
 }

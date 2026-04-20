@@ -6,13 +6,13 @@ use App\Http\Requests\Admin\CustomerFilterRequest;
 use App\Jobs\GenerateCustomerExportJob;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CustomerController extends Controller
 {
@@ -111,6 +111,42 @@ class CustomerController extends Controller
             ->get();
 
         return response()->json($customers);
+    }
+
+    public function exportExpiring(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        // BRD open question 4: Download expiring customers per partner
+        $partnerId = $request->integer('partner_id');
+
+        $query = Customer::query()
+            ->with(['partner:id,name', 'product:id,name'])
+            ->expiringSoon();
+
+        if ($partnerId) {
+            $query->where('partner_id', $partnerId);
+        }
+
+        $customers = $query->get();
+
+        $filename = 'expiring-covers-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($customers): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Customer ID', 'Full Name', 'Email', 'Phone', 'Partner', 'Product', 'Cover End Date', 'Days Remaining']);
+            foreach ($customers as $customer) {
+                fputcsv($handle, [
+                    $customer->uuid,
+                    $customer->full_name,
+                    $customer->email,
+                    $customer->phone,
+                    $customer->partner?->name,
+                    $customer->product?->name,
+                    optional($customer->cover_end_date)->toDateString(),
+                    now()->diffInDays($customer->cover_end_date, false),
+                ]);
+            }
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 
     public function export(CustomerFilterRequest $request): JsonResponse
