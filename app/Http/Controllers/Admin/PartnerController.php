@@ -82,7 +82,7 @@ class PartnerController extends Controller
     public function show(Partner $partner): Response
     {
         $viewer = request()->user();
-        $canViewPartnerPricing = (bool) $viewer?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
+        $canViewPartnerPricing = (bool) $viewer?->hasRole('super_admin');
         $partner->load([
             'products' => function ($query) {
                 $query->withPivot(['is_enabled', 'partner_price', 'partner_currency', 'cover_duration_days_override', 'rule_overrides']);

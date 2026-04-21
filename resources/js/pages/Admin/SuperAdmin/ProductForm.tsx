@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout';
 import { PageProps } from '@/Types';
-import { cn } from '@/lib/utils';
-import { CheckCircle2, CirclePlus, Layers3, ShieldCheck, Sparkles, Trash2 } from 'lucide-react';
+import { Layers3, ShieldCheck, Sparkles } from 'lucide-react';
 
 interface ProductPayload {
     id?: number;
@@ -41,7 +40,6 @@ interface ProductFormData {
     fields: ProductFieldForm[];
 }
 
-const durationSuggestions = [1, 3, 6, 12, 24, 36];
 const fieldTypeOptions: Array<{ value: ProductFieldType; label: string; hint: string }> = [
     { value: 'text', label: 'Text', hint: 'Single-line input' },
     { value: 'textarea', label: 'Textarea', hint: 'Longer freeform answer' },
@@ -64,29 +62,40 @@ const defaultBeneficiaryFields: ProductFieldForm[] = [
     { name: 'cover_duration', label: 'Cover Duration', type: 'dropdown', is_required: true, options: ['monthly', 'annual'] },
 ];
 
-function createEmptyField(index: number): ProductFieldForm {
-    return {
-        name: `field_${index + 1}`,
-        label: '',
-        type: 'text',
-        is_required: false,
-        options: [],
-    };
+function beneficiaryTemplateFields(): ProductFieldForm[] {
+    return defaultBeneficiaryFields.map((field) => ({ ...field, options: [...field.options] }));
 }
 
 function normalizeFields(fields?: ProductPayload['fields']): ProductFieldForm[] {
     if (!Array.isArray(fields) || fields.length === 0) {
-        return [createEmptyField(0)];
+        return beneficiaryTemplateFields();
     }
 
-    return fields.map((field, index) => ({
-        id: field.id,
-        name: field.name || `field_${index + 1}`,
-        label: field.label || '',
-        type: field.type || 'text',
-        is_required: Boolean(field.is_required),
-        options: Array.isArray(field.options) ? field.options.filter(Boolean) : [],
-    }));
+    const byName = new Map<string, ProductFieldForm>();
+    fields.forEach((field) => {
+        const key = String(field.name ?? '');
+        if (key) {
+            byName.set(key, {
+                id: field.id,
+                name: key,
+                label: String(field.label ?? ''),
+                type: (field.type as ProductFieldType) || 'text',
+                is_required: Boolean(field.is_required),
+                options: Array.isArray(field.options) ? field.options.filter(Boolean) : [],
+            });
+        }
+    });
+
+    return beneficiaryTemplateFields().map((template) => {
+        const existing = byName.get(template.name);
+        if (!existing) return template;
+        return {
+            ...template,
+            id: existing.id,
+            label: existing.label || template.label,
+            options: existing.type === 'dropdown' && existing.options.length > 0 ? existing.options : template.options,
+        };
+    });
 }
 
 function slugify(value: string): string {
@@ -107,8 +116,8 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
         name: product?.name ?? 'Nigerian Beneficiary Community Product',
         description: product?.description ?? 'Insuretech beneficiary product template.',
         status: product?.status ?? 'active',
-        cover_duration_options: product?.cover_duration_options ?? [1, 12],
-        fields: product ? normalizeFields(product?.fields) : defaultBeneficiaryFields.map((field) => ({ ...field })),
+        cover_duration_options: [1, 12],
+        fields: product ? normalizeFields(product?.fields) : beneficiaryTemplateFields(),
     });
 
     const submit = () => {
@@ -141,25 +150,8 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
         );
     };
 
-    const addField = () => {
-        setData('fields', [...data.fields, createEmptyField(data.fields.length)]);
-    };
-
-    const removeField = (index: number) => {
-        setData(
-            'fields',
-            data.fields.length === 1 ? [createEmptyField(0)] : data.fields.filter((_, fieldIndex) => fieldIndex !== index),
-        );
-    };
-
-    const addDuration = (months: number) => {
-        if (data.cover_duration_options.includes(months)) return;
-        setData('cover_duration_options', [...data.cover_duration_options, months].sort((a, b) => a - b));
-    };
-
-    const removeDuration = (months: number) => {
-        const next = data.cover_duration_options.filter((value) => value !== months);
-        setData('cover_duration_options', next.length > 0 ? next : [12]);
+    const applyBeneficiaryTemplate = () => {
+        setData('fields', beneficiaryTemplateFields());
     };
 
     const updateDropdownOptions = (index: number, rawValue: string) => {
@@ -245,39 +237,13 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-5">
-                                <div className="flex flex-wrap gap-2">
-                                    {durationSuggestions.map((months) => {
-                                        const active = data.cover_duration_options.includes(months);
-                                        return (
-                                            <button
-                                                key={months}
-                                                type="button"
-                                                onClick={() => (active ? removeDuration(months) : addDuration(months))}
-                                                className={cn(
-                                                    'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition',
-                                                    active
-                                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50',
-                                                )}
-                                            >
-                                                {active && <CheckCircle2 className="h-4 w-4" />}
-                                                {months} months
-                                            </button>
-                                        );
-                                    })}
-                                </div>
                                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
-                                    <p className="text-sm font-medium text-slate-700">Selected durations</p>
+                                    <p className="text-sm font-medium text-slate-700">Fixed duration options</p>
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {data.cover_duration_options.map((months) => (
-                                            <button
-                                                key={months}
-                                                type="button"
-                                                onClick={() => removeDuration(months)}
-                                                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-red-200 hover:text-red-600"
-                                            >
-                                                {months} months x
-                                            </button>
+                                            <span key={months} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700">
+                                                {months === 1 ? 'Monthly' : months === 12 ? 'Annual' : `${months} months`}
+                                            </span>
                                         ))}
                                     </div>
                                     {errors.cover_duration_options && <p className="mt-3 text-sm text-red-600">{errors.cover_duration_options}</p>}
@@ -297,9 +263,8 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                             <p className="text-sm text-slate-500">These are the fields partner APIs must send for this product.</p>
                                         </div>
                                     </div>
-                                    <Button type="button" variant="outline" onClick={addField}>
-                                        <CirclePlus className="mr-2 h-4 w-4" />
-                                        Add field
+                                    <Button type="button" variant="outline" onClick={applyBeneficiaryTemplate}>
+                                        Use Beneficiary Template
                                     </Button>
                                 </div>
                             </CardHeader>
@@ -311,10 +276,7 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                                 <p className="text-sm font-semibold text-slate-900">{field.label || `Field ${index + 1}`}</p>
                                                 <p className="text-xs text-slate-500">API key: {field.name || `field_${index + 1}`}</p>
                                             </div>
-                                            <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => removeField(index)}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Remove
-                                            </Button>
+                                            <Badge variant="outline">Fixed field</Badge>
                                         </div>
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
@@ -329,13 +291,13 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                                 <Label>API field key</Label>
                                                 <Input
                                                     value={field.name}
-                                                    onChange={(e) => updateField(index, 'name', slugify(e.target.value))}
+                                                    readOnly
                                                     placeholder="e.g. beneficiary_first_name"
                                                 />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Field type</Label>
-                                                <Select value={field.type} onValueChange={(value: ProductFieldType) => updateField(index, 'type', value)}>
+                                                <Select value={field.type} disabled>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select field type" />
                                                     </SelectTrigger>
@@ -357,7 +319,7 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                                     <label className="flex items-center gap-3 text-sm text-slate-700">
                                                         <Checkbox
                                                             checked={field.is_required}
-                                                            onCheckedChange={(checked) => updateField(index, 'is_required', Boolean(checked))}
+                                                            disabled
                                                         />
                                                         Required field
                                                     </label>

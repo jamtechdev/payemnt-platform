@@ -7,7 +7,6 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Partner;
 use App\Models\Product;
-use App\Models\ProductField;
 use App\Models\ProductVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +17,39 @@ use Illuminate\Http\RedirectResponse;
 
 class ProductController extends Controller
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function beneficiaryTemplateFields(): array
+    {
+        return [
+            ['field_key' => 'beneficiary_first_name', 'label' => 'Beneficiary First Name', 'field_type' => 'text', 'is_required' => true, 'options' => []],
+            ['field_key' => 'beneficiary_surname', 'label' => 'Beneficiary Surname', 'field_type' => 'text', 'is_required' => true, 'options' => []],
+            ['field_key' => 'beneficiary_date_of_birth', 'label' => 'Beneficiary Date of Birth', 'field_type' => 'date', 'is_required' => true, 'options' => []],
+            ['field_key' => 'beneficiary_age', 'label' => 'Beneficiary Age (Auto)', 'field_type' => 'number', 'is_required' => false, 'options' => []],
+            ['field_key' => 'beneficiary_gender', 'label' => 'Beneficiary Gender', 'field_type' => 'dropdown', 'is_required' => true, 'options' => ['male', 'female', 'other']],
+            ['field_key' => 'beneficiary_address', 'label' => 'Beneficiary Address', 'field_type' => 'text', 'is_required' => true, 'options' => []],
+            ['field_key' => 'cover_start_date', 'label' => 'Cover Start Date', 'field_type' => 'date', 'is_required' => true, 'options' => []],
+            ['field_key' => 'cover_duration', 'label' => 'Cover Duration', 'field_type' => 'dropdown', 'is_required' => true, 'options' => ['monthly', 'annual']],
+        ];
+    }
+
+    private function syncBeneficiaryTemplateFields(Product $product): void
+    {
+        $product->fields()->delete();
+
+        foreach ($this->beneficiaryTemplateFields() as $index => $field) {
+            $product->fields()->create([
+                'field_key' => $field['field_key'],
+                'label' => $field['label'],
+                'field_type' => $field['field_type'],
+                'is_required' => $field['is_required'],
+                'options' => $field['options'],
+                'sort_order' => $index + 1,
+            ]);
+        }
+    }
+
     public function index(): Response
     {
         return Inertia::render('Admin/SuperAdmin/ProductList', [
@@ -38,8 +70,8 @@ class ProductController extends Controller
             $name = $request->string('name')->toString();
             $slug = Str::slug($name);
             $productCode = strtoupper(str_replace('-', '_', $slug));
-            $durationOptions = (array) $request->input('cover_duration_options', [12]);
-            $defaultDurationMonths = (int) min($durationOptions);
+            $durationOptions = [1, 12];
+            $defaultDurationMonths = 1;
             $product = Product::query()->create([
                 'product_code' => $productCode,
                 'name' => $name,
@@ -48,18 +80,9 @@ class ProductController extends Controller
                 'status' => $request->input('status', 'active'),
                 'cover_duration_mode' => 'custom',
                 'default_cover_duration_days' => max(1, $defaultDurationMonths) * 30,
-                'cover_duration_options' => $request->input('cover_duration_options', [12]),
+                'cover_duration_options' => $durationOptions,
             ]);
-            foreach ((array) $request->input('fields', []) as $i => $field) {
-                $product->fields()->create([
-                    'field_key' => (string) ($field['name'] ?? ''),
-                    'label' => (string) ($field['label'] ?? ''),
-                    'field_type' => (string) ($field['type'] ?? 'text'),
-                    'is_required' => (bool) ($field['is_required'] ?? false),
-                    'options' => (array) ($field['options'] ?? []),
-                    'sort_order' => $i,
-                ]);
-            }
+            $this->syncBeneficiaryTemplateFields($product);
         });
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
@@ -77,26 +100,12 @@ class ProductController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $payload = $request->only(['name', 'slug', 'description', 'status', 'cover_duration_options']);
-        if (! empty($payload['cover_duration_options']) && is_array($payload['cover_duration_options'])) {
-            $payload['default_cover_duration_days'] = max(1, (int) min($payload['cover_duration_options'])) * 30;
-        }
+        $payload = $request->only(['name', 'slug', 'description', 'status']);
+        $payload['cover_duration_options'] = [1, 12];
+        $payload['default_cover_duration_days'] = 30;
         $product->update($payload);
 
-        foreach ((array) $request->input('fields', []) as $i => $field) {
-            ProductField::query()->updateOrCreate(
-                ['id' => $field['id'] ?? null],
-                [
-                    'field_key' => (string) ($field['name'] ?? ''),
-                    'label' => (string) ($field['label'] ?? ''),
-                    'field_type' => (string) ($field['type'] ?? 'text'),
-                    'is_required' => (bool) ($field['is_required'] ?? false),
-                    'options' => (array) ($field['options'] ?? []),
-                    'product_id' => $product->id,
-                    'sort_order' => $i,
-                ]
-            );
-        }
+        $this->syncBeneficiaryTemplateFields($product);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }

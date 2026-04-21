@@ -36,6 +36,11 @@ class PurchaseService
 
         return DB::transaction(function () use ($partner, $product, $customerData, $paymentData): array {
             $dob = Carbon::parse((string) $customerData['date_of_birth']);
+            if (array_key_exists('age', $customerData) && $customerData['age'] !== null && (int) $customerData['age'] !== $dob->age) {
+                throw ValidationException::withMessages([
+                    'customer.age' => ['Customer age must match date_of_birth.'],
+                ]);
+            }
             $coverStartDate = Carbon::parse((string) $customerData['cover_start_date']);
             $coverDurationDays = $customerData['cover_duration'] === 'monthly' ? 30 : 365;
 

@@ -912,6 +912,6 @@ class AdminController extends BaseApiController
 
     private function canViewPartnerPricing(?User $actor): bool
     {
-        return (bool) $actor?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
+        return (bool) $actor?->hasAnyRole(['partner', 'super_admin']);
     }
 }

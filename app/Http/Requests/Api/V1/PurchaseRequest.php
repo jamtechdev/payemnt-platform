@@ -33,6 +33,7 @@ class PurchaseRequest extends FormRequest
             'customer.first_name' => ['required', 'string', 'max:120'],
             'customer.last_name' => ['required', 'string', 'max:120'],
             'customer.date_of_birth' => ['required', 'date', 'before:today'],
+            'customer.age' => ['nullable', 'integer', 'min:0'],
             'customer.gender' => ['required', Rule::in(['male', 'female', 'other'])],
             'customer.address' => ['required', 'string', 'max:255'],
             'customer.cover_start_date' => ['required', 'date'],

@@ -46,7 +46,7 @@ class AdminCustomerController extends BaseApiController
             : null;
 
         $user = auth()->user();
-        $canViewPricing = (bool) $user?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
+        $canViewPricing = (bool) $user?->hasAnyRole(['partner', 'super_admin']);
 
         if (! $canViewPricing) {
             $maskedPayments = $customer->payments->map(function ($payment): array {

@@ -84,7 +84,7 @@ class PlatformSeeder extends Seeder
             ]
         );
 
-        $requiredProductCodes = ['NIGERIA_COMMUNITY', 'GHANA_COMMUNITY'];
+        $requiredProductCodes = ['NIGERIA_BENEFICIARY_COMMUNITY', 'GHANA_BENEFICIARY_COMMUNITY'];
         Product::withTrashed()
             ->whereNotIn('product_code', $requiredProductCodes)
             ->get()
@@ -93,7 +93,7 @@ class PlatformSeeder extends Seeder
             });
 
         $nigeriaProduct = Product::withTrashed()->updateOrCreate(
-            ['product_code' => 'NIGERIA_COMMUNITY'],
+            ['product_code' => 'NIGERIA_BENEFICIARY_COMMUNITY'],
             [
                 'name' => 'Nigerian Beneficiary Community Product',
                 'slug' => Str::slug('Nigerian Beneficiary Community Product'),
@@ -110,7 +110,7 @@ class PlatformSeeder extends Seeder
         }
 
         $ghanaProduct = Product::withTrashed()->updateOrCreate(
-            ['product_code' => 'GHANA_COMMUNITY'],
+            ['product_code' => 'GHANA_BENEFICIARY_COMMUNITY'],
             [
                 'name' => 'Ghana Beneficiary Community Product',
                 'slug' => Str::slug('Ghana Beneficiary Community Product'),

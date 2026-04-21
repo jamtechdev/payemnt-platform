@@ -27,7 +27,7 @@ class PurchaseController extends BaseApiController
                 required: ['partner_id', 'product_id', 'customer', 'payment'],
                 properties: [
                     new OA\Property(property: 'partner_id', type: 'string', example: 'SWAP_CIRCLE'),
-                    new OA\Property(property: 'product_id', type: 'string', example: 'NIGERIA_COMMUNITY'),
+                    new OA\Property(property: 'product_id', type: 'string', example: 'NIGERIA_BENEFICIARY_COMMUNITY'),
                     new OA\Property(property: 'customer', type: 'object'),
                     new OA\Property(property: 'payment', type: 'object'),
                 ]
