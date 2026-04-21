@@ -4,31 +4,6 @@ declare(strict_types=1);
 
 return [
     'roles' => [
-        'customer_service' => [
-            'label' => 'Customer Service',
-            'permissions' => [
-                'dashboard.customer_overview',
-                'customers.view_list',
-                'customers.search',
-                'customers.view_detail',
-                'customers.view_submitted_data',
-                'customers.export',
-                'reports.customer_summary',
-            ],
-        ],
-        'reconciliation_admin' => [
-            'label' => 'Reconciliation Admin',
-            'permissions' => [
-                'dashboard.metrics_overview',
-                'reports.customer_acquisition',
-                'reports.revenue_by_product',
-                'reports.view',
-                'reports.export',
-                'reports.export_excel',
-                'reports.export_pdf',
-                'reports.scheduled_reports',
-            ],
-        ],
         'super_admin' => [
             'label' => 'Super Admin',
             'permissions' => ['*'],
@@ -78,8 +53,6 @@ return [
         'settings.email',
     ],
     'modules' => [
-        'customer_service' => ['dashboard', 'customers', 'profile'],
-        'reconciliation_admin' => ['dashboard', 'reports', 'profile'],
         'super_admin' => ['dashboard', 'customers', 'products', 'partners', 'users', 'reports', 'audit_logs', 'settings'],
     ],
 ];

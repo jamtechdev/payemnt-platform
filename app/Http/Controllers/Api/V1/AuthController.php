@@ -17,64 +17,6 @@ use OpenApi\Attributes as OA;
 
 class AuthController extends BaseApiController
 {
-    #[OA\Post(
-        path: '/api/v1/auth/register',
-        operationId: 'authRegister',
-        summary: 'Register user with email and password',
-        tags: ['Auth'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['name', 'email', 'password', 'password_confirmation'],
-                properties: [
-                    new OA\Property(property: 'name', type: 'string'),
-                    new OA\Property(property: 'email', type: 'string', format: 'email'),
-                    new OA\Property(property: 'password', type: 'string', format: 'password'),
-                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 201,
-                description: 'User registered',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'token', type: 'string', example: '1|sanctum-token-value'),
-                                new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
-                                new OA\Property(
-                                    property: 'user',
-                                    properties: [
-                                        new OA\Property(property: 'id', type: 'integer', example: 1),
-                                        new OA\Property(property: 'name', type: 'string', example: 'Alex Admin'),
-                                        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@local.test'),
-                                        new OA\Property(property: 'role', type: 'string', nullable: true, example: 'admin'),
-                                    ],
-                                    type: 'object'
-                                ),
-                            ],
-                            type: 'object'
-                        ),
-                    ],
-                    type: 'object'
-                )
-            ),
-            new OA\Response(
-                response: 422,
-                description: 'Validation error',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'The password field confirmation does not match.'),
-                        new OA\Property(property: 'errors', type: 'object'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -179,42 +121,6 @@ class AuthController extends BaseApiController
         return $this->issueToken($request);
     }
 
-    #[OA\Post(
-        path: '/api/v1/auth/forgot-password',
-        operationId: 'authForgotPassword',
-        summary: 'Send password reset link',
-        tags: ['Auth'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['email'],
-                properties: [new OA\Property(property: 'email', type: 'string', format: 'email')]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Reset link sent',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(property: 'message', type: 'string', example: 'We have emailed your password reset link.'),
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 422,
-                description: 'Reset link failed',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'error'),
-                        new OA\Property(property: 'error_code', type: 'string', example: 'RESET_LINK_FAILED'),
-                        new OA\Property(property: 'message', type: 'string', example: 'We can not find a user with that email address.'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function forgotPassword(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -237,47 +143,6 @@ class AuthController extends BaseApiController
         ]);
     }
 
-    #[OA\Post(
-        path: '/api/v1/auth/reset-password',
-        operationId: 'authResetPassword',
-        summary: 'Reset password using reset token',
-        tags: ['Auth'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['token', 'email', 'password', 'password_confirmation'],
-                properties: [
-                    new OA\Property(property: 'token', type: 'string'),
-                    new OA\Property(property: 'email', type: 'string', format: 'email'),
-                    new OA\Property(property: 'password', type: 'string', format: 'password'),
-                    new OA\Property(property: 'password_confirmation', type: 'string', format: 'password'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Password reset',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(property: 'message', type: 'string', example: 'Your password has been reset.'),
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 422,
-                description: 'Password reset failed',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'error'),
-                        new OA\Property(property: 'error_code', type: 'string', example: 'PASSWORD_RESET_FAILED'),
-                        new OA\Property(property: 'message', type: 'string', example: 'This password reset token is invalid.'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function resetPassword(Request $request): JsonResponse
     {
         $validated = $request->validate([

@@ -32,7 +32,7 @@ class PlatformSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $rolesConfig = config('admin_portal.roles');
 
-        foreach (['customer_service', 'reconciliation_admin', 'super_admin'] as $roleName) {
+        foreach (['super_admin'] as $roleName) {
             if (! isset($rolesConfig[$roleName])) {
                 continue;
             }
@@ -51,28 +51,6 @@ class PlatformSeeder extends Seeder
             ]
         );
         $superAdmin->syncRoles(['super_admin']);
-
-        $customerService = User::query()->updateOrCreate(
-            ['email' => 'cs.admin@platform.local'],
-            [
-                'name' => 'Customer Service Admin',
-                'password' => Hash::make('ChangeMe@12345'),
-                'status' => 'active',
-                'is_active' => true,
-            ]
-        );
-        $customerService->syncRoles(['customer_service']);
-
-        $reconciliationAdmin = User::query()->updateOrCreate(
-            ['email' => 'recon.admin@platform.local'],
-            [
-                'name' => 'Reconciliation Admin',
-                'password' => Hash::make('ChangeMe@12345'),
-                'status' => 'active',
-                'is_active' => true,
-            ]
-        );
-        $reconciliationAdmin->syncRoles(['reconciliation_admin']);
 
         $partner = Partner::query()->updateOrCreate(
             ['partner_code' => 'SWAP_CIRCLE'],
