@@ -67,14 +67,16 @@ class PartnerController extends Controller
             'status' => 'active',
         ]);
 
-        $partner->assignRole('partner');
-
-        // Create partner profile
-        $partner->profile()->create([
-            'company_name' => $request->name,
-            'contact_person' => $request->name,
-            'billing_email' => $request->email,
-        ]);
+        // Create partner profile if relation exists
+        if (method_exists($partner, 'profile')) {
+            $partner->profile()->firstOrCreate([
+                'partner_id' => $partner->id,
+            ], [
+                'company_name' => $request->name,
+                'contact_person' => $request->name,
+                'billing_email' => $request->email,
+            ]);
+        }
 
         return redirect()
             ->route('admin.partners.index')
