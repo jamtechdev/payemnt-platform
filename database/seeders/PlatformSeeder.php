@@ -32,7 +32,7 @@ class PlatformSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $rolesConfig = config('admin_portal.roles');
 
-        foreach (['customer_service', 'reconciliation_admin', 'super_admin', 'admin'] as $roleName) {
+        foreach (['customer_service', 'reconciliation_admin', 'super_admin'] as $roleName) {
             if (! isset($rolesConfig[$roleName])) {
                 continue;
             }

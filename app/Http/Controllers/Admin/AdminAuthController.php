@@ -19,7 +19,7 @@ class AdminAuthController extends Controller
      *
      * @var list<string>
      */
-    private const ALLOWED_LOGIN_ROLES = ['admin', 'super_admin', 'customer_service', 'reconciliation_admin'];
+    private const ALLOWED_LOGIN_ROLES = ['super_admin', 'customer_service', 'reconciliation_admin'];
 
     public function showLogin(): Response
     {
