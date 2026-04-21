@@ -59,9 +59,11 @@ class PartnerController extends Controller
         $partner = Partner::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'partner_code' => $request->filled('partner_code')
+                ? strtoupper(Str::slug($request->partner_code, '_'))
+                : strtoupper(Str::slug($request->name, '_') . '_' . strtoupper(Str::random(4))),
+            'contact_email' => $request->email,
+            'contact_phone' => $request->phone,
             'status' => 'active',
         ]);
 

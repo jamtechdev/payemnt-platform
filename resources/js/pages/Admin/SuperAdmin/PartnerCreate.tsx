@@ -8,8 +8,7 @@ export default function PartnerCreate() {
         name: '',
         email: '',
         phone: '',
-        password: '',
-        password_confirmation: '',
+        partner_code: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -35,6 +34,21 @@ export default function PartnerCreate() {
                         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                     </div>
 
+                    {/* Partner Code */}
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Partner Code <span className="text-xs text-gray-400">(optional — auto-generated if blank)</span>
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            value={data.partner_code}
+                            onChange={(e) => setData('partner_code', e.target.value.toUpperCase())}
+                            placeholder="e.g. ACME_PARTNER"
+                        />
+                        {errors.partner_code && <p className="mt-1 text-sm text-red-500">{errors.partner_code}</p>}
+                    </div>
+
                     {/* Email */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
@@ -57,29 +71,6 @@ export default function PartnerCreate() {
                             onChange={(e) => setData('phone', e.target.value)}
                         />
                         {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                        <input
-                            type="password"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                        />
-                        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                        />
                     </div>
 
                     {/* Button */}
