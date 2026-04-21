@@ -83,7 +83,17 @@ class PartnerController extends Controller
     {
         $viewer = request()->user();
         $canViewPartnerPricing = (bool) $viewer?->hasAnyRole(['partner', 'super_admin', 'reconciliation_admin']);
-        $partner->load('products');
+        $partner->load([
+            'products' => function ($query) {
+                $query->withPivot(['is_enabled', 'partner_price', 'partner_currency', 'cover_duration_days_override', 'rule_overrides']);
+            },
+            'customers' => function ($query) {
+                $query->with('product:id,name')->latest()->limit(5);
+            },
+            'payments' => function ($query) {
+                $query->latest()->limit(5);
+            }
+        ]);
         if (! $canViewPartnerPricing) {
             $partner->products->each(function ($product): void {
                 if ($product->pivot) {
@@ -92,18 +102,6 @@ class PartnerController extends Controller
                 }
             });
         }
-
-        $partner->load([
-            'products' => function ($query) {
-                $query->withPivot(['status', 'activated_at', 'deactivated_at']);
-            },
-            'customers' => function ($query) {
-                $query->latest()->limit(10);
-            },
-            'payments' => function ($query) {
-                $query->latest()->limit(5);
-            }
-        ]);
 
         // Get API key status
         $apiKeyStatus = $partner->hasActiveApiKey() ? 'active' : 'inactive';
@@ -123,7 +121,6 @@ class PartnerController extends Controller
         return Inertia::render('Admin/SuperAdmin/PartnerDetail', [
             'partner' => $partner,
             'canViewPartnerPricing' => $canViewPartnerPricing,
-            'partner' => $partner,
             'stats' => $stats
         ]);
     }
@@ -216,11 +213,11 @@ class PartnerController extends Controller
         abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         $productId = $request->input('product_id');
-        $status = $request->input('status', 'active');
+        $isEnabled = $request->boolean('is_enabled');
 
         $partner->products()->updateExistingPivot($productId, [
-            'status' => $status,
-            $status === 'active' ? 'activated_at' : 'deactivated_at' => now()
+            'is_enabled' => $isEnabled,
+            'updated_at' => now(),
         ]);
 
         return back()->with('success', 'Product access updated successfully.');

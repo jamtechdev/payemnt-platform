@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Deployment notes (security / compliance)
+    |--------------------------------------------------------------------------
+    |
+    | Use HTTPS in production: set APP_URL to an https URL and enable
+    | SESSION_SECURE_COOKIE (and trusted proxies as needed). Encryption at
+    | rest for the database is handled at the infrastructure layer (e.g. TDE).
+    |
+    */
+
 ];

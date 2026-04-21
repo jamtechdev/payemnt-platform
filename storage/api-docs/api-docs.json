@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Admin Portal API",
-        "description": "Authorization: Bearer {token} for all secured routes. Partner integration routes (/api/v1/partner/...) expect a Sanctum token for a user with the partner role. Admin/ops routes (/api/v1/customers admin CRUD, /api/v1/products, etc.) expect a Sanctum token for a staff user; mutating routes require admin or super_admin role.",
-        "version": "1.2.0"
+        "title": "Partner API Platform",
+        "description": "Partner API + RBAC Admin API. Partner endpoint: POST /api/v1/customers with Bearer token and 1000 req/hour limiter.",
+        "version": "2.0.0"
     },
     "servers": [
         {
@@ -53,9 +53,8 @@
                 "tags": [
                     "Customers"
                 ],
-                "summary": "Submit customer (alias — use /partner/customers instead)",
-                "description": "Same behavior as POST /api/v1/partner/customers. Prefer the /partner/customers path.",
-                "operationId": "partnerSubmitCustomerAlias",
+                "summary": "Ingest customer and payment (partner Bearer token)",
+                "operationId": "63608eaeb546cd420e3ce702edc186cf",
                 "requestBody": {
                     "$ref": "#/components/requestBodies/PartnerSubmitCustomer"
                 },
@@ -63,8 +62,11 @@
                     "201": {
                         "description": "Created"
                     },
+                    "404": {
+                        "description": "Product not available for partner"
+                    },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation failed"
                     }
                 },
                 "security": [
@@ -1604,64 +1606,6 @@
                 ]
             }
         },
-        "/api/v1/partner/customers": {
-            "post": {
-                "tags": [
-                    "Customers"
-                ],
-                "summary": "Submit customer (partner API)",
-                "description": "Preferred partner endpoint. Uses Bearer token from a partner Sanctum token.",
-                "operationId": "partnerSubmitCustomer",
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/PartnerSubmitCustomer"
-                },
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "customer_uuid": {
-                                                    "type": "string",
-                                                    "format": "uuid"
-                                                },
-                                                "customer_id": {
-                                                    "description": "Same as customer_uuid (stable external id)",
-                                                    "type": "string"
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "meta": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/partner/customers/{uuid}": {
             "get": {
                 "tags": [
@@ -1887,6 +1831,64 @@
                     }
                 ]
             }
+        },
+        "/api/v1/purchase": {
+            "post": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Record partner purchase",
+                "description": "Partner purchase endpoint for Swap Circle and other partners.",
+                "operationId": "partnerPurchase",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "partner_id",
+                                    "product_id",
+                                    "customer",
+                                    "payment"
+                                ],
+                                "properties": {
+                                    "partner_id": {
+                                        "type": "string",
+                                        "example": "SWAP_CIRCLE"
+                                    },
+                                    "product_id": {
+                                        "type": "string",
+                                        "example": "NIGERIA_COMMUNITY"
+                                    },
+                                    "customer": {
+                                        "type": "object"
+                                    },
+                                    "payment": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Purchase recorded"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -1903,16 +1905,17 @@
                             ],
                             "properties": {
                                 "partner_id": {
-                                    "description": "Optional. When omitted, the authenticated partner id is used.",
-                                    "type": "integer",
-                                    "nullable": true
+                                    "description": "Partner code. Must match authenticated partner token.",
+                                    "type": "string",
+                                    "example": "PARTNER_001"
                                 },
                                 "product_id": {
-                                    "description": "Product id enabled for this partner",
-                                    "type": "integer"
+                                    "description": "Product code enabled for this partner",
+                                    "type": "string",
+                                    "example": "PROD_123"
                                 },
                                 "customer_data": {
-                                    "description": "Dynamic fields from product definition (e.g. beneficiary_first_name, beneficiary_surname, beneficiary_date_of_birth, beneficiary_gender, beneficiary_address, cover_start_date, cover_duration monthly/annual, first_name, last_name, email). beneficiary_age is auto-calculated from beneficiary_date_of_birth.",
+                                    "description": "Dynamic fields from product configuration with runtime validation.",
                                     "type": "object",
                                     "additionalProperties": true
                                 },
@@ -1920,8 +1923,7 @@
                                     "required": [
                                         "amount",
                                         "currency",
-                                        "payment_date",
-                                        "transaction_reference"
+                                        "paid_at"
                                     ],
                                     "properties": {
                                         "amount": {
@@ -1932,16 +1934,21 @@
                                             "type": "string",
                                             "example": "USD"
                                         },
-                                        "payment_date": {
+                                        "paid_at": {
                                             "description": "ISO-8601 datetime, e.g. 2026-04-17T12:30:00Z",
                                             "type": "string"
                                         },
                                         "transaction_reference": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "nullable": true
                                         },
-                                        "payment_status": {
+                                        "status": {
                                             "type": "string",
                                             "example": "success"
+                                        },
+                                        "metadata": {
+                                            "type": "object",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"

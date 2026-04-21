@@ -77,23 +77,23 @@ class ReportController extends Controller
 
         // BRD REC-004: Time period filtering for revenue
         $query = Payment::query()
-            ->selectRaw('users.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
-            ->join('users', 'users.id', '=', 'payments.customer_id');
+            ->selectRaw('payments.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
+            ->where('payments.status', 'success');
 
         if ($request->filled('date_from')) {
-            $query->whereDate('payments.payment_date', '>=', $request->string('date_from')->toString());
+            $query->whereDate('payments.paid_at', '>=', $request->string('date_from')->toString());
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('payments.payment_date', '<=', $request->string('date_to')->toString());
+            $query->whereDate('payments.paid_at', '<=', $request->string('date_to')->toString());
         }
         if ($request->filled('period') && ! $request->filled('date_from')) {
             $period = $request->string('period')->toString();
-            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.payment_date', today()))
-                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.payment_date', [now()->startOfWeek(), now()->endOfWeek()]))
-                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.payment_date', now()->month)->whereYear('payments.payment_date', now()->year));
+            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.paid_at', today()))
+                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.paid_at', [now()->startOfWeek(), now()->endOfWeek()]))
+                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.paid_at', now()->month)->whereYear('payments.paid_at', now()->year));
         }
 
-        $rows = $query->groupBy('users.product_id')->get();
+        $rows = $query->groupBy('payments.product_id')->get();
 
         return Inertia::render('Admin/Reconciliation/RevenueByProductReport', [
             'rows' => $rows,

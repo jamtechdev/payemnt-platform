@@ -24,17 +24,34 @@ class GenerateCustomerExportJob implements ShouldQueue
         Cache::put("export_job:{$this->jobId}", ['status' => 'processing'], now()->addHour());
 
         $query = Customer::query()->with(['partner', 'product']);
+
         if (! empty($this->filters['partner_id'])) {
-            $query->where('partner_id', $this->filters['partner_id']);
+            $query->where('partner_id', (int) $this->filters['partner_id']);
         }
         if (! empty($this->filters['product_id'])) {
-            $query->where('product_id', $this->filters['product_id']);
+            $query->where('product_id', (int) $this->filters['product_id']);
         }
         if (! empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
+            $query->where('status', (string) $this->filters['status']);
+        }
+        if (! empty($this->filters['date_from'])) {
+            $query->whereDate('customer_since', '>=', (string) $this->filters['date_from']);
+        }
+        if (! empty($this->filters['date_to'])) {
+            $query->whereDate('customer_since', '<=', (string) $this->filters['date_to']);
+        }
+        if (! empty($this->filters['search'])) {
+            $term = (string) $this->filters['search'];
+            $query->where(function ($sub) use ($term): void {
+                $sub->where('first_name', 'like', "%{$term}%")
+                    ->orWhere('last_name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%")
+                    ->orWhere('phone', 'like', "%{$term}%")
+                    ->orWhere('uuid', 'like', "%{$term}%");
+            });
         }
 
-        $rows = $query->limit(10000)->get();
+        $rows = $query->orderBy('id')->limit(10_000)->get();
 
         $csv = "uuid,full_name,email,partner,product,status,cover_end_date\n";
         foreach ($rows as $row) {

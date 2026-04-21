@@ -26,15 +26,15 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.customers.index'), label: 'Customers' });
     }
 
-    if (modules.includes('products') && permissions.includes('products.view')) {
+    if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
         items.push({ href: route('admin.products.index'), label: 'Products' });
     }
 
-    if (modules.includes('partners') && permissions.includes('partners.view')) {
+    if (modules.includes('partners') && (permissions.includes('partners.view') || permissions.includes('partners.manage'))) {
         items.push({ href: route('admin.partners.index'), label: 'Partners' });
     }
 
-    if (modules.includes('users') && permissions.includes('users.view')) {
+    if (modules.includes('users') && (permissions.includes('users.view') || permissions.includes('users.manage'))) {
         items.push({ href: route('admin.users.index'), label: 'Users' });
     }
 
@@ -46,12 +46,12 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
             items.push({ href: route('admin.reports.revenue'), label: 'Revenue' });
         }
         if (permissions.includes('reports.partner_performance')) {
-            items.push({ href: route('admin.reports.partner-performance'), label: 'Partner performance' });
+            items.push({ href: route('admin.partners.performance'), label: 'Partner performance' });
         }
     }
 
     if (modules.includes('audit_logs') && permissions.includes('audit_logs.view')) {
-        items.push({ href: route('admin.audit-logs.index'), label: 'Audit logs' });
+        items.push({ href: route('admin.audit.index'), label: 'Audit logs' });
     }
 
     if (modules.includes('settings') && permissions.includes('settings.system')) {
@@ -59,7 +59,7 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
     }
 
     if (modules.includes('profile')) {
-        items.push({ href: route('admin.profile.edit'), label: 'My profile' });
+        items.push({ href: route('admin.profile.index'), label: 'My profile' });
     }
 
     return items;

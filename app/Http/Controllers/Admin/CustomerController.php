@@ -38,7 +38,8 @@ class CustomerController extends Controller
                 });
             });
 
-        $customers = $query->paginate((int) $request->integer('per_page', 15))
+        $perPage = max(1, min((int) $request->integer('per_page', 5), 5));
+        $customers = $query->paginate($perPage)
             ->withQueryString()
             ->through(function (Customer $customer) use ($canViewPaymentAmount): array {
                 $latestPayment = $customer->payments->first();
@@ -126,7 +127,7 @@ class CustomerController extends Controller
             $query->where('partner_id', $partnerId);
         }
 
-        $customers = $query->get();
+        $customers = $query->orderBy('cover_end_date')->limit(10_000)->get();
 
         $filename = 'expiring-covers-'.now()->format('Y-m-d').'.csv';
 

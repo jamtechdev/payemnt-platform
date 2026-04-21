@@ -15,55 +15,17 @@ use OpenApi\Attributes as OA;
 
 class CustomerController extends BaseApiController
 {
-    #[OA\Post(
-        path: '/api/v1/partner/customers',
-        operationId: 'partnerSubmitCustomer',
-        summary: 'Submit customer (partner API)',
-        description: 'Preferred partner endpoint. Uses Bearer token from a partner Sanctum token.',
-        security: [['sanctum' => []]],
-        tags: ['Customers'],
-        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PartnerSubmitCustomer'),
-        responses: [
-            new OA\Response(
-                response: 201,
-                description: 'Created',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'customer_uuid', type: 'string', format: 'uuid'),
-                                new OA\Property(property: 'customer_id', type: 'string', description: 'Same as customer_uuid (stable external id)'),
-                                new OA\Property(property: 'message', type: 'string'),
-                            ],
-                            type: 'object'
-                        ),
-                        new OA\Property(property: 'meta', type: 'object'),
-                    ]
-                )
-            ),
-            new OA\Response(response: 422, description: 'Validation error'),
-        ]
-    )]
+    /**
+     * @deprecated Not routed; live partner ingest is {@see PartnerCustomerController::store}.
+     */
     public function storePartnerCustomer(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
     {
         return $this->submitCustomer($request, $ingestionService);
     }
 
-    #[OA\Post(
-        path: '/api/v1/customers',
-        operationId: 'partnerSubmitCustomerAlias',
-        summary: 'Submit customer (alias — use /partner/customers instead)',
-        description: 'Same behavior as POST /api/v1/partner/customers. Prefer the /partner/customers path.',
-        security: [['sanctum' => []]],
-        tags: ['Customers'],
-        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PartnerSubmitCustomer'),
-        responses: [
-            new OA\Response(response: 201, description: 'Created'),
-            new OA\Response(response: 422, description: 'Validation error'),
-        ]
-    )]
+    /**
+     * @deprecated Not routed; live partner ingest is {@see PartnerCustomerController::store}.
+     */
     public function storePartnerCustomerAlias(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
     {
         return $this->submitCustomer($request, $ingestionService);

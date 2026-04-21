@@ -14,31 +14,32 @@ use OpenApi\Attributes as OA;
         properties: [
             new OA\Property(
                 property: 'partner_id',
-                type: 'integer',
-                nullable: true,
-                description: 'Optional. When omitted, the authenticated partner id is used.'
+                type: 'string',
+                example: 'PARTNER_001',
+                description: 'Partner code. Must match authenticated partner token.'
             ),
-            new OA\Property(property: 'product_id', type: 'integer', description: 'Product id enabled for this partner'),
+            new OA\Property(property: 'product_id', type: 'string', example: 'PROD_123', description: 'Product code enabled for this partner'),
             new OA\Property(
                 property: 'customer_data',
                 type: 'object',
                 additionalProperties: true,
-                description: 'Dynamic fields from product definition (e.g. beneficiary_first_name, beneficiary_surname, beneficiary_date_of_birth, beneficiary_gender, beneficiary_address, cover_start_date, cover_duration monthly/annual, first_name, last_name, email). beneficiary_age is auto-calculated from beneficiary_date_of_birth.'
+                description: 'Dynamic fields from product configuration with runtime validation.'
             ),
             new OA\Property(
                 property: 'payment',
                 type: 'object',
-                required: ['amount', 'currency', 'payment_date', 'transaction_reference'],
+                required: ['amount', 'currency', 'paid_at'],
                 properties: [
                     new OA\Property(property: 'amount', type: 'number', format: 'float'),
                     new OA\Property(property: 'currency', type: 'string', example: 'USD'),
                     new OA\Property(
-                        property: 'payment_date',
+                        property: 'paid_at',
                         type: 'string',
                         description: 'ISO-8601 datetime, e.g. 2026-04-17T12:30:00Z'
                     ),
-                    new OA\Property(property: 'transaction_reference', type: 'string'),
-                    new OA\Property(property: 'payment_status', type: 'string', example: 'success'),
+                    new OA\Property(property: 'transaction_reference', type: 'string', nullable: true),
+                    new OA\Property(property: 'status', type: 'string', example: 'success'),
+                    new OA\Property(property: 'metadata', type: 'object', nullable: true),
                 ]
             ),
         ]

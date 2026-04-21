@@ -321,31 +321,23 @@ class AdminController extends BaseApiController
     public function revenueByProductReport(Request $request): JsonResponse
     {
         $query = Payment::query()
-            ->selectRaw('customers.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
-            ->join('users as customers', 'customers.id', '=', 'payments.customer_id')
-            ->whereExists(function ($q): void {
-                $q->selectRaw('1')
-                    ->from('model_has_roles')
-                    ->whereColumn('model_has_roles.model_id', 'customers.id')
-                    ->where('model_has_roles.model_type', User::class)
-                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                    ->where('roles.name', 'customer');
-            });
+            ->selectRaw('payments.product_id, SUM(payments.amount) as total_revenue, COUNT(payments.id) as payment_count')
+            ->where('payments.status', 'success');
 
         if ($request->filled('date_from')) {
-            $query->whereDate('payments.payment_date', '>=', $request->string('date_from')->toString());
+            $query->whereDate('payments.paid_at', '>=', $request->string('date_from')->toString());
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('payments.payment_date', '<=', $request->string('date_to')->toString());
+            $query->whereDate('payments.paid_at', '<=', $request->string('date_to')->toString());
         }
         if ($request->filled('period') && ! $request->filled('date_from')) {
             $period = $request->string('period')->toString();
-            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.payment_date', today()))
-                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.payment_date', [now()->startOfWeek(), now()->endOfWeek()]))
-                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.payment_date', now()->month)->whereYear('payments.payment_date', now()->year));
+            $query->when($period === 'daily', fn ($q) => $q->whereDate('payments.paid_at', today()))
+                ->when($period === 'weekly', fn ($q) => $q->whereBetween('payments.paid_at', [now()->startOfWeek(), now()->endOfWeek()]))
+                ->when($period === 'monthly', fn ($q) => $q->whereMonth('payments.paid_at', now()->month)->whereYear('payments.paid_at', now()->year));
         }
 
-        return $this->success($query->groupBy('customers.product_id')->get());
+        return $this->success($query->groupBy('payments.product_id')->get());
     }
 
     #[OA\Get(path: '/api/v1/products', summary: 'List products', security: [['sanctum' => []]], tags: ['Products'], responses: [new OA\Response(response: 200, description: 'OK')])]

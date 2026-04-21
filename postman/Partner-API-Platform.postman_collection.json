@@ -1,0 +1,148 @@
+{
+  "info": {
+    "name": "Partner API Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Submit Customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{partner_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/customers",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "customers"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"partner_id\": \"PARTNER_001\",\n  \"product_id\": \"PROD_123\",\n  \"customer_data\": {\n    \"external_customer_id\": \"CUST-EXT-001\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"phone\": \"+14155550123\",\n    \"start_date\": \"2026-04-20\",\n    \"cover_duration_days\": 365\n  },\n  \"payment\": {\n    \"amount\": 149.99,\n    \"currency\": \"USD\",\n    \"paid_at\": \"2026-04-20T12:00:00Z\",\n    \"transaction_reference\": \"TXN-20260420-001\",\n    \"status\": \"success\",\n    \"metadata\": {\n      \"source\": \"partner_api\"\n    }\n  }\n}"
+        }
+      }
+    },
+    {
+      "name": "Admin Analytics Summary",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/summary",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "admin",
+            "analytics",
+            "summary"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Queue Analytics Export",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/export?async=true&format=csv&period=weekly",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "admin",
+            "analytics",
+            "export"
+          ],
+          "query": [
+            {
+              "key": "async",
+              "value": "true"
+            },
+            {
+              "key": "format",
+              "value": "csv"
+            },
+            {
+              "key": "period",
+              "value": "weekly"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Export Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/export/{{export_job_id}}/status",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "admin",
+            "analytics",
+            "export",
+            "{{export_job_id}}",
+            "status"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "partner_token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "export_job_id",
+      "value": ""
+    }
+  ]
+}

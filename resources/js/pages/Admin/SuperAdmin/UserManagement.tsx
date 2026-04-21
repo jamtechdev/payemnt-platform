@@ -23,7 +23,8 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
     const matrixRoles = asArray(matrix.roles);
     const matrixRows = asArray(matrix.rows);
     const { auth } = usePage<PageProps>().props;
-    const canManageUsers = auth.permissions.includes('users.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const isSuperAdmin = auth.role === 'super_admin';
+    const canManageUsers = isSuperAdmin || (auth.permissions.includes('users.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''));
     const roleOptions = useMemo(() => roleRows.map((r) => String(r.name ?? '')).filter(Boolean), [roleRows]);
     const [openPermissionUserId, setOpenPermissionUserId] = useState<number | null>(null);
     const [openRoleUserId, setOpenRoleUserId] = useState<number | null>(null);

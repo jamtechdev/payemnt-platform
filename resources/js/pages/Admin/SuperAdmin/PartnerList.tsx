@@ -21,9 +21,10 @@ function asArray(input: unknown): LooseRecord[] {
 export default function PartnerList({ partners }: { partners: unknown }) {
     const rows = asArray(partners);
     const { auth } = usePage<PageProps>().props;
-    const canCreate = auth.permissions.includes('partners.create') && ['admin', 'super_admin'].includes(auth.role ?? '');
-    const canEdit = auth.permissions.includes('partners.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
-    const canDelete = auth.permissions.includes('partners.delete') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const isSuperAdmin = auth.role === 'super_admin';
+    const canCreate = isSuperAdmin || (auth.permissions.includes('partners.create') && ['admin', 'super_admin'].includes(auth.role ?? ''));
+    const canEdit = isSuperAdmin || (auth.permissions.includes('partners.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''));
+    const canDelete = isSuperAdmin || (auth.permissions.includes('partners.delete') && ['admin', 'super_admin'].includes(auth.role ?? ''));
     const columnHelper = createColumnHelper<LooseRecord>();
     const columns = [
         columnHelper.accessor((row) => String(row.name ?? '-'), { id: 'name', header: 'Partner' }),

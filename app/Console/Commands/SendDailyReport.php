@@ -44,10 +44,10 @@ class SendDailyReport extends Command
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
         $paymentsByProduct = Payment::query()
-            ->selectRaw('users.product_id, SUM(payments.amount) as total_amount')
-            ->join('users', 'users.id', '=', 'payments.customer_id')
-            ->whereBetween('payments.payment_date', [$startDate, $endDate])
-            ->groupBy('users.product_id')
+            ->selectRaw('payments.product_id, SUM(payments.amount) as total_amount')
+            ->where('payments.status', 'success')
+            ->whereBetween('payments.paid_at', [$startDate, $endDate])
+            ->groupBy('payments.product_id')
             ->get();
         $expiringSoon = Customer::query()
             ->selectRaw('partner_id, COUNT(*) as total')

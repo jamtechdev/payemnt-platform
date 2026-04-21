@@ -4,6 +4,7 @@ import { PageProps } from '@/Types';
 import AdminLayout from '@/layouts/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Link, router, usePage } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Layers, Pencil, Trash2 } from 'lucide-react';
 
@@ -20,13 +21,33 @@ function asArray(input: unknown): LooseRecord[] {
 export default function ProductList({ products }: { products: unknown }) {
     const rows = asArray(products);
     const { auth } = usePage<PageProps>().props;
-    const canCreate = auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? '');
-    const canEdit = auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? '');
-    const canDelete = auth.permissions.includes('products.delete') && ['admin', 'super_admin'].includes(auth.role ?? '');
+    const isSuperAdmin = auth.role === 'super_admin';
+    const canCreate = isSuperAdmin || (auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? ''));
+    const canEdit = isSuperAdmin || (auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''));
+    const canDelete = isSuperAdmin || (auth.permissions.includes('products.delete') && ['admin', 'super_admin'].includes(auth.role ?? ''));
     const columnHelper = createColumnHelper<LooseRecord>();
-    const columns = [
+    const columns: ColumnDef<LooseRecord, any>[] = [
         columnHelper.accessor((row) => String(row.name ?? '-'), { id: 'name', header: 'Name' }),
         columnHelper.accessor((row) => String(row.slug ?? '-'), { id: 'slug', header: 'Slug' }),
+        columnHelper.display({
+            id: 'fields',
+            header: 'Configured fields',
+            cell: (info) => {
+                const fields = Array.isArray(info.row.original.fields) ? (info.row.original.fields as LooseRecord[]) : [];
+                if (fields.length === 0) return <span className="text-xs text-muted-foreground">No fields</span>;
+                const labels = fields
+                    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+                    .slice(0, 3)
+                    .map((field) => String(field.label ?? field.field_key ?? '-'));
+                const remaining = fields.length - labels.length;
+                return (
+                    <div className="text-xs text-foreground">
+                        <span>{labels.join(', ')}</span>
+                        {remaining > 0 ? <span className="text-muted-foreground"> +{remaining} more</span> : null}
+                    </div>
+                );
+            },
+        }),
         columnHelper.accessor((row) => String(row.status ?? 'inactive'), {
             id: 'status',
             header: 'Status',

@@ -4,32 +4,32 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductField extends Model
 {
-    use HasAuditLog;
-
     protected $fillable = [
         'product_id',
-        'name',
+        'field_key',
         'label',
-        'type',
+        'field_type',
         'options',
         'is_required',
+        'is_filterable',
         'sort_order',
-        'validation_rules',
+        'validation_rule',
+        'default_value',
     ];
 
     protected function casts(): array
     {
         return [
             'options' => 'array',
-            'validation_rules' => 'array',
+            'default_value' => 'array',
             'is_required' => 'boolean',
+            'is_filterable' => 'boolean',
         ];
     }
 
@@ -40,15 +40,6 @@ class ProductField extends Model
 
     public function scopeType(Builder $query, string $type): Builder
     {
-        return $query->where('type', $type);
-    }
-
-    public function getOptionsAttribute($value): array
-    {
-        if ($value === null) {
-            return [];
-        }
-
-        return json_decode((string) $value, true, 512, JSON_THROW_ON_ERROR);
+        return $query->where('field_type', $type);
     }
 }

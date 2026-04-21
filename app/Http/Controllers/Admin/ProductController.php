@@ -21,7 +21,7 @@ class ProductController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/SuperAdmin/ProductList', [
-            'products' => Product::query()->withCount(['customers', 'partners', 'fields'])->paginate(15),
+            'products' => Product::query()->with(['fields:id,product_id,field_key,label,field_type,is_required,sort_order'])->withCount(['customers', 'partners', 'fields'])->paginate(15),
         ]);
     }
 
@@ -35,16 +35,28 @@ class ProductController extends Controller
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         DB::transaction(function () use ($request): void {
+            $name = $request->string('name')->toString();
+            $slug = Str::slug($name);
+            $productCode = strtoupper(str_replace('-', '_', $slug));
+            $durationOptions = (array) $request->input('cover_duration_options', [12]);
+            $defaultDurationMonths = (int) min($durationOptions);
             $product = Product::query()->create([
-                'name' => $request->string('name')->toString(),
-                'slug' => Str::slug($request->string('name')->toString()),
+                'product_code' => $productCode,
+                'name' => $name,
+                'slug' => $slug,
                 'description' => $request->input('description'),
                 'status' => $request->input('status', 'active'),
+                'cover_duration_mode' => 'custom',
+                'default_cover_duration_days' => max(1, $defaultDurationMonths) * 30,
                 'cover_duration_options' => $request->input('cover_duration_options', [12]),
             ]);
             foreach ((array) $request->input('fields', []) as $i => $field) {
                 $product->fields()->create([
-                    ...$field,
+                    'field_key' => (string) ($field['name'] ?? ''),
+                    'label' => (string) ($field['label'] ?? ''),
+                    'field_type' => (string) ($field['type'] ?? 'text'),
+                    'is_required' => (bool) ($field['is_required'] ?? false),
+                    'options' => (array) ($field['options'] ?? []),
                     'sort_order' => $i,
                 ]);
             }
@@ -65,12 +77,24 @@ class ProductController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $product->update($request->only(['name', 'slug', 'description', 'status', 'cover_duration_options']));
+        $payload = $request->only(['name', 'slug', 'description', 'status', 'cover_duration_options']);
+        if (! empty($payload['cover_duration_options']) && is_array($payload['cover_duration_options'])) {
+            $payload['default_cover_duration_days'] = max(1, (int) min($payload['cover_duration_options'])) * 30;
+        }
+        $product->update($payload);
 
         foreach ((array) $request->input('fields', []) as $i => $field) {
             ProductField::query()->updateOrCreate(
                 ['id' => $field['id'] ?? null],
-                [...$field, 'product_id' => $product->id, 'sort_order' => $i]
+                [
+                    'field_key' => (string) ($field['name'] ?? ''),
+                    'label' => (string) ($field['label'] ?? ''),
+                    'field_type' => (string) ($field['type'] ?? 'text'),
+                    'is_required' => (bool) ($field['is_required'] ?? false),
+                    'options' => (array) ($field['options'] ?? []),
+                    'product_id' => $product->id,
+                    'sort_order' => $i,
+                ]
             );
         }
 

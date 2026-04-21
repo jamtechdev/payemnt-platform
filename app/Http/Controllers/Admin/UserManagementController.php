@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
-use App\Models\UserProfile;
+use App\Support\PortalPassword;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +39,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::in(Role::query()->pluck('name')->all())],
-            'password' => ['nullable', 'string', 'min:12'],
+            'password' => ['nullable', 'string', PortalPassword::defaults()],
         ]);
         $actor = $request->user();
         if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
@@ -52,7 +52,6 @@ class UserManagementController extends Controller
             'password' => Hash::make($validated['password'] ?? 'ChangeMe12345!'),
         ]);
         $user->syncRoles([$validated['role']]);
-        UserProfile::query()->firstOrCreate(['user_id' => $user->id]);
         AuditLog::record('created', $user, [], $user->toArray(), $request->user());
 
         return back()->with('success', 'User invited.');

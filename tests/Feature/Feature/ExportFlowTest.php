@@ -17,9 +17,11 @@ class ExportFlowTest extends TestCase
 
     public function test_customer_export_job_can_be_polled_and_downloaded(): void
     {
-        Permission::query()->firstOrCreate(['name' => 'customers.view_list', 'guard_name' => 'web']);
+        foreach (['customers.view_list', 'customers.export'] as $perm) {
+            Permission::query()->firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
+        }
         $role = Role::query()->firstOrCreate(['name' => 'customer_service', 'guard_name' => 'web']);
-        $role->givePermissionTo('customers.view_list');
+        $role->syncPermissions(['customers.view_list', 'customers.export']);
 
         $user = User::factory()->create();
         $user->assignRole('customer_service');
@@ -27,13 +29,15 @@ class ExportFlowTest extends TestCase
 
         $partner = Partner::query()->create([
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'partner_code' => 'PARTNER_X',
             'name' => 'Partner X',
             'slug' => 'partner-x',
-            'email' => 'partnerx@test.local',
+            'contact_email' => 'partnerx@test.local',
             'status' => 'active',
         ]);
         $product = Product::query()->create([
             'uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'product_code' => 'PROD_X',
             'name' => 'Product X',
             'slug' => 'product-x',
             'status' => 'active',
@@ -46,11 +50,10 @@ class ExportFlowTest extends TestCase
             'first_name' => 'Jane',
             'last_name' => 'Doe',
             'email' => 'jane@test.local',
-            'cover_start_date' => now()->toDateString(),
-            'cover_duration_months' => 12,
+            'start_date' => now()->toDateString(),
+            'cover_duration_days' => 30,
             'customer_since' => now()->toDateString(),
             'status' => 'active',
-            'submitted_data' => ['first_name' => 'Jane'],
         ]);
 
         $job = $this->postJson(route('admin.customers.export'))->assertOk()->json('job_id');

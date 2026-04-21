@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Api\V1;
 
-use App\Models\Product;
 use Carbon\Carbon;
-use Illuminate\Support\Arr;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class SubmitCustomerRequest extends FormRequest
@@ -25,22 +26,8 @@ class SubmitCustomerRequest extends FormRequest
     {
         $partner = $this->attributes->get('partner');
 
-        // BRD API payload uses string partner_id like "PARTNER_001" — resolve to integer
         if ($partner && ! $this->filled('partner_id')) {
-            $this->merge(['partner_id' => $partner->id]);
-        } elseif ($this->filled('partner_id') && is_string($this->input('partner_id'))) {
-            $raw = $this->input('partner_id');
-            if (preg_match('/^PARTNER_(\d+)$/i', (string) $raw, $matches)) {
-                $this->merge(['partner_id' => (int) $matches[1]]);
-            }
-        }
-
-        // BRD API payload uses string product_id like "PROD_123" — resolve to integer
-        if ($this->filled('product_id') && is_string($this->input('product_id'))) {
-            $raw = $this->input('product_id');
-            if (preg_match('/^PROD_(\d+)$/i', (string) $raw, $matches)) {
-                $this->merge(['product_id' => (int) $matches[1]]);
-            }
+            $this->merge(['partner_id' => $partner->partner_code]);
         }
 
         $customerData = (array) $this->input('customer_data', []);
@@ -64,6 +51,13 @@ class SubmitCustomerRequest extends FormRequest
             }
         }
 
+        if (! Arr::has($customerData, 'first_name') && is_string(Arr::get($customerData, 'beneficiary_first_name'))) {
+            $customerData['first_name'] = Arr::get($customerData, 'beneficiary_first_name');
+        }
+        if (! Arr::has($customerData, 'last_name') && is_string(Arr::get($customerData, 'beneficiary_surname'))) {
+            $customerData['last_name'] = Arr::get($customerData, 'beneficiary_surname');
+        }
+
         $this->merge(['customer_data' => $customerData]);
     }
 
@@ -79,22 +73,19 @@ class SubmitCustomerRequest extends FormRequest
         return [
             'partner_id' => [
                 'required',
-                Rule::exists('users', 'id'),
-                Rule::in([(int) $partner?->id]),
+                'string',
+                Rule::in([(string) $partner?->partner_code]),
             ],
             'product_id' => [
                 'required',
-                'integer',
-                Rule::exists('products', 'id'),
-                Rule::exists('partner_products', 'product_id')->where(function ($query) use ($partner) {
-                    $query->where('partner_id', $partner?->id)->where('status', 'active');
-                }),
+                'string',
+                Rule::exists('products', 'product_code'),
             ],
             'customer_data' => ['required', 'array'],
             'payment' => ['required', 'array'],
             'payment.amount' => ['required', 'numeric', 'min:0'],
             'payment.currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'payment.payment_date' => ['required', 'date'],
+            'payment.paid_at' => ['required', 'date'],
             'payment.transaction_reference' => ['required', 'string', 'unique:payments,transaction_reference'],
         ];
     }
@@ -109,38 +100,4 @@ class SubmitCustomerRequest extends FormRequest
         ], 422));
     }
 
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($validator): void {
-            $product = Product::query()->with('fields')->find($this->input('product_id'));
-            $payload = (array) $this->input('customer_data', []);
-
-            if (! $product) {
-                return;
-            }
-
-            foreach ($product->fields as $field) {
-                $key = "customer_data.{$field->name}";
-                $value = $payload[$field->name] ?? null;
-                $isAutoCalculatedAge = $field->name === 'beneficiary_age';
-                if ($field->is_required && $value === null && ! $isAutoCalculatedAge) {
-                    $validator->errors()->add($key, 'This field is required.');
-                    continue;
-                }
-                if ($value === null) {
-                    continue;
-                }
-
-                match ($field->type) {
-                    'email' => filter_var($value, FILTER_VALIDATE_EMAIL) ? null : $validator->errors()->add($key, 'Invalid email format.'),
-                    'phone' => preg_match('/^\+?[0-9\-\s]{7,20}$/', (string) $value) ? null : $validator->errors()->add($key, 'Invalid phone format.'),
-                    'number' => is_numeric($value) ? null : $validator->errors()->add($key, 'Must be numeric.'),
-                    'date' => strtotime((string) $value) ? null : $validator->errors()->add($key, 'Invalid date.'),
-                    'datetime' => strtotime((string) $value) ? null : $validator->errors()->add($key, 'Invalid datetime.'),
-                    'dropdown' => in_array($value, $field->options, true) ? null : $validator->errors()->add($key, 'Value is not in allowed options.'),
-                    default => null,
-                };
-            }
-        });
-    }
 }

@@ -33,6 +33,12 @@ class AdminAuthController extends Controller
         $user = User::query()->where('email', $credentials['email'])->first();
 
         if (! $user || ! $user->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
+            if ($user) {
+                AuditLog::record('login_failed', $user, [], ['reason' => 'unauthorized_role'], null);
+            } else {
+                AuditLog::record('login_failed', null, [], ['email' => $credentials['email'], 'reason' => 'unknown_user'], null);
+            }
+
             return back()->withErrors([
                 'email' => 'You are not allowed to access admin panel.',
             ]);
@@ -47,6 +53,7 @@ class AdminAuthController extends Controller
 
         if (! Auth::attempt($credentials)) {
             $user->incrementLoginAttempts();
+            AuditLog::record('login_failed', $user, [], ['reason' => 'invalid_credentials'], null);
 
             return back()->withErrors([
                 'email' => 'Invalid credentials.',

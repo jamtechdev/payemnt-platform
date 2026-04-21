@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Customer;
+use App\Policies\CustomerPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use App\Events\CustomerCreated;
-use App\Listeners\CustomerCreatedListener;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(CustomerCreated::class, CustomerCreatedListener::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
 
         RateLimiter::for('partner_api', function (Request $request): Limit {
             $partner = $request->attributes->get('partner');
@@ -40,5 +41,7 @@ class AppServiceProvider extends ServiceProvider
                     ], 429, $headers);
                 });
         });
+
+        Paginator::useBootstrapFive();
     }
 }

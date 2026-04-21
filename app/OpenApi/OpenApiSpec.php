@@ -7,9 +7,9 @@ namespace App\OpenApi;
 use OpenApi\Attributes as OA;
 
 #[OA\Info(
-    version: '1.2.0',
-    title: 'Admin Portal API',
-    description: 'Authorization: Bearer {token} for all secured routes. Partner integration routes (/api/v1/partner/...) expect a Sanctum token for a user with the partner role. Admin/ops routes (/api/v1/customers admin CRUD, /api/v1/products, etc.) expect a Sanctum token for a staff user; mutating routes require admin or super_admin role.'
+    version: '2.0.0',
+    title: 'Partner API Platform',
+    description: 'Partner API + RBAC Admin API. Partner endpoint: POST /api/v1/customers with Bearer token and 1000 req/hour limiter.'
 )]
 #[OA\Server(url: '/', description: 'Application server (paths already include /api/v1 prefix)')]
 #[OA\SecurityScheme(

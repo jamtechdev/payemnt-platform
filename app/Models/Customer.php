@@ -4,79 +4,70 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Traits\HasAuditLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-class Customer extends User
+class Customer extends Model
 {
-    use HasAuditLog;
-    protected $table = 'users';
+    use SoftDeletes;
+
     protected $fillable = [
-        'name',
-        'slug',
         'uuid',
+        'customer_code',
+        'partner_id',
+        'product_id',
+        'external_customer_id',
+        'first_name',
+        'last_name',
+        'date_of_birth',
+        'age',
+        'gender',
+        'address',
         'email',
         'phone',
         'status',
-        'password',
-        'last_login_at',
-        'is_active',
-        'login_attempts',
-        'locked_until',
-        'metadata',
-        'partner_id',
-        'product_id',
-        'first_name',
-        'last_name',
         'cover_start_date',
-        'cover_duration_months',
+        'cover_duration',
+        'start_date',
+        'cover_duration_days',
         'cover_end_date',
         'customer_since',
-        'submitted_data',
+        'last_payment_date',
+        'customer_data',
     ];
 
     protected function casts(): array
     {
-        return array_merge(parent::casts(), [
+        return [
+            'start_date' => 'date',
+            'date_of_birth' => 'date',
             'cover_start_date' => 'date',
             'cover_end_date' => 'date',
             'customer_since' => 'date',
-            'submitted_data' => 'array',
-        ]);
+            'last_payment_date' => 'datetime',
+            'customer_data' => 'array',
+        ];
     }
 
     protected static function booted(): void
     {
-        static::addGlobalScope('customer_role', function (Builder $query): void {
-            $query->whereHas('roles', fn (Builder $roleQuery) => $roleQuery->where('name', 'customer'));
-        });
-
         static::creating(function (Customer $customer): void {
-            $customer->uuid = $customer->uuid ?? (string) Str::uuid();
-            $customer->name = trim(($customer->first_name ?? '').' '.($customer->last_name ?? ''));
-            $customer->slug = Str::slug($customer->name.'-'.$customer->uuid);
-            $customer->status = $customer->status ?? 'active';
-            if (! $customer->password) {
-                $customer->password = Hash::make(Str::random(24));
+            if (! $customer->uuid) {
+                $customer->uuid = (string) Str::uuid();
             }
-            $start = Carbon::parse($customer->cover_start_date);
-            $customer->cover_end_date = $start->copy()->addMonths((int) $customer->cover_duration_months)->toDateString();
+            if (! $customer->customer_code) {
+                $customer->customer_code = 'CUST_'.str_pad((string) random_int(1, 99999999), 8, '0', STR_PAD_LEFT);
+            }
+            $customer->status = $customer->status ?: 'active';
+            $start = Carbon::parse($customer->start_date);
+            $customer->cover_end_date = $start->copy()->addDays((int) $customer->cover_duration_days)->toDateString();
             $customer->customer_since = $customer->customer_since ?? now()->toDateString();
-            $customer->is_active = $customer->status === 'active';
-
-            $exists = self::query()
-                ->where('partner_id', $customer->partner_id)
-                ->where('email', $customer->email)
-                ->exists();
-            $metadata = $customer->metadata ?? [];
-            $metadata['is_returning_customer'] = $exists;
-            $customer->metadata = $metadata;
         });
     }
 
@@ -93,6 +84,11 @@ class Customer extends User
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function meta(): HasMany
+    {
+        return $this->hasMany(CustomerMeta::class);
     }
 
     protected function fullName(): Attribute
@@ -118,20 +114,17 @@ class Customer extends User
         return $query->whereDate('cover_end_date', '<', now()->toDateString());
     }
 
-    public function anonymize(): void
+    public function scopeSearch(Builder $query, ?string $term): Builder
     {
-        $this->forceFill([
-            'first_name' => 'ANONYMIZED',
-            'last_name' => 'USER-'.$this->id,
-            'email' => 'anon-'.$this->uuid.'@example.invalid',
-            'name' => 'ANONYMIZED USER',
-            'phone' => null,
-            'submitted_data' => [],
-        ])->save();
-    }
+        if (! $term) {
+            return $query;
+        }
 
-    public function getMorphClass(): string
-    {
-        return User::class;
+        return $query->where(function (Builder $builder) use ($term): void {
+            $builder->where('first_name', 'like', "%{$term}%")
+                ->orWhere('last_name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%")
+                ->orWhere('phone', 'like', "%{$term}%");
+        });
     }
 }

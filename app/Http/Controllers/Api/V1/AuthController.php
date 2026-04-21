@@ -7,13 +7,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Resources\Api\AuthTokenResource;
 use App\Models\AuditLog;
 use App\Models\User;
-use App\Models\UserProfile;
+use App\Support\PortalPassword;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use OpenApi\Attributes as OA;
 
 class AuthController extends BaseApiController
@@ -81,7 +80,7 @@ class AuthController extends BaseApiController
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', PortalPassword::defaults()],
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -92,7 +91,6 @@ class AuthController extends BaseApiController
             'status' => 'active',
             'is_active' => true,
         ]);
-        UserProfile::query()->firstOrCreate(['user_id' => $user->id]);
 
         $token = $user->createToken($validated['device_name'] ?? 'admin-api')->plainTextToken;
         AuditLog::record('api_register', $user, [], ['source' => 'api'], $user);
@@ -285,7 +283,7 @@ class AuthController extends BaseApiController
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', PortalPassword::defaults()],
         ]);
 
         $status = Password::reset(

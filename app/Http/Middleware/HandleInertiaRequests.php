@@ -37,12 +37,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $user?->loadMissing('profile');
         $role = $user?->getRoleNames()->first();
 
         $avatarUrl = null;
-        if ($user?->profile?->avatar_path) {
-            $avatarUrl = Storage::disk('public')->url($user->profile->avatar_path);
+        $avatarPath = is_array($user?->metadata) ? ($user->metadata['avatar_path'] ?? null) : null;
+        if (is_string($avatarPath) && $avatarPath !== '') {
+            $avatarUrl = Storage::disk('public')->url($avatarPath);
         }
 
         return [

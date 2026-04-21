@@ -31,6 +31,9 @@ interface PlatformDashboardProps {
 
 export default function PlatformDashboard(props: PlatformDashboardProps) {
     const { auth } = usePage<PageProps>().props;
+    const monthlyPayments = Array.isArray(props.monthlyPayments) ? props.monthlyPayments : [];
+    const recentAuditLogs = Array.isArray(props.recentAuditLogs) ? props.recentAuditLogs : [];
+    const dbHealth = props.dbHealth && typeof props.dbHealth === 'object' ? props.dbHealth : {};
 
     return (
         <AdminLayout title="Platform overview">
@@ -99,7 +102,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                             </div>
                             <div className="mt-3 h-28">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={props.monthlyPayments}>
+                                    <AreaChart data={monthlyPayments}>
                                         <XAxis dataKey="label" hide />
                                         <YAxis hide />
                                         <Tooltip
@@ -130,14 +133,14 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {props.recentAuditLogs.length === 0 ? (
+                                {recentAuditLogs.length === 0 ? (
                                     <tr>
                                         <td colSpan={3} className="px-1 py-6 text-center text-muted-foreground">
                                             No recent activity found.
                                         </td>
                                     </tr>
                                 ) : (
-                                    props.recentAuditLogs.map((log) => (
+                                    recentAuditLogs.map((log) => (
                                         <tr key={log.id} className="border-b border-border/80 text-foreground/90 last:border-b-0">
                                             <td className="px-1 py-3">
                                                 <div className="inline-flex items-center gap-2">
@@ -158,7 +161,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                         <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                             <div className="mb-3 text-sm font-semibold text-foreground">Database health</div>
                             <div className="space-y-2 text-sm">
-                                {Object.entries(props.dbHealth).map(([key, value]) => (
+                                {Object.entries(dbHealth).map(([key, value]) => (
                                     <div key={key} className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <Database className="h-4 w-4 shrink-0 text-blue-500" />

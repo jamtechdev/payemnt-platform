@@ -71,15 +71,15 @@ class DashboardController extends Controller
 
         // BRD REC-003: Income per product line
         $revenueByProduct = Payment::query()
-            ->selectRaw('users.product_id, SUM(payments.amount) as total_revenue')
-            ->join('users', 'users.id', '=', 'payments.customer_id')
-            ->whereMonth('payments.payment_date', now()->month)
-            ->groupBy('users.product_id')
+            ->selectRaw('customers.product_id, SUM(payments.amount) as total_revenue')
+            ->join('customers', 'customers.id', '=', 'payments.customer_id')
+            ->whereMonth('payments.paid_at', now()->month)
+            ->groupBy('customers.product_id')
             ->get();
 
         return Inertia::render('Admin/Reconciliation/Dashboard', [
             'monthlyCustomers' => Customer::query()->whereMonth('created_at', now()->month)->count(),
-            'monthlyRevenue' => (float) Payment::query()->whereMonth('payment_date', now()->month)->sum('amount'),
+            'monthlyRevenue' => (float) Payment::query()->whereMonth('paid_at', now()->month)->sum('amount'),
             'customersByProduct' => $customersByProduct,
             'revenueByProduct' => $revenueByProduct,
         ]);
@@ -88,10 +88,10 @@ class DashboardController extends Controller
     public function superAdminDashboard(): Response
     {
         $monthlyPayments = Payment::query()
-            ->selectRaw("DATE_FORMAT(payment_date, '%b %e') as label, SUM(amount) as total")
-            ->whereDate('payment_date', '>=', now()->subDays(30))
+            ->selectRaw("DATE_FORMAT(paid_at, '%b %e') as label, SUM(amount) as total")
+            ->whereDate('paid_at', '>=', now()->subDays(30))
             ->groupBy('label')
-            ->orderByRaw('MIN(payment_date)')
+            ->orderByRaw('MIN(paid_at)')
             ->get();
 
         $dbHealth = [

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,22 +13,29 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    use HasAuditLog;
     use SoftDeletes;
 
     protected $fillable = [
         'uuid',
+        'product_code',
+        'country',
         'name',
         'slug',
         'description',
-        'status',
+        'cover_duration_mode',
+        'cover_duration_type',
+        'default_cover_duration_days',
         'cover_duration_options',
+        'status',
+        'settings',
     ];
 
     protected function casts(): array
     {
         return [
             'cover_duration_options' => 'array',
+            'default_cover_duration_days' => 'integer',
+            'settings' => 'array',
         ];
     }
 
@@ -49,19 +55,14 @@ class Product extends Model
 
     public function partners(): BelongsToMany
     {
-        return $this->belongsToMany(Partner::class, 'partner_products')
-            ->withPivot(['status', 'partner_price', 'partner_currency', 'activated_at', 'deactivated_at'])
+        return $this->belongsToMany(Partner::class, 'partner_product')
+            ->withPivot(['is_enabled', 'cover_duration_days_override', 'rule_overrides'])
             ->withTimestamps();
     }
 
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
-    }
-
-    public function versions(): HasMany
-    {
-        return $this->hasMany(ProductVersion::class)->latest('version_number');
     }
 
     public function scopeActive(Builder $query): Builder

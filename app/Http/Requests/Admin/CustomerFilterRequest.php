@@ -14,7 +14,7 @@ class CustomerFilterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'partner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'partner_id' => ['nullable', 'integer', 'exists:partners,id'],
             'product_id' => ['nullable', 'integer', 'exists:products,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],

@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 class PurgeAuditLogs extends Command
 {
     protected $signature = 'app:purge-audit-logs {--years=7}';
-    protected $description = 'Purge audit logs older than retention period';
+    protected $description = 'Delete audit logs older than the retention window (default 7 years); compliant records within the window are kept';
 
     public function handle(): int
     {

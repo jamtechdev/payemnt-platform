@@ -17,7 +17,8 @@ class CheckSessionTimeout
     public function handle(Request $request, Closure $next): Response
     {
         $lastActivity = (int) $request->session()->get('last_activity', time());
-        if (time() - $lastActivity > 1800) {
+        $maxIdleSeconds = max(60, (int) config('session.lifetime', 30) * 60);
+        if (time() - $lastActivity > $maxIdleSeconds) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

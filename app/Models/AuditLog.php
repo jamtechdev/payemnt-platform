@@ -4,53 +4,57 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 
 class AuditLog extends Model
 {
-    public const UPDATED_AT = null;
-
     protected $fillable = [
-        'user_id',
-        'user_type',
+        'actor_user_id',
+        'partner_id',
         'action',
-        'model_type',
-        'model_id',
-        'old_values',
-        'new_values',
+        'entity_type',
+        'entity_id',
         'ip_address',
         'user_agent',
-        'metadata',
+        'changes',
+        'occurred_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'old_values' => 'array',
-            'new_values' => 'array',
-            'metadata' => 'array',
-            'created_at' => 'datetime',
+            'changes' => 'array',
+            'occurred_at' => 'datetime',
         ];
     }
 
-    public static function record(string $action, ?EloquentModel $model, array $old, array $new, ?User $user): void
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_user_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
+    }
+
+    public static function record(string $action, mixed $entity = null, array $old = [], array $new = [], ?User $actor = null): void
     {
         /** @var Request|null $request */
         $request = request();
 
         self::query()->create([
-            'user_id' => $user?->id,
-            'user_type' => $user ? $user::class : null,
+            'actor_user_id' => $actor?->id,
+            'partner_id' => null,
             'action' => $action,
-            'model_type' => $model ? $model::class : null,
-            'model_id' => $model?->getKey(),
-            'old_values' => $old,
-            'new_values' => $new,
+            'entity_type' => is_object($entity) ? $entity::class : 'system',
+            'entity_id' => is_object($entity) && method_exists($entity, 'getKey') ? $entity->getKey() : null,
             'ip_address' => $request?->ip(),
             'user_agent' => $request?->userAgent(),
-            'metadata' => [],
+            'changes' => ['old' => $old, 'new' => $new],
+            'occurred_at' => now(),
         ]);
     }
 }

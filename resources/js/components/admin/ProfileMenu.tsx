@@ -46,7 +46,7 @@ export default function ProfileMenu({ auth }: ProfileMenuProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href={route('admin.profile.edit')} className="cursor-pointer">
+                    <Link href={route('admin.profile.index')} className="cursor-pointer">
                         <User className="mr-2 h-4 w-4" /> My profile
                     </Link>
                 </DropdownMenuItem>
