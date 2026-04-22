@@ -73,6 +73,7 @@ Route::prefix('admin')
             Route::delete('/partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])->name('partners.revoke-api-key');
             Route::post('/partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])->name('partners.toggle-product-access');
             Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
+            Route::post('/partners/{id}/restore', [PartnerController::class, 'restore'])->name('partners.restore');
 
             Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
             Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');

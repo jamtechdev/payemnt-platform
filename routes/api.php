@@ -16,9 +16,24 @@ Route::prefix('v1')
     ->name('api.v1.')
     ->group(function (): void {
         // Lightweight verify endpoint - accepts partner Bearer token
-        Route::get('/verify', function () {
-            return response()->json(['success' => true, 'message' => 'Authenticated.']);
-        })->middleware('auth.partner')->name('verify');
+        Route::get('/verify', function (\Illuminate\Http\Request $request) {
+            $bearer = $request->bearerToken();
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($bearer);
+            if (!$token) {
+                return response()->json(['success' => false, 'debug' => 'token_not_found', 'bearer_received' => $bearer ? substr($bearer, 0, 20).'...' : 'none'], 401);
+            }
+            if ($token->tokenable_type !== \App\Models\Partner::class) {
+                return response()->json(['success' => false, 'debug' => 'wrong_tokenable_type', 'type' => $token->tokenable_type], 401);
+            }
+            $partner = \App\Models\Partner::find($token->tokenable_id);
+            if (!$partner) {
+                return response()->json(['success' => false, 'debug' => 'partner_not_found'], 401);
+            }
+            if ($partner->status !== 'active') {
+                return response()->json(['success' => false, 'debug' => 'partner_inactive', 'status' => $partner->status], 401);
+            }
+            return response()->json(['success' => true, 'message' => 'Authenticated.', 'partner' => $partner->name]);
+        })->name('verify');
 
         Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
         Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');

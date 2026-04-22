@@ -22,14 +22,25 @@ class PartnerController extends Controller
             ->with('tokens')
             ->paginate(15);
 
-        // Add API key status to each partner
         $partners->getCollection()->transform(function ($partner) {
             $partner->api_key_status = $partner->hasActiveApiKey() ? 'active' : 'inactive';
             return $partner;
         });
 
+        $deletedPartners = Partner::onlyTrashed()
+            ->withCount('customers')
+            ->get()
+            ->map(fn($p) => [
+                'id'           => $p->id,
+                'name'         => $p->name,
+                'partner_code' => $p->partner_code,
+                'contact_email'=> $p->contact_email,
+                'deleted_at'   => $p->deleted_at?->format('d M Y'),
+            ]);
+
         return Inertia::render('Admin/SuperAdmin/PartnerList', [
-            'partners' => $partners,
+            'partners'        => $partners,
+            'deletedPartners' => $deletedPartners,
         ]);
     }
 
@@ -56,15 +67,31 @@ class PartnerController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
+        // Generate unique slug
+        $baseSlug = Str::slug($request->name);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Partner::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        // Generate unique partner_code
+        $baseCode = $request->filled('partner_code')
+            ? strtoupper(Str::slug($request->partner_code, '_'))
+            : strtoupper(Str::slug($request->name, '_'));
+        $code = $baseCode;
+        $j = 1;
+        while (Partner::withTrashed()->where('partner_code', $code)->exists()) {
+            $code = $baseCode . '_' . $j++;
+        }
+
         $partner = Partner::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'partner_code' => $request->filled('partner_code')
-                ? strtoupper(Str::slug($request->partner_code, '_'))
-                : strtoupper(Str::slug($request->name, '_') . '_' . strtoupper(Str::random(4))),
-            'contact_email' => $request->email,
-            'contact_phone' => $request->phone,
-            'status' => 'active',
+            'name'          => $request->name,
+            'slug'          => $slug,
+            'partner_code'  => $code,
+            'contact_email' => $request->contact_email,
+            'contact_phone' => $request->contact_phone,
+            'status'        => 'active',
         ]);
 
         // Create partner profile if relation exists
@@ -175,12 +202,22 @@ class PartnerController extends Controller
         abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         if ($partner->customers()->exists()) {
-            return back()->with('error', 'Cannot delete partner with customer records.');
+            return back()->with('error', 'Cannot delete partner with existing customer records.');
         }
 
         $partner->delete();
 
-        return redirect()->route('admin.partners.index')->with('success', 'Partner deleted.');
+        return redirect()->route('admin.partners.index')->with('success', 'Partner deleted. You can restore it anytime from the deleted partners list.');
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+        $partner = Partner::withTrashed()->findOrFail($id);
+        $partner->restore();
+
+        return redirect()->route('admin.partners.index')->with('success', 'Partner restored successfully.');
     }
 
     public function generateApiKey(Partner $partner): RedirectResponse
