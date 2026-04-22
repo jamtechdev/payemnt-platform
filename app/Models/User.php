@@ -70,11 +70,19 @@ class User extends Authenticatable
 
     public function isLocked(): bool
     {
+        if ($this->hasRole('super_admin')) {
+            return false;
+        }
+
         return $this->locked_until instanceof Carbon && $this->locked_until->isFuture();
     }
 
     public function incrementLoginAttempts(): void
     {
+        if ($this->hasRole('super_admin')) {
+            return;
+        }
+
         $attempts = $this->login_attempts + 1;
         $this->forceFill(['login_attempts' => $attempts]);
 
