@@ -58,6 +58,7 @@ Route::prefix('admin')
             Route::post('/products', [ProductController::class, 'store'])->name('products.store');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
             Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+            Route::post('/products/{product}', [ProductController::class, 'update'])->name('products.update.post');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
             Route::get('/products/{product}/versions', [ProductController::class, 'versions'])->name('products.versions');
 
