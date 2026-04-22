@@ -27,14 +27,17 @@ class Partner extends Model
         'contact_phone',
         'status',
         'settings',
+        'connected_base_url',
+        'connected_at',
         'last_seen_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'settings' => 'array',
-            'last_seen_at' => 'datetime',
+            'settings'           => 'array',
+            'last_seen_at'       => 'datetime',
+            'connected_at'       => 'datetime',
         ];
     }
 

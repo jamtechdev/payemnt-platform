@@ -226,10 +226,15 @@ class PartnerController extends Controller
 
         $apiKey = $partner->generateApiKey();
 
+        // Save connection info permanently
+        $partner->forceFill([
+            'connected_at' => now(),
+        ])->save();
+
         return back()->with([
-            'success' => 'API key generated successfully.',
-            'api_key' => $apiKey,
-            'show_api_key_modal' => true
+            'success'            => 'API key generated successfully.',
+            'api_key'            => $apiKey,
+            'show_api_key_modal' => true,
         ]);
     }
 

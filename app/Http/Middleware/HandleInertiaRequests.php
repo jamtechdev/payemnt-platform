@@ -59,9 +59,11 @@ class HandleInertiaRequests extends Middleware
                 'modules' => $role ? config("admin_portal.modules.{$role}", []) : [],
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'new_api_token' => fn () => $request->session()->get('new_api_token'),
+                'success'          => fn () => $request->session()->get('success'),
+                'error'            => fn () => $request->session()->get('error'),
+                'new_api_token'    => fn () => $request->session()->get('new_api_token'),
+                'api_key'          => fn () => $request->session()->get('api_key'),
+                'show_api_key_modal' => fn () => $request->session()->get('show_api_key_modal'),
             ],
         ];
     }
