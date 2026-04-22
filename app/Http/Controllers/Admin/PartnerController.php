@@ -149,19 +149,12 @@ class PartnerController extends Controller
     {
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'status' => $request->status ?? 'inactive',
-        ];
-
-        // 🔐 ONLY UPDATE IF PASSWORD FILLED
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        $partner->update($data);
+        $partner->update([
+            'name'          => $request->name ?? $partner->name,
+            'contact_email' => $request->contact_email ?? $partner->contact_email,
+            'contact_phone' => $request->contact_phone ?? $partner->contact_phone,
+            'status'        => $request->status ?? $partner->status,
+        ]);
 
         return redirect()
             ->route('admin.partners.index')

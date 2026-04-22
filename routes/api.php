@@ -15,10 +15,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')
     ->name('api.v1.')
     ->group(function (): void {
-        // Lightweight verify endpoint for external platforms to test token validity
+        // Lightweight verify endpoint - accepts partner Bearer token
         Route::get('/verify', function () {
             return response()->json(['success' => true, 'message' => 'Authenticated.']);
-        })->middleware('auth:sanctum')->name('verify');
+        })->middleware('auth.partner')->name('verify');
 
         Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
         Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');

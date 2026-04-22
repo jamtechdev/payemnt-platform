@@ -16,23 +16,10 @@ class UpdatePartnerRequest extends FormRequest
         $partnerId = $this->route('partner')?->id;
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email,'.$partnerId],
-            'phone' => ['nullable', 'string', 'max:40'],
-            'status' => ['sometimes', 'in:active,inactive'],
-            'password' => [
-                'nullable', 
-                'string', 
-                'min:12',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
-            ],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
+            'name'          => ['sometimes', 'required', 'string', 'max:255'],
+            'contact_email' => ['sometimes', 'required', 'email', 'max:255', 'unique:partners,contact_email,'.$partnerId],
+            'contact_phone' => ['nullable', 'string', 'max:40'],
+            'status'        => ['sometimes', 'in:active,inactive'],
         ];
     }
 }

@@ -6,13 +6,9 @@ import React from 'react';
 export default function PartnerEdit({ partner }: any) {
     const { data, setData, patch, processing, errors } = useForm({
         name: partner.name || '',
-        email: partner.email || '',
-        phone: partner.phone || '',
+        contact_email: partner.contact_email || partner.email || '',
+        contact_phone: partner.contact_phone || partner.phone || '',
         status: partner.status || 'active',
-
-        // optional password fields
-        password: '',
-        password_confirmation: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -23,82 +19,89 @@ export default function PartnerEdit({ partner }: any) {
     return (
         <AdminLayout title="Edit Partner">
             <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-900">
-                <h2 className="mb-6 text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Partner</h2>
+                <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Partner</h2>
+                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+                    Update partner details. API key management is available on the partner detail page.
+                </p>
 
                 <form onSubmit={submit} className="space-y-5">
-                    {/* Name */}
+                    {/* Partner Code — read only */}
                     <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Name</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Partner Code</label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                            value={partner.partner_code || '—'}
+                            readOnly
+                        />
+                        <p className="mt-1 text-xs text-gray-400">Partner code cannot be changed after creation.</p>
+                    </div>
+
+                    {/* Name */}
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Partner Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
+                            placeholder="e.g. Acme Insurance Ltd"
                         />
-                        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                     </div>
 
                     {/* Email */}
                     <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Email</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Contact Email <span className="text-red-500">*</span>
+                        </label>
                         <input
                             type="email"
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            value={data.contact_email}
+                            onChange={(e) => setData('contact_email', e.target.value)}
+                            placeholder="e.g. admin@acme.com"
                         />
-                        {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                        {errors.contact_email && <p className="mt-1 text-sm text-red-500">{errors.contact_email}</p>}
                     </div>
 
                     {/* Phone */}
                     <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Phone</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Phone</label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            value={data.contact_phone}
+                            onChange={(e) => setData('contact_phone', e.target.value)}
+                            placeholder="e.g. +234 800 000 0000"
                         />
+                        {errors.contact_phone && <p className="mt-1 text-sm text-red-500">{errors.contact_phone}</p>}
                     </div>
 
                     {/* Status */}
                     <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Status</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                         <select
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                             value={data.status}
                             onChange={(e) => setData('status', e.target.value)}
                         >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
                         </select>
+                        {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
                     </div>
 
-                    {/* Password (optional) */}
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">New Password (optional)</label>
-                        <input
-                            type="password"
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                        />
-                        {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                        <label className="mb-1 block text-sm text-gray-700 dark:text-gray-300">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="w-full rounded-lg border bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                        />
-                    </div>
-
-                    {/* Button */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => window.history.back()}
+                        >
+                            Cancel
+                        </Button>
                         <Button type="submit" disabled={processing} className="bg-[#0e9f84] text-white hover:bg-[#0c8f77]">
                             {processing ? 'Updating...' : 'Update Partner'}
                         </Button>
