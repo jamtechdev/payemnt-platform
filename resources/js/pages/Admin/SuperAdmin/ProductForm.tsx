@@ -8,12 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminLayout from '@/layouts/AdminLayout';
 import { PageProps } from '@/Types';
-import { Layers3, ShieldCheck, Sparkles } from 'lucide-react';
+import { Layers3, ShieldCheck, Sparkles, ImagePlus } from 'lucide-react';
+import { useState } from 'react';
+import React from 'react';
 
 interface ProductPayload {
     id?: number;
     name?: string;
     description?: string;
+    image?: string;
     status?: string;
     cover_duration_options?: number[];
     fields?: ProductFieldForm[];
@@ -32,9 +35,10 @@ interface ProductFieldForm {
 }
 
 interface ProductFormData {
-    [key: string]: string | number | string[] | number[] | ProductFieldForm[];
+    [key: string]: string | number | string[] | number[] | ProductFieldForm[] | File | null;
     name: string;
     description: string;
+    image: File | null;
     status: string;
     cover_duration_options: number[];
     fields: ProductFieldForm[];
@@ -115,19 +119,31 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
     const { data, setData, post, patch, errors, processing } = useForm<ProductFormData>({
         name: product?.name ?? 'Nigerian Beneficiary Community Product',
         description: product?.description ?? 'Insuretech beneficiary product template.',
+        image: null,
         status: product?.status ?? 'active',
         cover_duration_options: [1, 12],
         fields: product ? normalizeFields(product?.fields) : beneficiaryTemplateFields(),
     });
 
+    const [imagePreview, setImagePreview] = useState<string | null>(product?.image ?? null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] ?? null;
+        setData('image', file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
     const submit = () => {
         if (!canSubmit) return;
         if (product?.id) {
-            patch(route('admin.products.update', product.id), { preserveScroll: true });
+            patch(route('admin.products.update', product.id), { preserveScroll: true, forceFormData: true });
             return;
         }
-
-        post(route('admin.products.store'), { preserveScroll: true });
+        post(route('admin.products.store'), { preserveScroll: true, forceFormData: true });
     };
 
     const updateField = <K extends keyof ProductFieldForm>(index: number, key: K, value: ProductFieldForm[K]) => {
@@ -220,6 +236,50 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                         placeholder="Explain what this product covers, who it is for, and what makes it different."
                                     />
                                     {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
+                                </div>
+
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label>Product Image</Label>
+                                    <div className="flex items-start gap-4">
+                                        {imagePreview ? (
+                                            <img
+                                                src={imagePreview}
+                                                alt="Product"
+                                                className="h-28 w-28 rounded-xl border border-slate-200 object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-28 w-28 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400">
+                                                <ImagePlus className="h-8 w-8" />
+                                            </div>
+                                        )}
+                                        <div className="space-y-2">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                id="product-image"
+                                                className="hidden"
+                                                onChange={handleImageChange}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => document.getElementById('product-image')?.click()}
+                                            >
+                                                {imagePreview ? 'Change Image' : 'Upload Image'}
+                                            </Button>
+                                            {imagePreview && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={() => { setImagePreview(null); setData('image', null); }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            )}
+                                            <p className="text-xs text-slate-500">PNG, JPG up to 2MB</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

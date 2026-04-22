@@ -28,8 +28,13 @@ class ProductController extends BaseApiController
                 'products.name',
                 'products.slug',
                 'products.description',
+                'products.image',
                 'products.status',
                 'products.cover_duration_options',
+                'products.cover_duration_mode',
+                'products.cover_duration_type',
+                'products.default_cover_duration_days',
+                'products.country',
                 'partner_product.partner_price',
                 'partner_product.partner_currency',
             ])
@@ -38,7 +43,12 @@ class ProductController extends BaseApiController
             ->where('partner_product.is_enabled', true)
             ->get();
 
-        return response()->json(['status' => 'success', 'data' => $products]);
+        return response()->json(['status' => 'success', 'data' => $products->map(function ($product) {
+            $product->image_url = $product->image
+                ? asset('storage/' . $product->image)
+                : null;
+            return $product;
+        })]);
     }
 
     #[OA\Get(

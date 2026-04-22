@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -70,17 +71,22 @@ class ProductController extends Controller
             $name = $request->string('name')->toString();
             $slug = Str::slug($name);
             $productCode = strtoupper(str_replace('-', '_', $slug));
-            $durationOptions = [1, 12];
-            $defaultDurationMonths = 1;
+
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('products', 'public');
+            }
+
             $product = Product::query()->create([
-                'product_code' => $productCode,
-                'name' => $name,
-                'slug' => $slug,
-                'description' => $request->input('description'),
-                'status' => $request->input('status', 'active'),
-                'cover_duration_mode' => 'custom',
-                'default_cover_duration_days' => max(1, $defaultDurationMonths) * 30,
-                'cover_duration_options' => $durationOptions,
+                'product_code'               => $productCode,
+                'name'                       => $name,
+                'slug'                       => $slug,
+                'description'                => $request->input('description'),
+                'image'                      => $imagePath,
+                'status'                     => $request->input('status', 'active'),
+                'cover_duration_mode'        => 'custom',
+                'default_cover_duration_days'=> 30,
+                'cover_duration_options'     => [1, 12],
             ]);
             $this->syncBeneficiaryTemplateFields($product);
         });
@@ -90,8 +96,12 @@ class ProductController extends Controller
 
     public function edit(Product $product): Response
     {
+        $productData = $product->load('fields', 'partners')->toArray();
+        if ($product->image) {
+            $productData['image'] = asset('storage/' . $product->image);
+        }
         return Inertia::render('Admin/SuperAdmin/ProductForm', [
-            'product' => $product->load('fields', 'partners'),
+            'product' => $productData,
             'partners' => Partner::query()->get(),
         ]);
     }
@@ -101,10 +111,18 @@ class ProductController extends Controller
         abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         $payload = $request->only(['name', 'slug', 'description', 'status']);
-        $payload['cover_duration_options'] = [1, 12];
+        $payload['cover_duration_options']      = [1, 12];
         $payload['default_cover_duration_days'] = 30;
-        $product->update($payload);
 
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image);
+            }
+            $payload['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($payload);
         $this->syncBeneficiaryTemplateFields($product);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');

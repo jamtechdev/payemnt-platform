@@ -22,6 +22,7 @@ class Product extends Model
         'name',
         'slug',
         'description',
+        'image',
         'cover_duration_mode',
         'cover_duration_type',
         'default_cover_duration_days',
