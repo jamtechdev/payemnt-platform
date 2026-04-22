@@ -30,6 +30,16 @@ export default function ProductList({ products }: { products: unknown }) {
         columnHelper.accessor((row) => String(row.name ?? '-'), { id: 'name', header: 'Name' }),
         columnHelper.accessor((row) => String(row.slug ?? '-'), { id: 'slug', header: 'Slug' }),
         columnHelper.display({
+            id: 'image',
+            header: 'Image',
+            cell: (info) => {
+                const image = info.row.original.image as string | null;
+                if (!image) return <span className="text-xs text-muted-foreground">No image</span>;
+                const url = image.startsWith('http') ? image : `/storage/${image}`;
+                return <img src={url} alt="product" className="h-10 w-10 rounded-md object-cover border border-slate-200" />;
+            },
+        }),
+        columnHelper.display({
             id: 'fields',
             header: 'Configured fields',
             cell: (info) => {

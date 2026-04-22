@@ -125,7 +125,11 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
         fields: product ? normalizeFields(product?.fields) : beneficiaryTemplateFields(),
     });
 
-    const [imagePreview, setImagePreview] = useState<string | null>(product?.image ?? null);
+    const [imagePreview, setImagePreview] = useState<string | null>(
+        product?.image
+            ? (product.image.startsWith('http') ? product.image : `/storage/${product.image}`)
+            : null
+    );
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
