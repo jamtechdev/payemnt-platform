@@ -226,9 +226,13 @@ class PartnerController extends Controller
 
         $apiKey = $partner->generateApiKey();
 
-        // Save connection info permanently
+        $partner->forceFill(['connected_at' => now()])->save();
+
+        // Store new token in partner settings so external platforms can re-sync
         $partner->forceFill([
-            'connected_at' => now(),
+            'settings' => array_merge($partner->settings ?? [], [
+                'last_token_generated_at' => now()->toIso8601String(),
+            ])
         ])->save();
 
         return back()->with([

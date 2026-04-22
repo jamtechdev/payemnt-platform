@@ -30,12 +30,12 @@ class ProductController extends BaseApiController
                 'products.description',
                 'products.status',
                 'products.cover_duration_options',
-                'partner_products.partner_price',
-                'partner_products.partner_currency',
+                'partner_product.partner_price',
+                'partner_product.partner_currency',
             ])
-            ->join('partner_products', 'partner_products.product_id', '=', 'products.id')
-            ->where('partner_products.partner_id', $partner->id)
-            ->where('partner_products.status', 'active')
+            ->join('partner_product', 'partner_product.product_id', '=', 'products.id')
+            ->where('partner_product.partner_id', $partner->id)
+            ->where('partner_product.is_enabled', true)
             ->get();
 
         return response()->json(['status' => 'success', 'data' => $products]);
@@ -55,7 +55,7 @@ class ProductController extends BaseApiController
         $partner = $request->attributes->get('partner');
         $product = Product::query()
             ->where('uuid', $uuid)
-            ->whereHas('partners', fn ($query) => $query->where('partner_products.partner_id', $partner->id)->where('partner_products.status', 'active'))
+            ->whereHas('partners', fn ($query) => $query->where('partner_product.partner_id', $partner->id)->where('partner_product.is_enabled', true))
             ->first();
 
         if (! $product) {
