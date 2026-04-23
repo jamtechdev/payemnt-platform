@@ -48,11 +48,11 @@ Route::prefix('v1')
     ->name('api.v1.')
     ->middleware(['auth.partner', 'throttle:partner_api', 'audit.api'])
     ->group(function (): void {
-        Route::post('/customers', [PartnerCustomerController::class, 'store'])->name('customers.store');
-        Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.store');
-        Route::get('/partner/products', [ProductController::class, 'index'])->name('partner.products.index');
-        Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
-        Route::post('/partner/products/create', [PartnerProductController::class, 'store'])->name('partner.products.store');
+        // Route::post('/customers', [PartnerCustomerController::class, 'store'])->name('customers.store');
+        // Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.store');
+        // Route::get('/partner/products', [ProductController::class, 'index'])->name('partner.products.index');
+        // Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
+        Route::post('/partner/products', [PartnerProductController::class, 'store'])->name('partner.products.store');
         Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
     });
 
