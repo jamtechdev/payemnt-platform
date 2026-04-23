@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Partner API Platform",
-        "description": "Partner integration API for external platforms. Use partner Bearer token on /api/v1/customers and /api/v1/purchase.",
+        "description": "Admin API for product management.",
         "version": "2.0.0"
     },
     "servers": [
@@ -12,232 +12,13 @@
         }
     ],
     "paths": {
-        "/api/v1/auth/login": {
+        "/api/v1/admin/products": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Products"
                 ],
-                "summary": "Login with email and password",
-                "operationId": "unifiedLogin",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "email",
-                                    "password"
-                                ],
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email"
-                                    },
-                                    "password": {
-                                        "type": "string"
-                                    },
-                                    "device_name": {
-                                        "type": "string",
-                                        "example": "admin-api"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Token created",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|sanctum-token-value"
-                                                },
-                                                "token_type": {
-                                                    "type": "string",
-                                                    "example": "Bearer"
-                                                },
-                                                "user": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 1
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "Alex Admin"
-                                                        },
-                                                        "email": {
-                                                            "type": "string",
-                                                            "format": "email",
-                                                            "example": "admin@local.test"
-                                                        },
-                                                        "role": {
-                                                            "type": "string",
-                                                            "example": "admin",
-                                                            "nullable": true
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Invalid credentials",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "error_code": {
-                                            "type": "string",
-                                            "example": "INVALID_CREDENTIALS"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invalid credentials."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "423": {
-                        "description": "Account locked",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "error_code": {
-                                            "type": "string",
-                                            "example": "ACCOUNT_LOCKED"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Account is locked. Try again later."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/auth/logout": {
-            "post": {
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Revoke current Sanctum token",
-                "operationId": "workspaceTokenLogout",
-                "responses": {
-                    "200": {
-                        "description": "Token revoked",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token revoked."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/customers": {
-            "post": {
-                "tags": [
-                    "Customers"
-                ],
-                "summary": "Ingest customer and payment (partner Bearer token)",
-                "operationId": "63608eaeb546cd420e3ce702edc186cf",
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/PartnerSubmitCustomer"
-                },
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "404": {
-                        "description": "Product not available for partner"
-                    },
-                    "422": {
-                        "description": "Validation failed"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/purchase": {
-            "post": {
-                "tags": [
-                    "Customers"
-                ],
-                "summary": "Record partner purchase",
-                "description": "Partner purchase endpoint for Swap Circle and other partners.",
-                "operationId": "partnerPurchase",
+                "summary": "Create a new product",
+                "operationId": "adminProductCreate",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -245,24 +26,53 @@
                             "schema": {
                                 "required": [
                                     "partner_id",
-                                    "product_id",
-                                    "customer",
-                                    "payment"
+                                    "partner_code",
+                                    "name",
+                                    "product_code",
+                                    "status"
                                 ],
                                 "properties": {
                                     "partner_id": {
+                                        "description": "ID of the partner",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "partner_code": {
+                                        "description": "Unique partner code",
                                         "type": "string",
                                         "example": "SWAP_CIRCLE"
                                     },
-                                    "product_id": {
+                                    "image_url": {
+                                        "description": "Product image URL",
                                         "type": "string",
-                                        "example": "NIGERIA_BENEFICIARY_COMMUNITY"
+                                        "example": "https://example.com/image.png"
                                     },
-                                    "customer": {
-                                        "type": "object"
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Beneficiary Community Plan"
                                     },
-                                    "payment": {
-                                        "type": "object"
+                                    "description": {
+                                        "type": "string",
+                                        "example": "A community protection plan",
+                                        "nullable": true
+                                    },
+                                    "price": {
+                                        "description": "Product price",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 29.99
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    },
+                                    "product_code": {
+                                        "type": "string",
+                                        "example": "PROD_001"
                                     }
                                 },
                                 "type": "object"
@@ -272,7 +82,168 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Purchase recorded"
+                        "description": "Product created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/products": {
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create a new product (Partner API Key)",
+                "operationId": "partnerProductCreate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "partner_id",
+                                    "partner_code",
+                                    "name",
+                                    "product_code",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "partner_id": {
+                                        "description": "ID of the partner",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "partner_code": {
+                                        "description": "Partner code",
+                                        "type": "string",
+                                        "example": "SWAP_CIRCLE"
+                                    },
+                                    "image_url": {
+                                        "description": "Product image URL",
+                                        "type": "string",
+                                        "example": "https://example.com/image.png",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Beneficiary Community Plan"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "A community protection plan",
+                                        "nullable": true
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 29.99,
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Product created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/products/{product_code}": {
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Update an existing product (Partner API Key)",
+                "operationId": "partnerProductUpdate",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "PROD_001"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "image_url": {
+                                        "type": "string",
+                                        "example": "https://example.com/image.png",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Updated Plan Name"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 49.99,
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product updated successfully"
+                    },
+                    "404": {
+                        "description": "Product not found"
                     },
                     "422": {
                         "description": "Validation error"
@@ -407,12 +378,8 @@
     },
     "tags": [
         {
-            "name": "Auth",
-            "description": "Admin login and logout for portal access"
-        },
-        {
-            "name": "Customers",
-            "description": "Partner ingestion APIs for customer and purchase sync"
+            "name": "Products",
+            "description": "Product management APIs"
         }
     ]
 }

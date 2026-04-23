@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PartnerCustomerController;
+use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PurchaseController;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,8 @@ Route::prefix('v1')
         Route::post('/purchase', [PurchaseController::class, 'store'])->name('purchase.store');
         Route::get('/partner/products', [ProductController::class, 'index'])->name('partner.products.index');
         Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
+        Route::post('/partner/products/create', [PartnerProductController::class, 'store'])->name('partner.products.store');
+        Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
     });
 
 Route::prefix('v1/admin')

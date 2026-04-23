@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\CustomerIngestionService;
 use App\Services\PartnerTransactionService;
-use OpenApi\Attributes as OA;
 
 class CustomerController extends BaseApiController
 {
@@ -48,15 +47,6 @@ class CustomerController extends BaseApiController
         }
     }
 
-    #[OA\Get(
-        path: '/api/v1/partner/customers/{uuid}',
-        operationId: 'partnerCustomerShow',
-        summary: 'Get customer',
-        security: [['sanctum' => []]],
-        tags: ['Customers'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
-        responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 404, description: 'Not found')]
-    )]
     public function show(Request $request, string $uuid): JsonResponse
     {
         $partner = $request->attributes->get('partner');
@@ -95,24 +85,6 @@ class CustomerController extends BaseApiController
         ]);
     }
 
-    #[OA\Patch(
-        path: '/api/v1/partner/customers/{uuid}/status',
-        operationId: 'partnerCustomerStatusUpdate',
-        summary: 'Update customer status',
-        security: [['sanctum' => []]],
-        tags: ['Customers'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['status'],
-                properties: [
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'expired', 'cancelled']),
-                ]
-            )
-        ),
-        responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 404, description: 'Not found')]
-    )]
     public function updateStatus(UpdateCustomerStatusRequest $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
     {
         $validated = $request->validated();
@@ -132,28 +104,6 @@ class CustomerController extends BaseApiController
         return $this->success($updated);
     }
 
-    #[OA\Post(
-        path: '/api/v1/partner/customers/{uuid}/payments',
-        operationId: 'partnerCustomerPaymentAppend',
-        summary: 'Append payment transaction',
-        security: [['sanctum' => []]],
-        tags: ['Payments'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['amount', 'currency', 'payment_date', 'transaction_reference'],
-                properties: [
-                    new OA\Property(property: 'amount', type: 'number', format: 'float'),
-                    new OA\Property(property: 'currency', type: 'string', example: 'USD'),
-                    new OA\Property(property: 'payment_date', type: 'string', format: 'date-time'),
-                    new OA\Property(property: 'transaction_reference', type: 'string'),
-                    new OA\Property(property: 'payment_status', type: 'string', example: 'success'),
-                ]
-            )
-        ),
-        responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 404, description: 'Not found')]
-    )]
     public function addPayment(AddPaymentRequest $request, string $uuid, PartnerTransactionService $transactionService): JsonResponse
     {
         $validated = $request->validated();
@@ -186,14 +136,6 @@ class CustomerController extends BaseApiController
         ], 201);
     }
 
-    #[OA\Get(
-        path: '/api/v1/partner/analytics/usage',
-        operationId: 'partnerApiUsageAnalytics',
-        summary: 'Partner API usage analytics',
-        security: [['sanctum' => []]],
-        tags: ['Analytics'],
-        responses: [new OA\Response(response: 200, description: 'OK')]
-    )]
     public function usageAnalytics(Request $request): JsonResponse
     {
         $partner = $request->attributes->get('partner');

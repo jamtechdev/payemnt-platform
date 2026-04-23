@@ -12,22 +12,9 @@ use App\Services\CustomerIngestionService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
-use OpenApi\Attributes as OA;
 
 class PartnerCustomerController extends BaseApiController
 {
-    #[OA\Post(
-        path: '/api/v1/customers',
-        summary: 'Ingest customer and payment (partner Bearer token)',
-        security: [['sanctum' => []]],
-        tags: ['Customers'],
-        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PartnerSubmitCustomer'),
-        responses: [
-            new OA\Response(response: 201, description: 'Created'),
-            new OA\Response(response: 404, description: 'Product not available for partner'),
-            new OA\Response(response: 422, description: 'Validation failed'),
-        ]
-    )]
     public function store(SubmitCustomerRequest $request, CustomerIngestionService $ingestionService): JsonResponse
     {
         $partner = $request->attributes->get('partner');

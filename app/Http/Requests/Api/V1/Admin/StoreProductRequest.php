@@ -16,11 +16,15 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'partner_id' => ['required', 'integer'],
+            'partner_code' => ['required', 'string', 'max:40'],
+            'image_url' => ['nullable', 'string', 'max:500'],
             'product_code' => ['required', 'string', 'max:40', 'unique:products,product_code'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'default_cover_duration_days' => ['required', 'integer', 'min:1'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
+            'default_cover_duration_days' => ['nullable', 'integer', 'min:1'],
             'fields' => ['array'],
             'fields.*.field_key' => ['required_without:fields.*.name', 'string'],
             'fields.*.name' => ['required_without:fields.*.field_key', 'string'],

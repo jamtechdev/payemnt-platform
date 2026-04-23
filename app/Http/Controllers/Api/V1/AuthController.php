@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use OpenApi\Attributes as OA;
 
 class AuthController extends BaseApiController
 {
@@ -47,75 +46,6 @@ class AuthController extends BaseApiController
         ], 201);
     }
 
-    #[OA\Post(
-        path: '/api/v1/auth/login',
-        operationId: 'unifiedLogin',
-        summary: 'Login with email and password',
-        tags: ['Auth'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['email', 'password'],
-                properties: [
-                    new OA\Property(property: 'email', type: 'string', format: 'email'),
-                    new OA\Property(property: 'password', type: 'string'),
-                    new OA\Property(property: 'device_name', type: 'string', example: 'admin-api'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Token created',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(
-                            property: 'data',
-                            properties: [
-                                new OA\Property(property: 'token', type: 'string', example: '1|sanctum-token-value'),
-                                new OA\Property(property: 'token_type', type: 'string', example: 'Bearer'),
-                                new OA\Property(
-                                    property: 'user',
-                                    properties: [
-                                        new OA\Property(property: 'id', type: 'integer', example: 1),
-                                        new OA\Property(property: 'name', type: 'string', example: 'Alex Admin'),
-                                        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'admin@local.test'),
-                                        new OA\Property(property: 'role', type: 'string', nullable: true, example: 'admin'),
-                                    ],
-                                    type: 'object'
-                                ),
-                            ],
-                            type: 'object'
-                        ),
-                    ],
-                    type: 'object'
-                )
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Invalid credentials',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'error'),
-                        new OA\Property(property: 'error_code', type: 'string', example: 'INVALID_CREDENTIALS'),
-                        new OA\Property(property: 'message', type: 'string', example: 'Invalid credentials.'),
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 423,
-                description: 'Account locked',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'error'),
-                        new OA\Property(property: 'error_code', type: 'string', example: 'ACCOUNT_LOCKED'),
-                        new OA\Property(property: 'message', type: 'string', example: 'Account is locked. Try again later.'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function login(Request $request): JsonResponse
     {
         return $this->issueToken($request);
@@ -228,34 +158,6 @@ class AuthController extends BaseApiController
         ]);
     }
 
-    #[OA\Post(
-        path: '/api/v1/auth/logout',
-        operationId: 'workspaceTokenLogout',
-        summary: 'Revoke current Sanctum token',
-        security: [['sanctum' => []]],
-        tags: ['Auth'],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Token revoked',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'success'),
-                        new OA\Property(property: 'message', type: 'string', example: 'Token revoked.'),
-                    ]
-                )
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Unauthenticated',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: 'Unauthenticated.'),
-                    ]
-                )
-            ),
-        ]
-    )]
     public function logout(Request $request): JsonResponse
     {
         AuditLog::record('api_logout', $request->user(), [], ['source' => 'api'], $request->user());

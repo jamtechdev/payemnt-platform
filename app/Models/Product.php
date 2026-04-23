@@ -18,10 +18,13 @@ class Product extends Model
     protected $fillable = [
         'uuid',
         'product_code',
+        'partner_id',
+        'partner_code',
         'country',
         'name',
         'slug',
         'description',
+        'price',
         'image',
         'cover_duration_mode',
         'cover_duration_type',
