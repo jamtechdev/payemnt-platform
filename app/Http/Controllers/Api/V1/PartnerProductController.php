@@ -21,10 +21,11 @@ class PartnerProductController extends BaseApiController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['partner_id', 'partner_code', 'name', 'product_code', 'status'],
+                required: ['partner_id', 'partner_code', 'product_code', 'name', 'status'],
                 properties: [
                     new OA\Property(property: 'partner_id', type: 'integer', example: 1, description: 'ID of the partner'),
                     new OA\Property(property: 'partner_code', type: 'string', example: 'SWAP_CIRCLE', description: 'Partner code'),
+                    new OA\Property(property: 'product_code', type: 'string', example: 'PROD_001', description: 'Unique product code - used for edit/update later'),
                     new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png', description: 'Product image URL'),
                     new OA\Property(property: 'name', type: 'string', example: 'Beneficiary Community Plan'),
                     new OA\Property(property: 'description', type: 'string', nullable: true, example: 'A community protection plan'),
@@ -46,6 +47,7 @@ class PartnerProductController extends BaseApiController
         $validated = $request->validate([
             'partner_id'   => ['required', 'integer'],
             'partner_code' => ['required', 'string', 'max:40'],
+            'product_code' => ['required', 'string', 'max:40', 'unique:products,product_code'],
             'image_url'    => ['nullable', 'string', 'max:500'],
             'name'         => ['required', 'string', 'max:255'],
             'description'  => ['nullable', 'string'],
@@ -53,7 +55,6 @@ class PartnerProductController extends BaseApiController
             'status'       => ['required', 'in:active,inactive'],
         ]);
 
-        $validated['product_code'] = strtoupper(Str::slug($validated['name'], '_'));
         $validated['slug']  = Str::slug($validated['name'] . '-' . $validated['product_code']);
         $validated['image'] = $validated['image_url'] ?? null;
         unset($validated['image_url']);

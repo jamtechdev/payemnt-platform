@@ -70,6 +70,9 @@ Route::prefix('v1/admin')
 
         Route::apiResource('/partners', AdminPartnerController::class)->middleware('role:super_admin');
         Route::patch('/partners/{partner}/products/{product}/access', [AdminPartnerController::class, 'updateProductAccess'])->middleware('role:super_admin');
-        Route::apiResource('/products', AdminProductController::class)->middleware('role:super_admin');
+        Route::get('/products', [AdminProductController::class, 'index'])->middleware('role:super_admin');
+        Route::get('/products/{product}', [AdminProductController::class, 'show'])->middleware('role:super_admin');
+        Route::put('/products/{product}', [AdminProductController::class, 'update'])->middleware('role:super_admin');
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->middleware('role:super_admin');
         Route::apiResource('/users', AdminUserController::class)->middleware('role:super_admin');
     });

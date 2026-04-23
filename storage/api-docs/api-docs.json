@@ -12,92 +12,6 @@
         }
     ],
     "paths": {
-        "/api/v1/admin/products": {
-            "post": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Create a new product",
-                "operationId": "adminProductCreate",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "partner_id",
-                                    "partner_code",
-                                    "name",
-                                    "product_code",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "partner_id": {
-                                        "description": "ID of the partner",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "partner_code": {
-                                        "description": "Unique partner code",
-                                        "type": "string",
-                                        "example": "SWAP_CIRCLE"
-                                    },
-                                    "image_url": {
-                                        "description": "Product image URL",
-                                        "type": "string",
-                                        "example": "https://example.com/image.png"
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Beneficiary Community Plan"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "A community protection plan",
-                                        "nullable": true
-                                    },
-                                    "price": {
-                                        "description": "Product price",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 29.99
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "active",
-                                        "enum": [
-                                            "active",
-                                            "inactive"
-                                        ]
-                                    },
-                                    "product_code": {
-                                        "type": "string",
-                                        "example": "PROD_001"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Product created successfully"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/partner/products": {
             "post": {
                 "tags": [
@@ -113,8 +27,8 @@
                                 "required": [
                                     "partner_id",
                                     "partner_code",
-                                    "name",
                                     "product_code",
+                                    "name",
                                     "status"
                                 ],
                                 "properties": {
@@ -127,6 +41,11 @@
                                         "description": "Partner code",
                                         "type": "string",
                                         "example": "SWAP_CIRCLE"
+                                    },
+                                    "product_code": {
+                                        "description": "Unique product code - used for edit/update later",
+                                        "type": "string",
+                                        "example": "PROD_001"
                                     },
                                     "image_url": {
                                         "description": "Product image URL",

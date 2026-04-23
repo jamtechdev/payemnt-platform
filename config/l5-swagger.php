@@ -45,7 +45,6 @@ return [
                  */
                 'annotations' => [
                     base_path('app/OpenApi'),
-                    base_path('app/Http/Controllers/Api/V1/Admin/AdminProductController.php'),
                     base_path('app/Http/Controllers/Api/V1/PartnerProductController.php'),
                 ],
             ],

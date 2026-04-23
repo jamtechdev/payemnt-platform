@@ -2,11 +2,11 @@ import DataTable from '@/components/shared/DataTable';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { PageProps } from '@/Types';
 import AdminLayout from '@/layouts/AdminLayout';
-import { Button } from '@/components/ui/button';
-import { Link, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Layers, Pencil, Trash2 } from 'lucide-react';
+import { Layers } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -22,8 +22,6 @@ export default function ProductList({ products }: { products: unknown }) {
     const rows = asArray(products);
     const { auth } = usePage<PageProps>().props;
     const isSuperAdmin = auth.role === 'super_admin';
-    const canCreate = isSuperAdmin || (auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? ''));
-    const canEdit = isSuperAdmin || (auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''));
     const canDelete = isSuperAdmin || (auth.permissions.includes('products.delete') && ['admin', 'super_admin'].includes(auth.role ?? ''));
     const columnHelper = createColumnHelper<LooseRecord>();
     const columns: ColumnDef<LooseRecord, any>[] = [
@@ -71,12 +69,6 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center justify-center gap-2">
-                        <Link
-                            className={`text-[#0e9f84] hover:underline ${!canEdit ? 'pointer-events-none opacity-50' : ''}`}
-                            href={route('admin.products.edit', id)}
-                        >
-                            Edit
-                        </Link>
                         <Link className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70" href={route('admin.products.versions', id)} aria-label="Product versions" title="Versions">
                             <Layers className="h-3.5 w-3.5" />
                         </Link>
@@ -101,11 +93,6 @@ export default function ProductList({ products }: { products: unknown }) {
 
     return (
         <AdminLayout title="Products">
-            <div className="mb-4 flex justify-end">
-                <Link href={route('admin.products.create')} className={!canCreate ? 'pointer-events-none opacity-50' : ''}>
-                    <Button disabled={!canCreate}>Create Product</Button>
-                </Link>
-            </div>
             <DataTable columns={columns} data={rows} stripedRows showRowCount clickableRows={false} emptyMessage="No products found." stickyHeader compact />
         </AdminLayout>
     );

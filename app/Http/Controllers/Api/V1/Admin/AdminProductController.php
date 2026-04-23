@@ -10,7 +10,6 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use OpenApi\Attributes as OA;
 
 class AdminProductController extends BaseApiController
 {
@@ -20,34 +19,6 @@ class AdminProductController extends BaseApiController
         return $this->paginated($products);
     }
 
-    #[OA\Post(
-        path: '/api/v1/admin/products',
-        operationId: 'adminProductCreate',
-        summary: 'Create a new product',
-        security: [['sanctum' => []]],
-        tags: ['Products'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['partner_id', 'partner_code', 'name', 'product_code', 'status'],
-                properties: [
-                    new OA\Property(property: 'partner_id', type: 'integer', example: 1, description: 'ID of the partner'),
-                    new OA\Property(property: 'partner_code', type: 'string', example: 'SWAP_CIRCLE', description: 'Unique partner code'),
-                    new OA\Property(property: 'image_url', type: 'string', example: 'https://example.com/image.png', description: 'Product image URL'),
-                    new OA\Property(property: 'name', type: 'string', example: 'Beneficiary Community Plan'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true, example: 'A community protection plan'),
-                    new OA\Property(property: 'price', type: 'number', format: 'float', example: 29.99, description: 'Product price'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'], example: 'active'),
-                    new OA\Property(property: 'product_code', type: 'string', example: 'PROD_001'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 201, description: 'Product created successfully'),
-            new OA\Response(response: 422, description: 'Validation error'),
-            new OA\Response(response: 401, description: 'Unauthorized'),
-        ]
-    )]
     public function store(StoreProductRequest $request): JsonResponse
     {
         $validated = $request->validated();
