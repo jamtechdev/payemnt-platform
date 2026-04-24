@@ -105,36 +105,6 @@ class CustomerController extends BaseApiController
         ], 200);
     }
 
-    #[OA\Put(
-        path: '/api/v1/customers/{customer_code}',
-        operationId: 'partnerCustomerUpdate',
-        summary: 'Update customer by customer_code',
-        security: [['sanctum' => []]],
-        tags: ['Customer'],
-        parameters: [new OA\Parameter(name: 'customer_code', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'CUST_00000001')],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'company_name', type: 'string', example: 'Acme Corp'),
-                    new OA\Property(property: 'first_name', type: 'string', example: 'John'),
-                    new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
-                    new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
-                    new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
-                    new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
-                    new OA\Property(property: 'id_front_image', type: 'string', example: 'https://example.com/id_front.jpg'),
-                    new OA\Property(property: 'id_back_image', type: 'string', example: 'https://example.com/id_back.jpg'),
-                    new OA\Property(property: 'profile_pic', type: 'string', example: 'https://example.com/profile.jpg'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted'], example: 'Active'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Updated'),
-            new OA\Response(response: 404, description: 'Not found'),
-            new OA\Response(response: 422, description: 'Validation error'),
-        ]
-    )]
     public function update(Request $request, string $customer_code): JsonResponse
     {
         $partner = $request->attributes->get('partner');

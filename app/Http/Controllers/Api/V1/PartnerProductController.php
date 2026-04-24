@@ -98,34 +98,6 @@ class PartnerProductController extends BaseApiController
         return $this->success($product, 200);
     }
 
-    #[OA\Put(
-        path: '/api/v1/partner/products/{product_code}',
-        operationId: 'partnerProductUpdate',
-        summary: 'Update an existing product (Partner API Key)',
-        security: [['sanctum' => []]],
-        tags: ['Products'],
-        parameters: [
-            new OA\Parameter(name: 'product_code', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'PROD_001'),
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                properties: [
-                    new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png'),
-                    new OA\Property(property: 'name', type: 'string', example: 'Updated Plan Name'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true),
-                    new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, example: 49.99),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'], example: 'active'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Product updated successfully'),
-            new OA\Response(response: 404, description: 'Product not found'),
-            new OA\Response(response: 422, description: 'Validation error'),
-            new OA\Response(response: 401, description: 'Unauthorized'),
-        ]
-    )]
     #[OA\Delete(
         path: '/api/v1/partner/products',
         operationId: 'partnerProductsDeleteByPartner',
