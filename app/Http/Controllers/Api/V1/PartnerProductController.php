@@ -135,9 +135,9 @@ class PartnerProductController extends BaseApiController
     {
         $partner = $request->attributes->get('partner');
 
-        $deleted = Product::query()
+        $deleted = Product::withTrashed()
             ->where('partner_id', $partner->id)
-            ->delete();
+            ->forceDelete();
 
         if ($deleted === 0) {
             return $this->error('NOT_FOUND', 'No products found for this partner.', status: 404);
