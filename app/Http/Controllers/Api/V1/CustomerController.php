@@ -33,6 +33,9 @@ class CustomerController extends BaseApiController
                     new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
                     new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
                     new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
+                    new OA\Property(property: 'id_front_image', type: 'string', example: 'https://example.com/id_front.jpg'),
+                    new OA\Property(property: 'id_back_image', type: 'string', example: 'https://example.com/id_back.jpg'),
+                    new OA\Property(property: 'profile_pic', type: 'string', example: 'https://example.com/profile.jpg'),
                     new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted']),
                 ]
             )
@@ -55,6 +58,9 @@ class CustomerController extends BaseApiController
             'phone'          => ['nullable', 'string', 'max:20'],
             'location'       => ['nullable', 'string', 'max:255'],
             'valid_document' => ['nullable', 'string', 'max:255'],
+            'id_front_image' => ['nullable', 'string', 'max:500'],
+            'id_back_image'  => ['nullable', 'string', 'max:500'],
+            'profile_pic'    => ['nullable', 'string', 'max:500'],
             'status'         => ['required', 'in:Pending,Active,Inactive,Deleted'],
         ]);
 
@@ -83,6 +89,9 @@ class CustomerController extends BaseApiController
                     'phone'            => $validated['phone'] ?? null,
                     'location'         => $validated['location'] ?? null,
                     'valid_document'   => $validated['valid_document'] ?? null,
+                    'id_front_image'   => $validated['id_front_image'] ?? null,
+                    'id_back_image'    => $validated['id_back_image'] ?? null,
+                    'profile_pic'      => $validated['profile_pic'] ?? null,
                     'status'           => $validated['status'],
                 ]
             );
@@ -113,6 +122,9 @@ class CustomerController extends BaseApiController
                     new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
                     new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
                     new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
+                    new OA\Property(property: 'id_front_image', type: 'string', example: 'https://example.com/id_front.jpg'),
+                    new OA\Property(property: 'id_back_image', type: 'string', example: 'https://example.com/id_back.jpg'),
+                    new OA\Property(property: 'profile_pic', type: 'string', example: 'https://example.com/profile.jpg'),
                     new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted'], example: 'Active'),
                 ]
             )
@@ -143,6 +155,9 @@ class CustomerController extends BaseApiController
             'phone'          => ['sometimes', 'nullable', 'string', 'max:20'],
             'location'       => ['sometimes', 'nullable', 'string', 'max:255'],
             'valid_document' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'id_front_image' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'id_back_image'  => ['sometimes', 'nullable', 'string', 'max:500'],
+            'profile_pic'    => ['sometimes', 'nullable', 'string', 'max:500'],
             'status'         => ['sometimes', 'in:Pending,Active,Inactive,Deleted'],
         ]);
 

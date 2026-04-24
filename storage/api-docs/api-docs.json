@@ -66,6 +66,18 @@
                                         "type": "string",
                                         "example": "CNIC-12345"
                                     },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_front.jpg"
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_back.jpg"
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "example": "https://example.com/profile.jpg"
+                                    },
                                     "status": {
                                         "type": "string",
                                         "enum": [
@@ -143,6 +155,18 @@
                                     "valid_document": {
                                         "type": "string",
                                         "example": "CNIC-12345"
+                                    },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_front.jpg"
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_back.jpg"
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "example": "https://example.com/profile.jpg"
                                     },
                                     "status": {
                                         "type": "string",
