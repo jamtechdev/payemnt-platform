@@ -40,6 +40,29 @@ class PartnerProductController extends BaseApiController
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
+    // public function store(Request $request): JsonResponse
+    // {
+    //     $partner = $request->attributes->get('partner');
+
+    //     $validated = $request->validate([
+    //         'partner_id'   => ['required', 'integer'],
+    //         'partner_code' => ['required', 'string', 'max:40'],
+    //         'product_code' => ['required', 'string', 'max:40', 'unique:products,product_code'],
+    //         'image_url'    => ['nullable', 'string', 'max:500'],
+    //         'name'         => ['required', 'string', 'max:255'],
+    //         'description'  => ['nullable', 'string'],
+    //         'price'        => ['nullable', 'numeric', 'min:0'],
+    //         'status'       => ['required', 'in:active,inactive'],
+    //     ]);
+
+    //     $validated['slug']  = Str::slug($validated['name'] . '-' . $validated['product_code']);
+    //     $validated['image'] = $validated['image_url'] ?? null;
+    //     unset($validated['image_url']);
+
+    //     $product = Product::query()->create($validated);
+
+    //     return $this->success($product, 201);
+    // }
     public function store(Request $request): JsonResponse
     {
         $partner = $request->attributes->get('partner');
@@ -47,7 +70,7 @@ class PartnerProductController extends BaseApiController
         $validated = $request->validate([
             'partner_id'   => ['required', 'integer'],
             'partner_code' => ['required', 'string', 'max:40'],
-            'product_code' => ['required', 'string', 'max:40', 'unique:products,product_code'],
+            'product_code' => ['required', 'string', 'max:40'],
             'image_url'    => ['nullable', 'string', 'max:500'],
             'name'         => ['required', 'string', 'max:255'],
             'description'  => ['nullable', 'string'],
@@ -57,11 +80,17 @@ class PartnerProductController extends BaseApiController
 
         $validated['slug']  = Str::slug($validated['name'] . '-' . $validated['product_code']);
         $validated['image'] = $validated['image_url'] ?? null;
+
         unset($validated['image_url']);
 
-        $product = Product::query()->create($validated);
+        $product = Product::updateOrCreate(
+            [
+                'product_code' => $validated['product_code'],
+            ],
+            $validated
+        );
 
-        return $this->success($product, 201);
+        return $this->success($product, 200);
     }
 
     #[OA\Put(
@@ -92,6 +121,44 @@ class PartnerProductController extends BaseApiController
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
+    #[OA\Delete(
+        path: '/api/v1/partner/products',
+        operationId: 'partnerProductsDeleteByPartner',
+        summary: 'Delete all products linked to a partner',
+        security: [['sanctum' => []]],
+        tags: ['Products'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['partner_id'],
+                properties: [
+                    new OA\Property(property: 'partner_id', type: 'integer', example: 1, description: 'ID of the partner whose products will be deleted'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Products deleted successfully'),
+            new OA\Response(response: 404, description: 'No products found for this partner'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+        ]
+    )]
+    public function destroyByPartner(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'partner_id' => ['required', 'integer', 'exists:partners,id'],
+        ]);
+
+        $deleted = Product::query()
+            ->where('partner_id', $validated['partner_id'])
+            ->delete();
+
+        if ($deleted === 0) {
+            return $this->error('NOT_FOUND', 'No products found for this partner.', status: 404);
+        }
+
+        return $this->success(['deleted_count' => $deleted], 200);
+    }
+
     public function update(Request $request, string $product_code): JsonResponse
     {
         $partner = $request->attributes->get('partner');

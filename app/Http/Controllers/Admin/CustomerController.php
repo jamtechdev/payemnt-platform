@@ -21,7 +21,7 @@ class CustomerController extends Controller
         $canViewPaymentAmount = $request->user()?->can('customers.view_payment_amount') ?? false;
 
         $query = Customer::query()
-            ->with(['partner', 'product', 'payments' => fn ($q) => $q->latest('payment_date')])
+            ->with(['partner', 'product', 'payments' => fn ($q) => $q->latest('paid_at')])
             ->when($request->filled('partner_id'), fn ($q) => $q->where('partner_id', $request->integer('partner_id')))
             ->when($request->filled('product_id'), fn ($q) => $q->where('product_id', $request->integer('product_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))

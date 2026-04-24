@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\PartnerCustomerController;
 use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -54,6 +55,9 @@ Route::prefix('v1')
         // Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
         Route::post('/partner/products', [PartnerProductController::class, 'store'])->name('partner.products.store');
         Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
+        Route::delete('/partner/products', [PartnerProductController::class, 'destroyByPartner'])->name('partner.products.destroy-by-partner');
+        Route::post('/customers/register', [CustomerController::class, 'store'])->name('partner.customers.store');
+        Route::post('/customers/{uuid}', [CustomerController::class, 'update'])->name('partner.customers.update');
     });
 
 Route::prefix('v1/admin')

@@ -19,10 +19,12 @@ class Customer extends Model
 
     protected $fillable = [
         'uuid',
+        'platform_user_id',
         'customer_code',
         'partner_id',
         'product_id',
         'external_customer_id',
+        'company_name',
         'first_name',
         'last_name',
         'date_of_birth',
@@ -31,6 +33,11 @@ class Customer extends Model
         'address',
         'email',
         'phone',
+        'location',
+        'valid_document',
+        'id_front_image',
+        'id_back_image',
+        'profile_pic',
         'status',
         'cover_start_date',
         'cover_duration',
@@ -69,6 +76,11 @@ class Customer extends Model
             $customer->cover_end_date = $start->copy()->addDays((int) $customer->cover_duration_days)->toDateString();
             $customer->customer_since = $customer->customer_since ?? now()->toDateString();
         });
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'platform_user_id');
     }
 
     public function partner(): BelongsTo

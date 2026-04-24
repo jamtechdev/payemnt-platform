@@ -13,6 +13,9 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table): void {
             $table->id();
             $table->uuid('uuid')->unique();
+            $table->string('customer_code', 80)->nullable();
+            $table->foreignId('platform_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('company_name')->nullable();
             $table->foreignId('partner_id')->constrained('partners')->restrictOnDelete();
             $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
             $table->string('external_customer_id', 80)->nullable();
@@ -20,12 +23,17 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
-            $table->date('start_date');
-            $table->unsignedInteger('cover_duration_days');
-            $table->date('cover_end_date')->index();
-            $table->date('customer_since')->index();
+            $table->string('location')->nullable();
+            $table->string('valid_document')->nullable();
+            $table->string('id_front_image')->nullable();
+            $table->string('id_back_image')->nullable();
+            $table->string('profile_pic')->nullable();
+            $table->date('start_date')->nullable();
+            $table->unsignedInteger('cover_duration_days')->nullable();
+            $table->date('cover_end_date')->nullable()->index();
+            $table->date('customer_since')->nullable()->index();
             $table->timestamp('last_payment_date')->nullable()->index();
-            $table->enum('status', ['active', 'expired', 'cancelled'])->default('active')->index();
+            $table->enum('status', ['Pending', 'Active', 'Inactive', 'Deleted'])->default('Pending')->index();
             $table->json('customer_data')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -34,7 +42,6 @@ return new class extends Migration
             $table->index(['partner_id', 'status', 'created_at']);
             $table->index(['product_id', 'status', 'created_at']);
             $table->index(['email', 'phone']);
-            $table->unique(['partner_id', 'product_id', 'external_customer_id'], 'cust_partner_product_external_unique');
         });
     }
 

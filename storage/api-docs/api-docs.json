@@ -12,6 +12,192 @@
         }
     ],
     "paths": {
+        "/api/v1/customers/register": {
+            "post": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Create user then customer (partner_id auto-set from API key)",
+                "operationId": "partnerCustomerStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email",
+                                    "password",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "company_name": {
+                                        "type": "string",
+                                        "example": "Acme Corp"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+923001234567"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Karachi"
+                                    },
+                                    "valid_document": {
+                                        "type": "string",
+                                        "example": "CNIC-12345"
+                                    },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Active",
+                                            "Inactive",
+                                            "Deleted"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User and Customer created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/customers/{uuid}": {
+            "post": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Update customer (use POST with _method=PUT for file upload)",
+                "operationId": "partnerCustomerUpdate",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "type": "string",
+                                        "default": "PUT"
+                                    },
+                                    "company_name": {
+                                        "type": "string"
+                                    },
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "location": {
+                                        "type": "string"
+                                    },
+                                    "valid_document": {
+                                        "type": "string"
+                                    },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Active",
+                                            "Inactive",
+                                            "Deleted"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/partner/products": {
             "post": {
                 "tags": [
@@ -88,6 +274,49 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Delete all products linked to a partner",
+                "operationId": "partnerProductsDeleteByPartner",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "partner_id"
+                                ],
+                                "properties": {
+                                    "partner_id": {
+                                        "description": "ID of the partner whose products will be deleted",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Products deleted successfully"
+                    },
+                    "404": {
+                        "description": "No products found for this partner"
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -299,6 +528,10 @@
         {
             "name": "Products",
             "description": "Product management APIs"
+        },
+        {
+            "name": "Customer",
+            "description": "Customer"
         }
     ]
 }
