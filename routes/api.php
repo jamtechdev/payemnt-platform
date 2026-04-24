@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CustomerController;
@@ -62,6 +63,8 @@ Route::prefix('v1')
         Route::delete('/customers', [CustomerController::class, 'destroy'])->name('partner.customers.destroy');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('partner.transactions.store');
         Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
+        Route::post('/swap-offers', [SwapOfferController::class, 'store'])->name('partner.swap-offers.store');
+        Route::delete('/swap-offers', [SwapOfferController::class, 'destroy'])->name('partner.swap-offers.destroy');
     });
 
 Route::prefix('v1/admin')

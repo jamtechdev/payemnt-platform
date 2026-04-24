@@ -400,6 +400,128 @@
                 ]
             }
         },
+        "/api/v1/swap-offers": {
+            "post": {
+                "tags": [
+                    "Swap Offers"
+                ],
+                "summary": "Create or update a swap offer (partner auto-set from API key)",
+                "operationId": "swapOfferStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_email",
+                                    "from_currency_code",
+                                    "to_currency_code",
+                                    "from_amount",
+                                    "to_amount",
+                                    "exchange_rate",
+                                    "base_amount",
+                                    "status",
+                                    "date_added"
+                                ],
+                                "properties": {
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "from_currency_code": {
+                                        "type": "string",
+                                        "example": "NGN"
+                                    },
+                                    "to_currency_code": {
+                                        "type": "string",
+                                        "example": "GHS"
+                                    },
+                                    "from_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "to_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10.5
+                                    },
+                                    "admin_share": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 2.5
+                                    },
+                                    "admin_share_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 125
+                                    },
+                                    "exchange_rate": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0.0021
+                                    },
+                                    "base_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "expiry_date_time": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-12-31 23:59:59"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Pending"
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Swap offer created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Swap Offers"
+                ],
+                "summary": "Permanently delete all swap offers of authenticated partner",
+                "operationId": "swapOfferDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Swap offers deleted"
+                    },
+                    "404": {
+                        "description": "No swap offers found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/transactions": {
             "post": {
                 "tags": [
@@ -641,6 +763,10 @@
         {
             "name": "Customer",
             "description": "Customer"
+        },
+        {
+            "name": "Swap Offers",
+            "description": "Swap Offers"
         },
         {
             "name": "Transactions",
