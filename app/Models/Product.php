@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -55,6 +56,11 @@ class Product extends Model
     public function fields(): HasMany
     {
         return $this->hasMany(ProductField::class)->orderBy('sort_order');
+    }
+
+    public function partnerDirect(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class, 'partner_id');
     }
 
     public function partners(): BelongsToMany

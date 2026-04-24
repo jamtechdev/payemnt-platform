@@ -144,10 +144,8 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
     const submit = () => {
         if (!canSubmit) return;
         if (product?.id) {
-            post(route('admin.products.update', product.id), {
+            patch(route('admin.products.update', product.id), {
                 preserveScroll: true,
-                forceFormData: true,
-                data: { ...data, _method: 'PATCH' } as any,
             });
             return;
         }

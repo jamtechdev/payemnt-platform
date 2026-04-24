@@ -14,8 +14,28 @@ class ProductController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/SuperAdmin/ProductList', [
-            'products' => Product::query()->with(['fields:id,product_id,field_key,label,field_type,is_required,sort_order'])->withCount(['customers', 'partners', 'fields'])->paginate(15),
+            'products' => Product::query()
+                ->with(['partners:id,name', 'partnerDirect:id,name'])
+                ->paginate(15),
         ]);
+    }
+
+    public function edit(Product $product): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/ProductForm', [
+            'product' => $product->load('fields'),
+        ]);
+    }
+
+    public function update(Request $request, Product $product): RedirectResponse
+    {
+        $product->update($request->validate([
+            'name'        => ['sometimes', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'status'      => ['sometimes', 'in:active,inactive'],
+        ]));
+
+        return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }
 
     public function destroy(Product $product): RedirectResponse

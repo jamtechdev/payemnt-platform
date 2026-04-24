@@ -74,19 +74,26 @@ class PartnerProductController extends BaseApiController
             'status'       => ['required', 'in:active,inactive'],
         ]);
 
-        $validated['slug']       = Str::slug($validated['name'] . '-' . $validated['product_code']);
-        $validated['image']      = $validated['image_url'] ?? null;
-        $validated['partner_id'] = $partner->id;
-
+        $slug        = Str::slug($validated['name'] . '-' . $validated['product_code'] . '-' . $partner->id);
+        $image       = $validated['image_url'] ?? null;
         unset($validated['image_url']);
 
-        $product = Product::updateOrCreate(
-            [
-                'product_code' => $validated['product_code'],
-                'partner_id'   => $partner->id,
-            ],
-            $validated
-        );
+        $existing = Product::withTrashed()
+            ->where('product_code', $validated['product_code'])
+            ->where('partner_id', $partner->id)
+            ->first();
+
+        if ($existing) {
+            $existing->restore() ?: null;
+            $existing->update(array_merge($validated, ['image' => $image, 'partner_id' => $partner->id]));
+            $product = $existing->fresh();
+        } else {
+            $product = Product::create(array_merge($validated, [
+                'slug'       => $slug,
+                'image'      => $image,
+                'partner_id' => $partner->id,
+            ]));
+        }
 
         return $this->success($product, 200);
     }
