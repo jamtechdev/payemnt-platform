@@ -15,18 +15,16 @@ class PartnerProductController extends BaseApiController
     #[OA\Post(
         path: '/api/v1/partner/products',
         operationId: 'partnerProductCreate',
-        summary: 'Create a new product (Partner API Key)',
+        summary: 'Create or update a product (partner auto-set from API key)',
         security: [['sanctum' => []]],
         tags: ['Products'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['partner_id', 'partner_code', 'product_code', 'name', 'status'],
+                required: ['product_code', 'name', 'status'],
                 properties: [
-                    new OA\Property(property: 'partner_id', type: 'integer', example: 1, description: 'ID of the partner'),
-                    new OA\Property(property: 'partner_code', type: 'string', example: 'SWAP_CIRCLE', description: 'Partner code'),
-                    new OA\Property(property: 'product_code', type: 'string', example: 'PROD_001', description: 'Unique product code - used for edit/update later'),
-                    new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png', description: 'Product image URL'),
+                    new OA\Property(property: 'product_code', type: 'string', example: 'PROD_001', description: 'Unique product code'),
+                    new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png'),
                     new OA\Property(property: 'name', type: 'string', example: 'Beneficiary Community Plan'),
                     new OA\Property(property: 'description', type: 'string', nullable: true, example: 'A community protection plan'),
                     new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, example: 29.99),
@@ -35,7 +33,7 @@ class PartnerProductController extends BaseApiController
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'Product created successfully'),
+            new OA\Response(response: 200, description: 'Product created or updated'),
             new OA\Response(response: 422, description: 'Validation error'),
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
@@ -68,8 +66,6 @@ class PartnerProductController extends BaseApiController
         $partner = $request->attributes->get('partner');
 
         $validated = $request->validate([
-            'partner_id'   => ['required', 'integer'],
-            'partner_code' => ['required', 'string', 'max:40'],
             'product_code' => ['required', 'string', 'max:40'],
             'image_url'    => ['nullable', 'string', 'max:500'],
             'name'         => ['required', 'string', 'max:255'],
@@ -78,14 +74,16 @@ class PartnerProductController extends BaseApiController
             'status'       => ['required', 'in:active,inactive'],
         ]);
 
-        $validated['slug']  = Str::slug($validated['name'] . '-' . $validated['product_code']);
-        $validated['image'] = $validated['image_url'] ?? null;
+        $validated['slug']       = Str::slug($validated['name'] . '-' . $validated['product_code']);
+        $validated['image']      = $validated['image_url'] ?? null;
+        $validated['partner_id'] = $partner->id;
 
         unset($validated['image_url']);
 
         $product = Product::updateOrCreate(
             [
                 'product_code' => $validated['product_code'],
+                'partner_id'   => $partner->id,
             ],
             $validated
         );
@@ -124,32 +122,21 @@ class PartnerProductController extends BaseApiController
     #[OA\Delete(
         path: '/api/v1/partner/products',
         operationId: 'partnerProductsDeleteByPartner',
-        summary: 'Delete all products linked to a partner',
+        summary: 'Delete all products of authenticated partner',
         security: [['sanctum' => []]],
         tags: ['Products'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['partner_id'],
-                properties: [
-                    new OA\Property(property: 'partner_id', type: 'integer', example: 1, description: 'ID of the partner whose products will be deleted'),
-                ]
-            )
-        ),
         responses: [
             new OA\Response(response: 200, description: 'Products deleted successfully'),
-            new OA\Response(response: 404, description: 'No products found for this partner'),
+            new OA\Response(response: 404, description: 'No products found'),
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
     public function destroyByPartner(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'partner_id' => ['required', 'integer', 'exists:partners,id'],
-        ]);
+        $partner = $request->attributes->get('partner');
 
         $deleted = Product::query()
-            ->where('partner_id', $validated['partner_id'])
+            ->where('partner_id', $partner->id)
             ->delete();
 
         if ($deleted === 0) {

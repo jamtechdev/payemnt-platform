@@ -18,7 +18,7 @@ class CustomerController extends BaseApiController
     #[OA\Post(
         path: '/api/v1/customers/register',
         operationId: 'partnerCustomerStore',
-        summary: 'Create user then customer (partner_id auto-set from API key)',
+        summary: 'Create or update customer by email (partner_id auto-set from API key)',
         security: [['sanctum' => []]],
         tags: ['Customer'],
         requestBody: new OA\RequestBody(
@@ -40,12 +40,13 @@ class CustomerController extends BaseApiController
                         new OA\Property(property: 'id_back_image', type: 'string', format: 'binary'),
                         new OA\Property(property: 'profile_pic', type: 'string', format: 'binary'),
                         new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted']),
+                        new OA\Property(property: 'product_id', type: 'integer', example: 1),
                     ]
                 )
             )
         ),
         responses: [
-            new OA\Response(response: 201, description: 'User and Customer created'),
+            new OA\Response(response: 200, description: 'Customer created or updated'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
@@ -57,7 +58,7 @@ class CustomerController extends BaseApiController
             'company_name'   => ['nullable', 'string', 'max:255'],
             'first_name'     => ['required', 'string', 'max:255'],
             'last_name'      => ['required', 'string', 'max:255'],
-            'email'          => ['required', 'email', 'unique:users,email', 'unique:customers,email'],
+            'email'          => ['required', 'email'],
             'password'       => ['required', 'string', 'min:6'],
             'phone'          => ['nullable', 'string', 'max:20'],
             'location'       => ['nullable', 'string', 'max:255'],
@@ -70,39 +71,41 @@ class CustomerController extends BaseApiController
         ]);
 
         $result = DB::transaction(function () use ($validated, $partner, $request) {
-            // Step 1: Create User
-            $user = User::query()->create([
-                'uuid'      => (string) Str::uuid(),
-                'name'      => $validated['first_name'].' '.$validated['last_name'],
-                'email'     => $validated['email'],
-                'phone'     => $validated['phone'] ?? null,
-                'password'  => Hash::make($validated['password']),
-                'status'    => 'active',
-                'is_active' => true,
-            ]);
+            $user = User::updateOrCreate(
+                ['email' => $validated['email']],
+                [
+                    'name'      => $validated['first_name'].' '.$validated['last_name'],
+                    'phone'     => $validated['phone'] ?? null,
+                    'password'  => Hash::make($validated['password']),
+                    'status'    => 'active',
+                    'is_active' => true,
+                ]
+            );
 
-            // Step 2: Upload images
-            $idFront  = $request->hasFile('id_front_image') ? $request->file('id_front_image')->store('customers/documents', 'public') : null;
-            $idBack   = $request->hasFile('id_back_image') ? $request->file('id_back_image')->store('customers/documents', 'public') : null;
+            $idFront    = $request->hasFile('id_front_image') ? $request->file('id_front_image')->store('customers/documents', 'public') : null;
+            $idBack     = $request->hasFile('id_back_image') ? $request->file('id_back_image')->store('customers/documents', 'public') : null;
             $profilePic = $request->hasFile('profile_pic') ? $request->file('profile_pic')->store('customers/profiles', 'public') : null;
 
-            // Step 3: Create Customer linked to User
-            $customer = Customer::query()->create([
-                'platform_user_id' => $user->id,
-                'partner_id'     => $partner->id,
-                'product_id'     => $validated['product_id'] ?? null,
-                'company_name'   => $validated['company_name'] ?? null,
-                'first_name'     => $validated['first_name'],
-                'last_name'      => $validated['last_name'],
-                'email'          => $validated['email'],
-                'phone'          => $validated['phone'] ?? null,
-                'location'       => $validated['location'] ?? null,
-                'valid_document' => $validated['valid_document'] ?? null,
-                'id_front_image' => $idFront,
-                'id_back_image'  => $idBack,
-                'profile_pic'    => $profilePic,
-                'status'         => $validated['status'],
-            ]);
+            $customer = Customer::updateOrCreate(
+                [
+                    'email'      => $validated['email'],
+                    'partner_id' => $partner->id,
+                ],
+                array_filter([
+                    'platform_user_id' => $user->id,
+                    'product_id'       => $validated['product_id'] ?? null,
+                    'company_name'     => $validated['company_name'] ?? null,
+                    'first_name'       => $validated['first_name'],
+                    'last_name'        => $validated['last_name'],
+                    'phone'            => $validated['phone'] ?? null,
+                    'location'         => $validated['location'] ?? null,
+                    'valid_document'   => $validated['valid_document'] ?? null,
+                    'id_front_image'   => $idFront,
+                    'id_back_image'    => $idBack,
+                    'profile_pic'      => $profilePic,
+                    'status'           => $validated['status'],
+                ], fn ($v) => $v !== null)
+            );
 
             return ['user' => $user, 'customer' => $customer];
         });
@@ -110,16 +113,16 @@ class CustomerController extends BaseApiController
         return $this->success([
             'user'     => $result['user'],
             'customer' => $result['customer'],
-        ], 201);
+        ], 200);
     }
 
     #[OA\Post(
-        path: '/api/v1/customers/{uuid}',
+        path: '/api/v1/customers/{customer_code}',
         operationId: 'partnerCustomerUpdate',
-        summary: 'Update customer (use POST with _method=PUT for file upload)',
+        summary: 'Update customer by customer_code (use POST with _method=PUT for file upload)',
         security: [['sanctum' => []]],
         tags: ['Customer'],
-        parameters: [new OA\Parameter(name: 'uuid', in: 'path', required: true, schema: new OA\Schema(type: 'string'))],
+        parameters: [new OA\Parameter(name: 'customer_code', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'CUST_00000001')],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
@@ -147,12 +150,12 @@ class CustomerController extends BaseApiController
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
-    public function update(Request $request, string $uuid): JsonResponse
+    public function update(Request $request, string $customer_code): JsonResponse
     {
         $partner = $request->attributes->get('partner');
 
         $customer = Customer::query()
-            ->where('uuid', $uuid)
+            ->where('customer_code', $customer_code)
             ->where('partner_id', $partner->id)
             ->first();
 
@@ -186,7 +189,6 @@ class CustomerController extends BaseApiController
         DB::transaction(function () use ($customer, $validated): void {
             $customer->update($validated);
 
-            // Sync name on user if first_name or last_name changed
             if ($customer->user && (isset($validated['first_name']) || isset($validated['last_name']))) {
                 $customer->user->update([
                     'name' => ($validated['first_name'] ?? $customer->first_name).' '.($validated['last_name'] ?? $customer->last_name),
@@ -195,5 +197,31 @@ class CustomerController extends BaseApiController
         });
 
         return $this->success($customer->fresh());
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/customers',
+        operationId: 'partnerCustomerDestroy',
+        summary: 'Permanently delete all customers of authenticated partner',
+        security: [['sanctum' => []]],
+        tags: ['Customer'],
+        responses: [
+            new OA\Response(response: 200, description: 'Customers permanently deleted'),
+            new OA\Response(response: 404, description: 'No customers found'),
+        ]
+    )]
+    public function destroy(Request $request): JsonResponse
+    {
+        $partner = $request->attributes->get('partner');
+
+        $deleted = Customer::withTrashed()
+            ->where('partner_id', $partner->id)
+            ->forceDelete();
+
+        if ($deleted === 0) {
+            return $this->error('NOT_FOUND', 'No customers found for this partner.', [], 404);
+        }
+
+        return $this->success(['deleted_count' => $deleted]);
     }
 }

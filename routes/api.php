@@ -57,7 +57,8 @@ Route::prefix('v1')
         Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
         Route::delete('/partner/products', [PartnerProductController::class, 'destroyByPartner'])->name('partner.products.destroy-by-partner');
         Route::post('/customers/register', [CustomerController::class, 'store'])->name('partner.customers.store');
-        Route::post('/customers/{uuid}', [CustomerController::class, 'update'])->name('partner.customers.update');
+        Route::post('/customers/{customer_code}', [CustomerController::class, 'update'])->name('partner.customers.update');
+        Route::delete('/customers', [CustomerController::class, 'destroy'])->name('partner.customers.destroy');
     });
 
 Route::prefix('v1/admin')

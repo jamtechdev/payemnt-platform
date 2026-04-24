@@ -17,7 +17,7 @@
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Create user then customer (partner_id auto-set from API key)",
+                "summary": "Create or update customer by email (partner_id auto-set from API key)",
                 "operationId": "partnerCustomerStore",
                 "requestBody": {
                     "required": true,
@@ -86,6 +86,10 @@
                                             "Inactive",
                                             "Deleted"
                                         ]
+                                    },
+                                    "product_id": {
+                                        "type": "integer",
+                                        "example": 1
                                     }
                                 },
                                 "type": "object"
@@ -94,8 +98,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "User and Customer created"
+                    "200": {
+                        "description": "Customer created or updated"
                     },
                     "422": {
                         "description": "Validation error"
@@ -108,21 +112,22 @@
                 ]
             }
         },
-        "/api/v1/customers/{uuid}": {
+        "/api/v1/customers/{customer_code}": {
             "post": {
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Update customer (use POST with _method=PUT for file upload)",
+                "summary": "Update customer by customer_code (use POST with _method=PUT for file upload)",
                 "operationId": "partnerCustomerUpdate",
                 "parameters": [
                     {
-                        "name": "uuid",
+                        "name": "customer_code",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string"
-                        }
+                        },
+                        "example": "CUST_00000001"
                     }
                 ],
                 "requestBody": {
@@ -198,12 +203,34 @@
                 ]
             }
         },
+        "/api/v1/customers": {
+            "delete": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Permanently delete all customers of authenticated partner",
+                "operationId": "partnerCustomerDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Customers permanently deleted"
+                    },
+                    "404": {
+                        "description": "No customers found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/partner/products": {
             "post": {
                 "tags": [
                     "Products"
                 ],
-                "summary": "Create a new product (Partner API Key)",
+                "summary": "Create or update a product (partner auto-set from API key)",
                 "operationId": "partnerProductCreate",
                 "requestBody": {
                     "required": true,
@@ -211,30 +238,17 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "partner_id",
-                                    "partner_code",
                                     "product_code",
                                     "name",
                                     "status"
                                 ],
                                 "properties": {
-                                    "partner_id": {
-                                        "description": "ID of the partner",
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "partner_code": {
-                                        "description": "Partner code",
-                                        "type": "string",
-                                        "example": "SWAP_CIRCLE"
-                                    },
                                     "product_code": {
-                                        "description": "Unique product code - used for edit/update later",
+                                        "description": "Unique product code",
                                         "type": "string",
                                         "example": "PROD_001"
                                     },
                                     "image_url": {
-                                        "description": "Product image URL",
                                         "type": "string",
                                         "example": "https://example.com/image.png",
                                         "nullable": true
@@ -269,8 +283,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Product created successfully"
+                    "200": {
+                        "description": "Product created or updated"
                     },
                     "422": {
                         "description": "Validation error"
@@ -289,34 +303,14 @@
                 "tags": [
                     "Products"
                 ],
-                "summary": "Delete all products linked to a partner",
+                "summary": "Delete all products of authenticated partner",
                 "operationId": "partnerProductsDeleteByPartner",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "partner_id"
-                                ],
-                                "properties": {
-                                    "partner_id": {
-                                        "description": "ID of the partner whose products will be deleted",
-                                        "type": "integer",
-                                        "example": 1
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "Products deleted successfully"
                     },
                     "404": {
-                        "description": "No products found for this partner"
+                        "description": "No products found"
                     },
                     "401": {
                         "description": "Unauthorized"
