@@ -26,6 +26,12 @@ interface CustomerRow {
 
 interface PaginatedCustomers {
     data: CustomerRow[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
 }
 
 interface Filters {
@@ -202,6 +208,24 @@ export default function CustomerList({ customers, filters }: { customers: Pagina
                         stickyHeader
                         compact
                     />
+                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                        <span>Showing {customers.from ?? 0}–{customers.to ?? 0} of {customers.total ?? 0}</span>
+                        <div className="flex gap-1">
+                            {customers.links.map((link, i) => (
+                                <button
+                                    key={i}
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                    className={`rounded px-3 py-1 text-xs border ${
+                                        link.active
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'border-input hover:bg-accent disabled:opacity-40'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </AdminLayout>

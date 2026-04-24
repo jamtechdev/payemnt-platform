@@ -26,6 +26,12 @@ interface TransactionRow {
 
 interface PaginatedTransactions {
     data: TransactionRow[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
 }
 
 interface Filters {
@@ -140,6 +146,24 @@ export default function TransactionList({ transactions, filters }: { transaction
                 <CardHeader><CardTitle className="text-base">Transaction records</CardTitle></CardHeader>
                 <CardContent>
                     <DataTable columns={columns} data={rows} showHeader showRowCount stripedRows clickableRows={false} emptyMessage="No transactions found." stickyHeader compact />
+                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                        <span>Showing {transactions.from ?? 0}–{transactions.to ?? 0} of {transactions.total ?? 0}</span>
+                        <div className="flex gap-1">
+                            {transactions.links.map((link, i) => (
+                                <button
+                                    key={i}
+                                    disabled={!link.url}
+                                    onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                    className={`rounded px-3 py-1 text-xs border ${
+                                        link.active
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'border-input hover:bg-accent disabled:opacity-40'
+                                    }`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </AdminLayout>

@@ -38,7 +38,7 @@ class CustomerController extends Controller
                 });
             });
 
-        $perPage = max(1, min((int) $request->integer('per_page', 5), 5));
+        $perPage = 10;
         $customers = $query->paginate($perPage)
             ->withQueryString()
             ->through(function (Customer $customer) use ($canViewPaymentAmount): array {

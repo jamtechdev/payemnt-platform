@@ -25,7 +25,7 @@ class TransactionController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->latest('paid_at');
 
-        $transactions = $query->paginate(20)->withQueryString();
+        $transactions = $query->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/Transactions/TransactionList', [
             'transactions' => $transactions,
