@@ -26,6 +26,10 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.customers.index'), label: 'Customers' });
     }
 
+    if (role === 'super_admin' || permissions.includes('transactions.view')) {
+        items.push({ href: route('admin.transactions.index'), label: 'Transactions' });
+    }
+
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
         items.push({ href: route('admin.products.index'), label: 'Products' });
     }
