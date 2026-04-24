@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PersonalAccessTokenController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SwapOfferController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Auth;
@@ -57,6 +58,8 @@ Route::prefix('admin')
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
             Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
             Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+            Route::get('/swap-offers', [SwapOfferController::class, 'index'])->name('swap-offers.index');
+            Route::get('/swap-offers/{swapOffer}', [SwapOfferController::class, 'show'])->name('swap-offers.show');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
             Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');

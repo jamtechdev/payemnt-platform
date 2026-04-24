@@ -30,6 +30,10 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.transactions.index'), label: 'Transactions' });
     }
 
+    if (role === 'super_admin' || permissions.includes('swap_offers.view')) {
+        items.push({ href: route('admin.swap-offers.index'), label: 'Swap Offers' });
+    }
+
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
         items.push({ href: route('admin.products.index'), label: 'Products' });
     }
