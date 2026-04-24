@@ -17,20 +17,30 @@ class Payment extends Model
         'customer_id',
         'partner_id',
         'product_id',
+        'transaction_number',
+        'product_type',
+        'cover_duration',
+        'cover_start_date',
+        'cover_end_date',
         'amount',
         'currency',
         'paid_at',
         'transaction_reference',
         'status',
+        'payment_message',
+        'stripe_payment_intent',
+        'stripe_payment_status',
         'metadata',
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'paid_at' => 'datetime',
-            'metadata' => 'array',
+            'amount'           => 'decimal:2',
+            'paid_at'          => 'datetime',
+            'cover_start_date' => 'date',
+            'cover_end_date'   => 'date',
+            'metadata'         => 'array',
         ];
     }
 

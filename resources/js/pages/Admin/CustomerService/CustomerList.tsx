@@ -6,21 +6,20 @@ import { Button } from '@/components/ui/button';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Download, Search } from 'lucide-react';
+import { Download, Eye, Search } from 'lucide-react';
 import { PageProps } from '@/Types';
 
 interface CustomerRow {
     uuid: string;
+    customer_code?: string;
     first_name: string;
     last_name: string;
     email: string;
     phone?: string | null;
     status: string;
     full_name?: string;
+    profile_pic?: string | null;
     partner?: { name?: string | null };
-    product?: { name?: string | null };
-    last_payment_date?: string | null;
-    latest_payment_amount?: number | null;
     customer_since?: string | null;
     cover_end_date?: string | null;
 }
@@ -62,13 +61,22 @@ export default function CustomerList({ customers, filters }: { customers: Pagina
 
     const columnHelper = createColumnHelper<CustomerRow>();
     const columns = [
-        columnHelper.accessor('uuid', {
-            header: 'Customer ID',
-            cell: (info) => (
-                <Link className="font-mono text-xs text-primary hover:underline" href={route('admin.customers.show', info.row.original.uuid)}>
-                    {String(info.getValue()).slice(0, 8)}
-                </Link>
-            ),
+        columnHelper.display({
+            id: 'profile_pic',
+            header: 'Photo',
+            cell: (info) => {
+                const pic = info.row.original.profile_pic;
+                const name = info.row.original.full_name ?? `${info.row.original.first_name} ${info.row.original.last_name}`;
+                if (!pic) {
+                    return (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-600">
+                            {name.charAt(0).toUpperCase()}
+                        </div>
+                    );
+                }
+                const url = pic.startsWith('http') ? pic : `/storage/${pic}`;
+                return <img src={url} alt={name} className="h-10 w-10 rounded-full border border-slate-200 object-cover" />;
+            },
         }),
         columnHelper.accessor((row) => row.full_name ?? `${row.first_name ?? ''} ${row.last_name ?? ''}`.trim(), {
             id: 'full_name',
@@ -76,13 +84,24 @@ export default function CustomerList({ customers, filters }: { customers: Pagina
         }),
         columnHelper.accessor('email', { header: 'Email' }),
         columnHelper.accessor((row) => row.partner?.name ?? '-', { id: 'partner_name', header: 'Partner' }),
-        columnHelper.accessor((row) => row.product?.name ?? '-', { id: 'product_name', header: 'Product' }),
         columnHelper.accessor((row) => row.customer_since ?? '-', { id: 'customer_since', header: 'Customer Since' }),
         columnHelper.accessor((row) => row.cover_end_date ?? '-', { id: 'cover_end_date', header: 'Cover End' }),
-        columnHelper.accessor((row) => row.last_payment_date ?? '-', { id: 'last_payment_date', header: 'Last Payment' }),
         columnHelper.accessor('status', {
             header: 'Status',
             cell: (info) => <StatusBadge status={info.getValue()} type="customer" />,
+        }),
+        columnHelper.display({
+            id: 'actions',
+            header: 'Actions',
+            cell: (info) => (
+                <Link
+                    className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-primary transition-colors hover:bg-accent"
+                    href={route('admin.customers.show', info.row.original.uuid)}
+                >
+                    <Eye className="h-4 w-4" />
+                    View
+                </Link>
+            ),
         }),
     ];
 

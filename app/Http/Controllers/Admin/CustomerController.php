@@ -56,6 +56,7 @@ class CustomerController extends Controller
                     'customer_since' => optional($customer->customer_since)->toDateString(),
                     'partner' => ['uuid' => $customer->partner?->uuid, 'name' => $customer->partner?->name],
                     'product' => ['uuid' => $customer->product?->uuid, 'name' => $customer->product?->name],
+                    'profile_pic' => $customer->profile_pic,
                     'last_payment_date' => optional($latestPayment?->payment_date)->toDateTimeString(),
                 ];
 

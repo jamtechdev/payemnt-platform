@@ -399,6 +399,122 @@
                     }
                 ]
             }
+        },
+        "/api/v1/transactions": {
+            "post": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Create or update a transaction (partner auto-set from API key)",
+                "operationId": "transactionStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "transaction_number",
+                                    "customer_email",
+                                    "product_code",
+                                    "payment_status",
+                                    "date_added"
+                                ],
+                                "properties": {
+                                    "transaction_number": {
+                                        "type": "string",
+                                        "example": "TXN123"
+                                    },
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "product_code": {
+                                        "type": "string",
+                                        "example": "PROD_001"
+                                    },
+                                    "product_type": {
+                                        "type": "string",
+                                        "example": "A"
+                                    },
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "example": "Monthly"
+                                    },
+                                    "cover_start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-01-01"
+                                    },
+                                    "cover_end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-12-31"
+                                    },
+                                    "payment_status": {
+                                        "type": "string",
+                                        "example": "Successful"
+                                    },
+                                    "payment_message": {
+                                        "type": "string",
+                                        "example": "Payment done"
+                                    },
+                                    "stripe_payment_intent": {
+                                        "type": "string",
+                                        "example": "pi_xxx"
+                                    },
+                                    "stripe_payment_status": {
+                                        "type": "string",
+                                        "example": "succeeded"
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "404": {
+                        "description": "Customer or Product not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Transactions"
+                ],
+                "summary": "Permanently delete all transactions of authenticated partner",
+                "operationId": "transactionDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Transactions deleted"
+                    },
+                    "404": {
+                        "description": "No transactions found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -525,6 +641,10 @@
         {
             "name": "Customer",
             "description": "Customer"
+        },
+        {
+            "name": "Transactions",
+            "description": "Transactions"
         }
     ]
 }
