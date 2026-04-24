@@ -22,7 +22,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "first_name",
@@ -66,18 +66,6 @@
                                         "type": "string",
                                         "example": "CNIC-12345"
                                     },
-                                    "id_front_image": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "id_back_image": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "profile_pic": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
                                     "status": {
                                         "type": "string",
                                         "enum": [
@@ -86,10 +74,6 @@
                                             "Inactive",
                                             "Deleted"
                                         ]
-                                    },
-                                    "product_id": {
-                                        "type": "integer",
-                                        "example": 1
                                     }
                                 },
                                 "type": "object"
@@ -113,11 +97,11 @@
             }
         },
         "/api/v1/customers/{customer_code}": {
-            "post": {
+            "put": {
                 "tags": [
                     "Customer"
                 ],
-                "summary": "Update customer by customer_code (use POST with _method=PUT for file upload)",
+                "summary": "Update customer by customer_code",
                 "operationId": "partnerCustomerUpdate",
                 "parameters": [
                     {
@@ -133,45 +117,36 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "properties": {
-                                    "_method": {
-                                        "type": "string",
-                                        "default": "PUT"
-                                    },
                                     "company_name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Acme Corp"
                                     },
                                     "first_name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "John"
                                     },
                                     "last_name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Doe"
                                     },
                                     "phone": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "+923001234567"
                                     },
                                     "location": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Karachi"
                                     },
                                     "valid_document": {
-                                        "type": "string"
-                                    },
-                                    "id_front_image": {
                                         "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "id_back_image": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "profile_pic": {
-                                        "type": "string",
-                                        "format": "binary"
+                                        "example": "CNIC-12345"
                                     },
                                     "status": {
                                         "type": "string",
+                                        "example": "Active",
                                         "enum": [
                                             "Pending",
                                             "Active",

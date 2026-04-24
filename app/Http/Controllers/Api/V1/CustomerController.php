@@ -10,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
 
 class CustomerController extends BaseApiController
@@ -23,26 +22,19 @@ class CustomerController extends BaseApiController
         tags: ['Customer'],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\MediaType(
-                mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    required: ['first_name', 'last_name', 'email', 'password', 'status'],
-                    properties: [
-                        new OA\Property(property: 'company_name', type: 'string', example: 'Acme Corp'),
-                        new OA\Property(property: 'first_name', type: 'string', example: 'John'),
-                        new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
-                        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
-                        new OA\Property(property: 'password', type: 'string', format: 'password', example: 'secret123'),
-                        new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
-                        new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
-                        new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
-                        new OA\Property(property: 'id_front_image', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'id_back_image', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'profile_pic', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted']),
-                        new OA\Property(property: 'product_id', type: 'integer', example: 1),
-                    ]
-                )
+            content: new OA\JsonContent(
+                required: ['first_name', 'last_name', 'email', 'password', 'status'],
+                properties: [
+                    new OA\Property(property: 'company_name', type: 'string', example: 'Acme Corp'),
+                    new OA\Property(property: 'first_name', type: 'string', example: 'John'),
+                    new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+                    new OA\Property(property: 'email', type: 'string', format: 'email', example: 'john@example.com'),
+                    new OA\Property(property: 'password', type: 'string', format: 'password', example: 'secret123'),
+                    new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
+                    new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
+                    new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted']),
+                ]
             )
         ),
         responses: [
@@ -63,14 +55,10 @@ class CustomerController extends BaseApiController
             'phone'          => ['nullable', 'string', 'max:20'],
             'location'       => ['nullable', 'string', 'max:255'],
             'valid_document' => ['nullable', 'string', 'max:255'],
-            'id_front_image' => ['nullable', 'image', 'max:2048'],
-            'id_back_image'  => ['nullable', 'image', 'max:2048'],
-            'profile_pic'    => ['nullable', 'image', 'max:2048'],
             'status'         => ['required', 'in:Pending,Active,Inactive,Deleted'],
-            'product_id'     => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
-        $result = DB::transaction(function () use ($validated, $partner, $request) {
+        $result = DB::transaction(function () use ($validated, $partner) {
             $user = User::updateOrCreate(
                 ['email' => $validated['email']],
                 [
@@ -82,29 +70,21 @@ class CustomerController extends BaseApiController
                 ]
             );
 
-            $idFront    = $request->hasFile('id_front_image') ? $request->file('id_front_image')->store('customers/documents', 'public') : null;
-            $idBack     = $request->hasFile('id_back_image') ? $request->file('id_back_image')->store('customers/documents', 'public') : null;
-            $profilePic = $request->hasFile('profile_pic') ? $request->file('profile_pic')->store('customers/profiles', 'public') : null;
-
             $customer = Customer::updateOrCreate(
                 [
                     'email'      => $validated['email'],
                     'partner_id' => $partner->id,
                 ],
-                array_filter([
+                [
                     'platform_user_id' => $user->id,
-                    'product_id'       => $validated['product_id'] ?? null,
                     'company_name'     => $validated['company_name'] ?? null,
                     'first_name'       => $validated['first_name'],
                     'last_name'        => $validated['last_name'],
                     'phone'            => $validated['phone'] ?? null,
                     'location'         => $validated['location'] ?? null,
                     'valid_document'   => $validated['valid_document'] ?? null,
-                    'id_front_image'   => $idFront,
-                    'id_back_image'    => $idBack,
-                    'profile_pic'      => $profilePic,
                     'status'           => $validated['status'],
-                ], fn ($v) => $v !== null)
+                ]
             );
 
             return ['user' => $user, 'customer' => $customer];
@@ -116,32 +96,25 @@ class CustomerController extends BaseApiController
         ], 200);
     }
 
-    #[OA\Post(
+    #[OA\Put(
         path: '/api/v1/customers/{customer_code}',
         operationId: 'partnerCustomerUpdate',
-        summary: 'Update customer by customer_code (use POST with _method=PUT for file upload)',
+        summary: 'Update customer by customer_code',
         security: [['sanctum' => []]],
         tags: ['Customer'],
         parameters: [new OA\Parameter(name: 'customer_code', in: 'path', required: true, schema: new OA\Schema(type: 'string'), example: 'CUST_00000001')],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\MediaType(
-                mediaType: 'multipart/form-data',
-                schema: new OA\Schema(
-                    properties: [
-                        new OA\Property(property: '_method', type: 'string', default: 'PUT'),
-                        new OA\Property(property: 'company_name', type: 'string'),
-                        new OA\Property(property: 'first_name', type: 'string'),
-                        new OA\Property(property: 'last_name', type: 'string'),
-                        new OA\Property(property: 'phone', type: 'string'),
-                        new OA\Property(property: 'location', type: 'string'),
-                        new OA\Property(property: 'valid_document', type: 'string'),
-                        new OA\Property(property: 'id_front_image', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'id_back_image', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'profile_pic', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted']),
-                    ]
-                )
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'company_name', type: 'string', example: 'Acme Corp'),
+                    new OA\Property(property: 'first_name', type: 'string', example: 'John'),
+                    new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+                    new OA\Property(property: 'phone', type: 'string', example: '+923001234567'),
+                    new OA\Property(property: 'location', type: 'string', example: 'Karachi'),
+                    new OA\Property(property: 'valid_document', type: 'string', example: 'CNIC-12345'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['Pending', 'Active', 'Inactive', 'Deleted'], example: 'Active'),
+                ]
             )
         ),
         responses: [
@@ -170,21 +143,8 @@ class CustomerController extends BaseApiController
             'phone'          => ['sometimes', 'nullable', 'string', 'max:20'],
             'location'       => ['sometimes', 'nullable', 'string', 'max:255'],
             'valid_document' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'id_front_image' => ['sometimes', 'nullable', 'image', 'max:2048'],
-            'id_back_image'  => ['sometimes', 'nullable', 'image', 'max:2048'],
-            'profile_pic'    => ['sometimes', 'nullable', 'image', 'max:2048'],
             'status'         => ['sometimes', 'in:Pending,Active,Inactive,Deleted'],
         ]);
-
-        if ($request->hasFile('id_front_image')) {
-            $validated['id_front_image'] = $request->file('id_front_image')->store('customers/documents', 'public');
-        }
-        if ($request->hasFile('id_back_image')) {
-            $validated['id_back_image'] = $request->file('id_back_image')->store('customers/documents', 'public');
-        }
-        if ($request->hasFile('profile_pic')) {
-            $validated['profile_pic'] = $request->file('profile_pic')->store('customers/profiles', 'public');
-        }
 
         DB::transaction(function () use ($customer, $validated): void {
             $customer->update($validated);
