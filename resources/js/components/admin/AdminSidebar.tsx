@@ -48,6 +48,10 @@ const iconMap: Record<string, ReactNode> = {
     FAQs: <HelpCircle className="h-4 w-4" />,
     'App Resources': <Layers className="h-4 w-4" />,
     'Data Records':   <ClipboardList className="h-4 w-4" />,
+    'Transactions':   <ClipboardList className="h-4 w-4" />,
+    'Product Transactions': <FileText className="h-4 w-4" />,
+    'Fund Wallets':   <FileText className="h-4 w-4" />,
+    'Products Purchases': <FileText className="h-4 w-4" />,
     'Task Types': <FileText className="h-4 w-4" />,
     'Occupations': <FileText className="h-4 w-4" />,
     'Relationships': <FileText className="h-4 w-4" />,
@@ -72,6 +76,7 @@ const sectionMap: Record<string, string> = {
     FAQs: 'Connect',
     'App Resources': 'Resources',
     'Data Records':   'Resources',
+    'Transactions':   'Resources',
 };
 
 export default function AdminSidebar({ url, navItems, collapsed, className, onNavigate }: AdminSidebarProps) {
@@ -86,15 +91,25 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
     };
 
     const isGroupActive = (item: NavItem): boolean => {
-        if (item.children) return item.children.some((c) => isItemActive(c.href));
+        if (item.children) return item.children.some((c) => c.children ? c.children.some((s) => isItemActive(s.href)) : isItemActive(c.href));
         return isItemActive(item.href);
     };
 
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
         const init: Record<string, boolean> = {};
         navItems.forEach((item) => {
-            if (item.children && item.children.some((c) => isItemActive(c.href))) {
-                init[item.label] = true;
+            if (item.children) {
+                const anyChildActive = item.children.some((c) =>
+                    c.children ? c.children.some((s) => isItemActive(s.href)) : isItemActive(c.href)
+                );
+                if (anyChildActive) {
+                    init[item.label] = true;
+                    item.children.forEach((c) => {
+                        if (c.children && c.children.some((s) => isItemActive(s.href))) {
+                            init[c.label] = true;
+                        }
+                    });
+                }
             }
         });
         return init;
@@ -140,6 +155,48 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                     {open && !collapsed && (
                         <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border/60 pl-3">
                             {item.children.map((child) => {
+                                if (child.children) {
+                                    const subOpen = openGroups[child.label] ?? false;
+                                    const subActive = child.children.some((c) => isItemActive(c.href));
+                                    return (
+                                        <div key={child.label}>
+                                            <button
+                                                onClick={() => toggleGroup(child.label)}
+                                                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all ${
+                                                    subActive
+                                                        ? 'font-medium text-sidebar-primary'
+                                                        : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                                }`}
+                                            >
+                                                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
+                                                <span className="flex-1 truncate text-left">{child.label}</span>
+                                                {subOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                            </button>
+                                            {subOpen && (
+                                                <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border/40 pl-3">
+                                                    {child.children.map((sub) => {
+                                                        const subChildActive = isItemActive(sub.href);
+                                                        return (
+                                                            <Link
+                                                                key={sub.href}
+                                                                href={sub.href!}
+                                                                onClick={onNavigate}
+                                                                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-all ${
+                                                                    subChildActive
+                                                                        ? 'font-medium text-sidebar-primary'
+                                                                        : 'text-sidebar-foreground/65 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                                                }`}
+                                                            >
+                                                                <span className="h-1 w-1 rounded-full bg-current opacity-50" />
+                                                                {sub.label}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
                                 const childActive = isItemActive(child.href);
                                 return (
                                     <Link

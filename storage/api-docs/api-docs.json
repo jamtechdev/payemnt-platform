@@ -304,6 +304,194 @@
                 ]
             }
         },
+        "/api/v1/withdraw-wallets": {
+            "post": {
+                "tags": [
+                    "Withdraw Wallets"
+                ],
+                "summary": "Create or update a withdraw wallet entry (partner auto-set from API key)",
+                "operationId": "withdrawWalletStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_email",
+                                    "amount",
+                                    "currency_code",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1000
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Withdrawal request"
+                                    },
+                                    "currency_code": {
+                                        "type": "string",
+                                        "example": "NGN"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Pending",
+                                        "enum": [
+                                            "Pending",
+                                            "Approved",
+                                            "Rejected"
+                                        ]
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Withdraw wallet created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Withdraw Wallets"
+                ],
+                "summary": "Delete all withdraw wallet entries of authenticated partner",
+                "operationId": "withdrawWalletDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Withdraw wallet entries deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/fund-wallets": {
+            "post": {
+                "tags": [
+                    "Fund Wallets"
+                ],
+                "summary": "Create or update a fund wallet entry (partner auto-set from API key)",
+                "operationId": "fundWalletStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_email",
+                                    "bank_name",
+                                    "amount",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "bank_name": {
+                                        "type": "string",
+                                        "example": "Access Bank"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Wallet top-up"
+                                    },
+                                    "image_url": {
+                                        "type": "string",
+                                        "example": "https://example.com/proof.jpg"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Pending",
+                                        "enum": [
+                                            "Pending",
+                                            "Funded",
+                                            "Rejected"
+                                        ]
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Fund wallet created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Fund Wallets"
+                ],
+                "summary": "Delete all fund wallet entries of authenticated partner",
+                "operationId": "fundWalletDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Fund wallet entries deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/referral-usages": {
             "post": {
                 "tags": [
@@ -1475,6 +1663,14 @@
         {
             "name": "Connect Categories",
             "description": "Connect Categories"
+        },
+        {
+            "name": "Withdraw Wallets",
+            "description": "Withdraw Wallets"
+        },
+        {
+            "name": "Fund Wallets",
+            "description": "Fund Wallets"
         },
         {
             "name": "FAQs",

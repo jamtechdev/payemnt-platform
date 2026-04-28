@@ -27,7 +27,15 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
     }
 
     if (role === 'super_admin' || permissions.includes('transactions.view')) {
-        items.push({ href: route('admin.transactions.index'), label: 'Transactions' });
+        items.push({
+            label: 'Transactions',
+            children: [
+                { href: route('admin.transactions.index'),                    label: 'Product Transactions' },
+                { href: route('admin.app-resources.fund-wallets'),            label: 'Fund Wallets' },
+                { href: route('admin.app-resources.withdraw-wallets'),        label: 'Withdraw Wallets' },
+                { href: route('admin.app-resources.products-purchases'),      label: 'Products Purchases' },
+            ],
+        });
     }
 
     if (role === 'super_admin' || permissions.includes('swap_offers.view')) {
@@ -48,7 +56,6 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
             label: 'Data Records',
             children: [
                 { href: route('admin.app-resources.referral-usages'),           label: 'Referral Usages' },
-                { href: route('admin.app-resources.products-purchases'),        label: 'Products Purchases' },
                 { href: route('admin.app-resources.products-purchases-claims'), label: 'Purchase Claims' },
             ],
         });

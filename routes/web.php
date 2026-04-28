@@ -64,6 +64,8 @@ Route::prefix('admin')
             Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
             Route::get('/swap-offers', [SwapOfferController::class, 'index'])->name('swap-offers.index');
             Route::get('/swap-offers/{swapOffer}', [SwapOfferController::class, 'show'])->name('swap-offers.show');
+            Route::get('/app-resources/withdraw-wallets', [AppResourceController::class, 'withdrawWallets'])->name('app-resources.withdraw-wallets');
+            Route::get('/app-resources/fund-wallets', [AppResourceController::class, 'fundWallets'])->name('app-resources.fund-wallets');
             Route::get('/app-resources/task-types', [AppResourceController::class, 'taskTypes'])->name('app-resources.task-types');
             Route::get('/app-resources/occupations', [AppResourceController::class, 'occupations'])->name('app-resources.occupations');
             Route::get('/app-resources/relationships', [AppResourceController::class, 'relationships'])->name('app-resources.relationships');

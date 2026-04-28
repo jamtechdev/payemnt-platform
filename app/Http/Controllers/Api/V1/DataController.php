@@ -4,15 +4,159 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\FundWallet;
 use App\Models\ProductsPurchase;
 use App\Models\ProductsPurchasesClaim;
 use App\Models\ReferralUsage;
+use App\Models\WithdrawWallet;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class DataController extends BaseApiController
 {
+    // ─── Withdraw Wallets ────────────────────────────────────────────────────────
+
+    #[OA\Post(
+        path: '/api/v1/withdraw-wallets',
+        operationId: 'withdrawWalletStore',
+        summary: 'Create or update a withdraw wallet entry (partner auto-set from API key)',
+        security: [['sanctum' => []]],
+        tags: ['Withdraw Wallets'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['customer_email', 'amount', 'currency_code', 'status'],
+                properties: [
+                    new OA\Property(property: 'customer_email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 1000.00),
+                    new OA\Property(property: 'description',    type: 'string', example: 'Withdrawal request'),
+                    new OA\Property(property: 'currency_code',  type: 'string', example: 'NGN'),
+                    new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Approved', 'Rejected'], example: 'Pending'),
+                    new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Withdraw wallet created or updated'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    public function withdrawWalletStore(Request $request): JsonResponse
+    {
+        $partner   = $request->attributes->get('partner');
+        $validated = $request->validate([
+            'customer_email' => ['required', 'email'],
+            'amount'         => ['required', 'numeric', 'min:0'],
+            'description'    => ['nullable', 'string'],
+            'currency_code'  => ['required', 'string', 'max:10'],
+            'status'         => ['required', 'string', 'in:Pending,Approved,Rejected'],
+            'date_added'     => ['nullable', 'date'],
+        ]);
+
+        $record = WithdrawWallet::updateOrCreate(
+            ['partner_id' => $partner->id, 'customer_email' => $validated['customer_email'], 'currency_code' => $validated['currency_code']],
+            array_merge($validated, ['partner_id' => $partner->id])
+        );
+
+        return $this->success($record, 200);
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/withdraw-wallets',
+        operationId: 'withdrawWalletDestroy',
+        summary: 'Delete all withdraw wallet entries of authenticated partner',
+        security: [['sanctum' => []]],
+        tags: ['Withdraw Wallets'],
+        responses: [
+            new OA\Response(response: 200, description: 'Withdraw wallet entries deleted'),
+            new OA\Response(response: 404, description: 'No records found'),
+        ]
+    )]
+    public function withdrawWalletDestroy(Request $request): JsonResponse
+    {
+        $partner = $request->attributes->get('partner');
+        $deleted = WithdrawWallet::where('partner_id', $partner->id)->delete();
+
+        if ($deleted === 0) {
+            return $this->error('NOT_FOUND', 'No withdraw wallet entries found for this partner.', [], 404);
+        }
+
+        return $this->success(['deleted_count' => $deleted]);
+    }
+
+    // ─── Fund Wallets ────────────────────────────────────────────────────────────
+
+    #[OA\Post(
+        path: '/api/v1/fund-wallets',
+        operationId: 'fundWalletStore',
+        summary: 'Create or update a fund wallet entry (partner auto-set from API key)',
+        security: [['sanctum' => []]],
+        tags: ['Fund Wallets'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['customer_email', 'bank_name', 'amount', 'status'],
+                properties: [
+                    new OA\Property(property: 'customer_email', type: 'string', format: 'email', example: 'user@example.com'),
+                    new OA\Property(property: 'bank_name',      type: 'string', example: 'Access Bank'),
+                    new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 5000.00),
+                    new OA\Property(property: 'description',    type: 'string', example: 'Wallet top-up'),
+                    new OA\Property(property: 'image_url',      type: 'string', example: 'https://example.com/proof.jpg'),
+                    new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Funded', 'Rejected'], example: 'Pending'),
+                    new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Fund wallet created or updated'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
+    public function fundWalletStore(Request $request): JsonResponse
+    {
+        $partner   = $request->attributes->get('partner');
+        $validated = $request->validate([
+            'customer_email' => ['required', 'email'],
+            'bank_name'      => ['required', 'string', 'max:150'],
+            'amount'         => ['required', 'numeric', 'min:0'],
+            'description'    => ['nullable', 'string'],
+            'image_url'      => ['nullable', 'string', 'max:500'],
+            'status'         => ['required', 'string', 'in:Pending,Funded,Rejected'],
+            'date_added'     => ['nullable', 'date'],
+        ]);
+
+        $record = FundWallet::updateOrCreate(
+            ['partner_id' => $partner->id, 'customer_email' => $validated['customer_email'], 'bank_name' => $validated['bank_name']],
+            array_merge($validated, ['partner_id' => $partner->id])
+        );
+
+        return $this->success($record, 200);
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/fund-wallets',
+        operationId: 'fundWalletDestroy',
+        summary: 'Delete all fund wallet entries of authenticated partner',
+        security: [['sanctum' => []]],
+        tags: ['Fund Wallets'],
+        responses: [
+            new OA\Response(response: 200, description: 'Fund wallet entries deleted'),
+            new OA\Response(response: 404, description: 'No records found'),
+        ]
+    )]
+    public function fundWalletDestroy(Request $request): JsonResponse
+    {
+        $partner = $request->attributes->get('partner');
+        $deleted = FundWallet::where('partner_id', $partner->id)->delete();
+
+        if ($deleted === 0) {
+            return $this->error('NOT_FOUND', 'No fund wallet entries found for this partner.', [], 404);
+        }
+
+        return $this->success(['deleted_count' => $deleted]);
+    }
+
     // ─── Referral Usages ────────────────────────────────────────────────────────
 
     #[OA\Post(

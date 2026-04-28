@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\FundWallet;
 use App\Models\Occupation;
+use App\Models\WithdrawWallet;
 use App\Models\ProductsPurchase;
 use App\Models\ProductsPurchasesClaim;
 use App\Models\ReferralUsage;
@@ -15,6 +17,38 @@ use Inertia\Response;
 
 class AppResourceController extends Controller
 {
+    public function withdrawWallets(Request $request): Response
+    {
+        $items = WithdrawWallet::query()
+            ->with('partner:id,name')
+            ->when($request->filled('search'), fn ($q) => $q
+                ->where('customer_email', 'like', '%'.$request->string('search').'%')
+                ->orWhere('currency_code', 'like', '%'.$request->string('search').'%')
+                ->orWhere('status', 'like', '%'.$request->string('search').'%'))
+            ->latest()->paginate(10)->withQueryString();
+
+        return Inertia::render('Admin/AppResources/WithdrawWalletList', [
+            'items'   => $items,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function fundWallets(Request $request): Response
+    {
+        $items = FundWallet::query()
+            ->with('partner:id,name')
+            ->when($request->filled('search'), fn ($q) => $q
+                ->where('customer_email', 'like', '%'.$request->string('search').'%')
+                ->orWhere('bank_name', 'like', '%'.$request->string('search').'%')
+                ->orWhere('status', 'like', '%'.$request->string('search').'%'))
+            ->latest()->paginate(10)->withQueryString();
+
+        return Inertia::render('Admin/AppResources/FundWalletList', [
+            'items'   => $items,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
     public function taskTypes(Request $request): Response
     {
         $items = TaskType::query()

@@ -69,6 +69,12 @@ Route::prefix('v1')
         Route::post('/task-types', [LookupController::class, 'taskTypeStore'])->name('partner.task-types.store');
         Route::delete('/task-types', [LookupController::class, 'taskTypeDestroy'])->name('partner.task-types.destroy');
 
+        Route::post('/withdraw-wallets', [DataController::class, 'withdrawWalletStore'])->name('partner.withdraw-wallets.store');
+        Route::delete('/withdraw-wallets', [DataController::class, 'withdrawWalletDestroy'])->name('partner.withdraw-wallets.destroy');
+
+        Route::post('/fund-wallets', [DataController::class, 'fundWalletStore'])->name('partner.fund-wallets.store');
+        Route::delete('/fund-wallets', [DataController::class, 'fundWalletDestroy'])->name('partner.fund-wallets.destroy');
+
         Route::post('/referral-usages', [DataController::class, 'referralUsageStore'])->name('partner.referral-usages.store');
         Route::delete('/referral-usages', [DataController::class, 'referralUsageDestroy'])->name('partner.referral-usages.destroy');
 

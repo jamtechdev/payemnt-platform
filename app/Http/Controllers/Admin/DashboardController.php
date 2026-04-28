@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\FundWallet;
 use App\Models\Occupation;
 use App\Models\Partner;
 use App\Models\Payment;
@@ -130,6 +131,7 @@ class DashboardController extends Controller
                 'referral_usages'   => ReferralUsage::query()->count(),
                 'purchases'         => ProductsPurchase::query()->count(),
                 'purchase_claims'   => ProductsPurchasesClaim::query()->count(),
+                'fund_wallets'      => FundWallet::query()->count(),
             ],
         ]);
     }
