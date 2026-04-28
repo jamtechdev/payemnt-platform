@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\ProductsPurchase;
 use App\Models\ProductsPurchasesClaim;
 use App\Models\ReferralUsage;
-use App\Models\SystemCurrency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -85,23 +84,27 @@ class DataController extends BaseApiController
     #[OA\Post(
         path: '/api/v1/products-purchases',
         operationId: 'productsPurchaseStore',
-        summary: 'Create or update a product purchase (partner auto-set from API key)',
+        summary: 'Create or update a product purchase',
         security: [['sanctum' => []]],
         tags: ['Products Purchases'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['customer_email', 'product_code', 'product_type', 'cover_duration', 'cover_start_date', 'cover_end_date', 'payment_status'],
+                required: ['swap_offers_requests_id', 'from_users_customers_id', 'to_users_customers_id', 'from_system_currencies_id', 'to_system_currencies_id', 'from_amount', 'to_amount', 'admin_share', 'admin_share_amount', 'system_currencies_id', 'base_amount', 'payment_method_id', 'status'],
                 properties: [
-                    new OA\Property(property: 'customer_email',    type: 'string', format: 'email', example: 'john@example.com'),
-                    new OA\Property(property: 'product_code',      type: 'string', example: 'PROD_001'),
-                    new OA\Property(property: 'product_type',      type: 'string', example: 'A'),
-                    new OA\Property(property: 'cover_duration',    type: 'string', example: 'Monthly'),
-                    new OA\Property(property: 'cover_start_date',  type: 'string', format: 'date', example: '2024-01-01'),
-                    new OA\Property(property: 'cover_end_date',    type: 'string', format: 'date', example: '2024-12-31'),
-                    new OA\Property(property: 'payment_status',    type: 'string', example: 'Successful'),
-                    new OA\Property(property: 'transaction_number', type: 'string', example: 'TXN123'),
-                    new OA\Property(property: 'date_added',        type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
+                    new OA\Property(property: 'swap_offers_requests_id',  type: 'integer', example: 1),
+                    new OA\Property(property: 'from_users_customers_id',  type: 'integer', example: 101),
+                    new OA\Property(property: 'to_users_customers_id',    type: 'integer', example: 102),
+                    new OA\Property(property: 'from_system_currencies_id', type: 'integer', example: 3),
+                    new OA\Property(property: 'to_system_currencies_id',  type: 'integer', example: 5),
+                    new OA\Property(property: 'from_amount',              type: 'number', format: 'float', example: 500.00),
+                    new OA\Property(property: 'to_amount',                type: 'number', format: 'float', example: 450.00),
+                    new OA\Property(property: 'admin_share',              type: 'number', format: 'float', example: 2.5),
+                    new OA\Property(property: 'admin_share_amount',       type: 'number', format: 'float', example: 12.50),
+                    new OA\Property(property: 'system_currencies_id',     type: 'integer', example: 1),
+                    new OA\Property(property: 'base_amount',              type: 'number', format: 'float', example: 500.00),
+                    new OA\Property(property: 'payment_method_id',        type: 'integer', example: 1),
+                    new OA\Property(property: 'status',                   type: 'string', example: 'completed'),
                 ]
             )
         ),
@@ -112,22 +115,25 @@ class DataController extends BaseApiController
     )]
     public function productsPurchaseStore(Request $request): JsonResponse
     {
-        $partner   = $request->attributes->get('partner');
         $validated = $request->validate([
-            'customer_email'    => ['required', 'email'],
-            'product_code'      => ['required', 'string', 'max:40'],
-            'product_type'      => ['required', 'string', 'max:100'],
-            'cover_duration'    => ['required', 'string', 'max:100'],
-            'cover_start_date'  => ['required', 'date'],
-            'cover_end_date'    => ['required', 'date'],
-            'payment_status'    => ['required', 'string', 'max:100'],
-            'transaction_number' => ['nullable', 'string', 'max:100'],
-            'date_added'        => ['nullable', 'date'],
+            'swap_offers_requests_id'  => ['required', 'integer'],
+            'from_users_customers_id'  => ['required', 'integer'],
+            'to_users_customers_id'    => ['required', 'integer'],
+            'from_system_currencies_id' => ['required', 'integer'],
+            'to_system_currencies_id'  => ['required', 'integer'],
+            'from_amount'              => ['required', 'numeric', 'min:0'],
+            'to_amount'                => ['required', 'numeric', 'min:0'],
+            'admin_share'              => ['required', 'numeric', 'min:0'],
+            'admin_share_amount'       => ['required', 'numeric', 'min:0'],
+            'system_currencies_id'     => ['required', 'integer'],
+            'base_amount'              => ['required', 'numeric', 'min:0'],
+            'payment_method_id'        => ['required', 'integer'],
+            'status'                   => ['required', 'string', 'max:100'],
         ]);
 
         $record = ProductsPurchase::updateOrCreate(
-            ['partner_id' => $partner->id, 'customer_email' => $validated['customer_email'], 'transaction_number' => $validated['transaction_number'] ?? null],
-            array_merge($validated, ['partner_id' => $partner->id])
+            ['swap_offers_requests_id' => $validated['swap_offers_requests_id']],
+            $validated
         );
 
         return $this->success($record, 200);
@@ -136,7 +142,7 @@ class DataController extends BaseApiController
     #[OA\Delete(
         path: '/api/v1/products-purchases',
         operationId: 'productsPurchaseDestroy',
-        summary: 'Delete all product purchases of authenticated partner',
+        summary: 'Delete a product purchase by swap_offers_requests_id',
         security: [['sanctum' => []]],
         tags: ['Products Purchases'],
         responses: [
@@ -146,11 +152,14 @@ class DataController extends BaseApiController
     )]
     public function productsPurchaseDestroy(Request $request): JsonResponse
     {
-        $partner = $request->attributes->get('partner');
-        $deleted = ProductsPurchase::where('partner_id', $partner->id)->delete();
+        $validated = $request->validate([
+            'swap_offers_requests_id' => ['required', 'integer'],
+        ]);
+
+        $deleted = ProductsPurchase::where('swap_offers_requests_id', $validated['swap_offers_requests_id'])->delete();
 
         if ($deleted === 0) {
-            return $this->error('NOT_FOUND', 'No product purchases found for this partner.', [], 404);
+            return $this->error('NOT_FOUND', 'No product purchases found.', [], 404);
         }
 
         return $this->success(['deleted_count' => $deleted]);
@@ -221,76 +230,6 @@ class DataController extends BaseApiController
 
         if ($deleted === 0) {
             return $this->error('NOT_FOUND', 'No claims found for this partner.', [], 404);
-        }
-
-        return $this->success(['deleted_count' => $deleted]);
-    }
-
-    // ─── System Currencies ───────────────────────────────────────────────────────
-
-    #[OA\Post(
-        path: '/api/v1/system-currencies',
-        operationId: 'systemCurrencyStore',
-        summary: 'Create or update a system currency (partner auto-set from API key)',
-        security: [['sanctum' => []]],
-        tags: ['System Currencies'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['name', 'code', 'symbol', 'margin', 'admin_rate'],
-                properties: [
-                    new OA\Property(property: 'name',       type: 'string', example: 'Nigerian Naira'),
-                    new OA\Property(property: 'code',       type: 'string', example: 'NGN'),
-                    new OA\Property(property: 'symbol',     type: 'string', example: '₦'),
-                    new OA\Property(property: 'margin',     type: 'number', format: 'float', example: 2.50),
-                    new OA\Property(property: 'admin_rate', type: 'number', format: 'float', example: 1500.00),
-                    new OA\Property(property: 'status',     type: 'string', example: 'Active'),
-                ]
-            )
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Currency created or updated'),
-            new OA\Response(response: 422, description: 'Validation error'),
-        ]
-    )]
-    public function systemCurrencyStore(Request $request): JsonResponse
-    {
-        $partner   = $request->attributes->get('partner');
-        $validated = $request->validate([
-            'name'       => ['required', 'string', 'max:100'],
-            'code'       => ['required', 'string', 'max:10'],
-            'symbol'     => ['required', 'string', 'max:10'],
-            'margin'     => ['required', 'numeric', 'min:0'],
-            'admin_rate' => ['required', 'numeric', 'min:0'],
-            'status'     => ['nullable', 'string', 'max:100'],
-        ]);
-
-        $record = SystemCurrency::updateOrCreate(
-            ['partner_id' => $partner->id, 'code' => $validated['code']],
-            array_merge($validated, ['partner_id' => $partner->id])
-        );
-
-        return $this->success($record, 200);
-    }
-
-    #[OA\Delete(
-        path: '/api/v1/system-currencies',
-        operationId: 'systemCurrencyDestroy',
-        summary: 'Delete all system currencies of authenticated partner',
-        security: [['sanctum' => []]],
-        tags: ['System Currencies'],
-        responses: [
-            new OA\Response(response: 200, description: 'Currencies deleted'),
-            new OA\Response(response: 404, description: 'No records found'),
-        ]
-    )]
-    public function systemCurrencyDestroy(Request $request): JsonResponse
-    {
-        $partner = $request->attributes->get('partner');
-        $deleted = SystemCurrency::where('partner_id', $partner->id)->delete();
-
-        if ($deleted === 0) {
-            return $this->error('NOT_FOUND', 'No currencies found for this partner.', [], 404);
         }
 
         return $this->success(['deleted_count' => $deleted]);

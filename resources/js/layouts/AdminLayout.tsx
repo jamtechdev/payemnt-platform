@@ -50,7 +50,6 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
                 { href: route('admin.app-resources.referral-usages'),           label: 'Referral Usages' },
                 { href: route('admin.app-resources.products-purchases'),        label: 'Products Purchases' },
                 { href: route('admin.app-resources.products-purchases-claims'), label: 'Purchase Claims' },
-                { href: route('admin.app-resources.system-currencies'),         label: 'System Currencies' },
             ],
         });
     }

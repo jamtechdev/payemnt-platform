@@ -387,7 +387,7 @@
                 "tags": [
                     "Products Purchases"
                 ],
-                "summary": "Create or update a product purchase (partner auto-set from API key)",
+                "summary": "Create or update a product purchase",
                 "operationId": "productsPurchaseStore",
                 "requestBody": {
                     "required": true,
@@ -395,54 +395,77 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "customer_email",
-                                    "product_code",
-                                    "product_type",
-                                    "cover_duration",
-                                    "cover_start_date",
-                                    "cover_end_date",
-                                    "payment_status"
+                                    "swap_offers_requests_id",
+                                    "from_users_customers_id",
+                                    "to_users_customers_id",
+                                    "from_system_currencies_id",
+                                    "to_system_currencies_id",
+                                    "from_amount",
+                                    "to_amount",
+                                    "admin_share",
+                                    "admin_share_amount",
+                                    "system_currencies_id",
+                                    "base_amount",
+                                    "payment_method_id",
+                                    "status"
                                 ],
                                 "properties": {
-                                    "customer_email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
+                                    "swap_offers_requests_id": {
+                                        "type": "integer",
+                                        "example": 1
                                     },
-                                    "product_code": {
-                                        "type": "string",
-                                        "example": "PROD_001"
+                                    "from_users_customers_id": {
+                                        "type": "integer",
+                                        "example": 101
                                     },
-                                    "product_type": {
-                                        "type": "string",
-                                        "example": "A"
+                                    "to_users_customers_id": {
+                                        "type": "integer",
+                                        "example": 102
                                     },
-                                    "cover_duration": {
-                                        "type": "string",
-                                        "example": "Monthly"
+                                    "from_system_currencies_id": {
+                                        "type": "integer",
+                                        "example": 3
                                     },
-                                    "cover_start_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2024-01-01"
+                                    "to_system_currencies_id": {
+                                        "type": "integer",
+                                        "example": 5
                                     },
-                                    "cover_end_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2024-12-31"
+                                    "from_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500
                                     },
-                                    "payment_status": {
-                                        "type": "string",
-                                        "example": "Successful"
+                                    "to_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 450
                                     },
-                                    "transaction_number": {
-                                        "type": "string",
-                                        "example": "TXN123"
+                                    "admin_share": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 2.5
                                     },
-                                    "date_added": {
+                                    "admin_share_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 12.5
+                                    },
+                                    "system_currencies_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "base_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 500
+                                    },
+                                    "payment_method_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "status": {
                                         "type": "string",
-                                        "format": "date-time",
-                                        "example": "2024-01-01 10:00:00"
+                                        "example": "completed"
                                     }
                                 },
                                 "type": "object"
@@ -468,7 +491,7 @@
                 "tags": [
                     "Products Purchases"
                 ],
-                "summary": "Delete all product purchases of authenticated partner",
+                "summary": "Delete a product purchase by swap_offers_requests_id",
                 "operationId": "productsPurchaseDestroy",
                 "responses": {
                     "200": {
@@ -559,93 +582,6 @@
                 "responses": {
                     "200": {
                         "description": "Claims deleted"
-                    },
-                    "404": {
-                        "description": "No records found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/system-currencies": {
-            "post": {
-                "tags": [
-                    "System Currencies"
-                ],
-                "summary": "Create or update a system currency (partner auto-set from API key)",
-                "operationId": "systemCurrencyStore",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "code",
-                                    "symbol",
-                                    "margin",
-                                    "admin_rate"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Nigerian Naira"
-                                    },
-                                    "code": {
-                                        "type": "string",
-                                        "example": "NGN"
-                                    },
-                                    "symbol": {
-                                        "type": "string",
-                                        "example": "₦"
-                                    },
-                                    "margin": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 2.5
-                                    },
-                                    "admin_rate": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 1500
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "Active"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Currency created or updated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "System Currencies"
-                ],
-                "summary": "Delete all system currencies of authenticated partner",
-                "operationId": "systemCurrencyDestroy",
-                "responses": {
-                    "200": {
-                        "description": "Currencies deleted"
                     },
                     "404": {
                         "description": "No records found"
@@ -1514,10 +1450,6 @@
         {
             "name": "Products Purchases Claims",
             "description": "Product purchase claim APIs"
-        },
-        {
-            "name": "System Currencies",
-            "description": "System currency APIs"
         },
         {
             "name": "Connect Articles",

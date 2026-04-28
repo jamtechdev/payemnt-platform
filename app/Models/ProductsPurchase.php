@@ -10,22 +10,35 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProductsPurchase extends Model
 {
     protected $fillable = [
-        'partner_id', 'customer_email', 'product_code', 'product_type',
-        'cover_duration', 'cover_start_date', 'cover_end_date',
-        'payment_status', 'transaction_number', 'date_added',
+        'swap_offers_requests_id', 'from_users_customers_id', 'to_users_customers_id',
+        'from_system_currencies_id', 'to_system_currencies_id', 'from_amount', 'to_amount',
+        'admin_share', 'admin_share_amount', 'system_currencies_id', 'base_amount',
+        'payment_method_id', 'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'cover_start_date' => 'date',
-            'cover_end_date'   => 'date',
-            'date_added'       => 'datetime',
+            'from_amount'        => 'decimal:2',
+            'to_amount'          => 'decimal:2',
+            'admin_share'        => 'decimal:2',
+            'admin_share_amount' => 'decimal:2',
+            'base_amount'        => 'decimal:2',
         ];
     }
 
-    public function partner(): BelongsTo
+    public function swapOffer(): BelongsTo
     {
-        return $this->belongsTo(Partner::class);
+        return $this->belongsTo(SwapOffer::class, 'swap_offers_requests_id');
+    }
+
+    public function fromCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'from_users_customers_id');
+    }
+
+    public function toCustomer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'to_users_customers_id');
     }
 }

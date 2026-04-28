@@ -24,20 +24,20 @@ return new class extends Migration
 
         Schema::create('products_purchases', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('partner_id')->constrained('partners')->restrictOnDelete();
-            $table->string('customer_email');
-            $table->string('product_code');
-            $table->string('product_type');
-            $table->string('cover_duration');
-            $table->date('cover_start_date');
-            $table->date('cover_end_date');
-            $table->string('payment_status');
-            $table->string('transaction_number')->nullable();
-            $table->timestamp('date_added')->nullable();
+            $table->unsignedBigInteger('swap_offers_requests_id');
+            $table->unsignedBigInteger('from_users_customers_id');
+            $table->unsignedBigInteger('to_users_customers_id');
+            $table->unsignedBigInteger('from_system_currencies_id');
+            $table->unsignedBigInteger('to_system_currencies_id');
+            $table->decimal('from_amount', 15, 2);
+            $table->decimal('to_amount', 15, 2);
+            $table->decimal('admin_share', 5, 2);
+            $table->decimal('admin_share_amount', 15, 2);
+            $table->unsignedBigInteger('system_currencies_id');
+            $table->decimal('base_amount', 15, 2);
+            $table->unsignedBigInteger('payment_method_id');
+            $table->string('status');
             $table->timestamps();
-
-            $table->index(['partner_id', 'customer_email']);
-            $table->index(['partner_id', 'transaction_number']);
         });
 
         Schema::create('products_purchases_claims', function (Blueprint $table): void {
@@ -53,25 +53,10 @@ return new class extends Migration
 
             $table->index(['partner_id', 'customer_email']);
         });
-
-        Schema::create('system_currencies', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('partner_id')->constrained('partners')->restrictOnDelete();
-            $table->string('name');
-            $table->string('code', 10);
-            $table->string('symbol', 10);
-            $table->decimal('margin', 5, 2);
-            $table->decimal('admin_rate', 10, 2);
-            $table->string('status')->default('Active');
-            $table->timestamps();
-
-            $table->index(['partner_id', 'code']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('system_currencies');
         Schema::dropIfExists('products_purchases_claims');
         Schema::dropIfExists('products_purchases');
         Schema::dropIfExists('referral_usages');

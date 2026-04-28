@@ -78,8 +78,6 @@ Route::prefix('v1')
         Route::post('/products-purchases-claims', [DataController::class, 'productsPurchasesClaimStore'])->name('partner.products-purchases-claims.store');
         Route::delete('/products-purchases-claims', [DataController::class, 'productsPurchasesClaimDestroy'])->name('partner.products-purchases-claims.destroy');
 
-        Route::post('/system-currencies', [DataController::class, 'systemCurrencyStore'])->name('partner.system-currencies.store');
-        Route::delete('/system-currencies', [DataController::class, 'systemCurrencyDestroy'])->name('partner.system-currencies.destroy');
     });
 
 Route::prefix('v1/admin')

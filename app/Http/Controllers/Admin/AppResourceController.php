@@ -8,7 +8,6 @@ use App\Models\ProductsPurchase;
 use App\Models\ProductsPurchasesClaim;
 use App\Models\ReferralUsage;
 use App\Models\Relationship;
-use App\Models\SystemCurrency;
 use App\Models\TaskType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -73,10 +72,9 @@ class AppResourceController extends Controller
     public function productsPurchases(Request $request): Response
     {
         $items = ProductsPurchase::query()
-            ->with('partner:id,name')
-            ->when($request->filled('search'), fn ($q) => $q->where('customer_email', 'like', '%'.$request->string('search').'%')
-                ->orWhere('transaction_number', 'like', '%'.$request->string('search').'%')
-                ->orWhere('product_code', 'like', '%'.$request->string('search').'%'))
+            ->with(['swapOffer:id,uuid', 'fromCustomer:id,first_name,last_name,email', 'toCustomer:id,first_name,last_name,email'])
+            ->when($request->filled('search'), fn ($q) => $q->where('swap_offers_requests_id', $request->string('search'))
+                ->orWhere('status', 'like', '%'.$request->string('search').'%'))
             ->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/AppResources/ProductsPurchaseList', [
@@ -94,20 +92,6 @@ class AppResourceController extends Controller
             ->latest()->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/AppResources/ProductsPurchasesClaimList', [
-            'items'   => $items,
-            'filters' => $request->only(['search']),
-        ]);
-    }
-
-    public function systemCurrencies(Request $request): Response
-    {
-        $items = SystemCurrency::query()
-            ->with('partner:id,name')
-            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%')
-                ->orWhere('code', 'like', '%'.$request->string('search').'%'))
-            ->latest()->paginate(10)->withQueryString();
-
-        return Inertia::render('Admin/AppResources/SystemCurrencyList', [
             'items'   => $items,
             'filters' => $request->only(['search']),
         ]);

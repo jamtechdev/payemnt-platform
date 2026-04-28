@@ -13,7 +13,6 @@ use App\Models\ProductsPurchasesClaim;
 use App\Models\ReferralUsage;
 use App\Models\Relationship;
 use App\Models\SwapOffer;
-use App\Models\SystemCurrency;
 use App\Models\TaskType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -131,7 +130,6 @@ class DashboardController extends Controller
                 'referral_usages'   => ReferralUsage::query()->count(),
                 'purchases'         => ProductsPurchase::query()->count(),
                 'purchase_claims'   => ProductsPurchasesClaim::query()->count(),
-                'system_currencies' => SystemCurrency::query()->count(),
             ],
         ]);
     }
