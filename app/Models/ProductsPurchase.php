@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductsPurchase extends Model
 {
     protected $fillable = [
-        'swap_offers_requests_id',
+        'partner_id', 'swap_offers_requests_id',
         'from_user_name', 'from_user_email',
         'to_user_name', 'to_user_email',
         'from_currency_name', 'from_currency_code',

@@ -24,6 +24,7 @@ return new class extends Migration
 
         Schema::create('products_purchases', function (Blueprint $table): void {
             $table->id();
+            $table->foreignId('partner_id')->constrained('partners')->restrictOnDelete();
             $table->unsignedBigInteger('swap_offers_requests_id');
             $table->string('from_user_name');
             $table->string('from_user_email');

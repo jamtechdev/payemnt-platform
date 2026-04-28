@@ -508,7 +508,7 @@
                 "tags": [
                     "Products Purchases"
                 ],
-                "summary": "Delete a product purchase by swap_offers_requests_id",
+                "summary": "Delete all product purchases of authenticated partner",
                 "operationId": "productsPurchaseDestroy",
                 "responses": {
                     "200": {

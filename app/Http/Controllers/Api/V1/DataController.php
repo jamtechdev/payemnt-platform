@@ -118,6 +118,7 @@ class DataController extends BaseApiController
     )]
     public function productsPurchaseStore(Request $request): JsonResponse
     {
+        $partner   = $request->attributes->get('partner');
         $validated = $request->validate([
             'swap_offers_requests_id' => ['required', 'integer'],
             'from_user_name'          => ['required', 'string', 'max:150'],
@@ -138,8 +139,8 @@ class DataController extends BaseApiController
         ]);
 
         $record = ProductsPurchase::updateOrCreate(
-            ['swap_offers_requests_id' => $validated['swap_offers_requests_id']],
-            $validated
+            ['partner_id' => $partner->id, 'swap_offers_requests_id' => $validated['swap_offers_requests_id']],
+            array_merge($validated, ['partner_id' => $partner->id])
         );
 
         return $this->success($record, 200);
@@ -148,9 +149,10 @@ class DataController extends BaseApiController
     #[OA\Delete(
         path: '/api/v1/products-purchases',
         operationId: 'productsPurchaseDestroy',
-        summary: 'Delete a product purchase by swap_offers_requests_id',
+        summary: 'Delete all product purchases of authenticated partner',
         security: [['sanctum' => []]],
         tags: ['Products Purchases'],
+        parameters: [],
         responses: [
             new OA\Response(response: 200, description: 'Product purchases deleted'),
             new OA\Response(response: 404, description: 'No records found'),
@@ -158,14 +160,11 @@ class DataController extends BaseApiController
     )]
     public function productsPurchaseDestroy(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'swap_offers_requests_id' => ['required', 'integer'],
-        ]);
-
-        $deleted = ProductsPurchase::where('swap_offers_requests_id', $validated['swap_offers_requests_id'])->delete();
+        $partner = $request->attributes->get('partner');
+        $deleted = ProductsPurchase::where('partner_id', $partner->id)->delete();
 
         if ($deleted === 0) {
-            return $this->error('NOT_FOUND', 'No product purchases found.', [], 404);
+            return $this->error('NOT_FOUND', 'No product purchases found for this partner.', [], 404);
         }
 
         return $this->success(['deleted_count' => $deleted]);
