@@ -49,10 +49,7 @@ return [
                     base_path('app/Http/Controllers/Api/V1/CustomerController.php'),
                     base_path('app/Http/Controllers/Api/V1/TransactionController.php'),
                     base_path('app/Http/Controllers/Api/V1/SwapOfferController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ConnectCategoryController.php'),
-                    base_path('app/Http/Controllers/Api/V1/ConnectArticleController.php'),
-                    base_path('app/Http/Controllers/Api/V1/FaqController.php'),
-                    base_path('app/Http/Controllers/Api/V1/VerifyController.php'),
+                    base_path('app/Http/Controllers/Api/V1/LookupController.php')
                 ],
             ],
         ],
