@@ -6,7 +6,10 @@ import {
     BriefcaseBusiness,
     ChevronRight,
     FileText,
+    FolderOpen,
+    HelpCircle,
     LayoutDashboard,
+    Newspaper,
     Settings,
     Shield,
     ShoppingBag,
@@ -37,6 +40,9 @@ const iconMap: Record<string, ReactNode> = {
     'Audit logs': <Shield className="h-4 w-4" />,
     Settings: <Settings className="h-4 w-4" />,
     'My profile': <FileText className="h-4 w-4" />,
+    'Connect Categories': <FolderOpen className="h-4 w-4" />,
+    'Connect Articles': <Newspaper className="h-4 w-4" />,
+    FAQs: <HelpCircle className="h-4 w-4" />,
 };
 
 const sectionMap: Record<string, string> = {
@@ -51,6 +57,9 @@ const sectionMap: Record<string, string> = {
     'Audit logs': 'Governance',
     Settings: 'Governance',
     'My profile': 'Account',
+    'Connect Categories': 'Connect',
+    'Connect Articles': 'Connect',
+    FAQs: 'Connect',
 };
 
 export default function AdminSidebar({ url, navItems, collapsed, className, onNavigate }: AdminSidebarProps) {

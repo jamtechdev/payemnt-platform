@@ -12,6 +12,180 @@
         }
     ],
     "paths": {
+        "/api/v1/partner/connect-articles/swap": {
+            "post": {
+                "tags": [
+                    "Connect Articles"
+                ],
+                "summary": "Bulk create or update connect articles (partner auto-set from API key)",
+                "operationId": "connectArticleSwap",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "articles"
+                                ],
+                                "properties": {
+                                    "articles": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "article_code",
+                                                "category_code",
+                                                "title",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "article_code": {
+                                                    "type": "string",
+                                                    "example": "ART_001"
+                                                },
+                                                "category_code": {
+                                                    "type": "string",
+                                                    "example": "CAT_001"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Travel Tips"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Article description"
+                                                },
+                                                "image_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "https://example.com/image.jpg"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Articles swapped successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/connect-articles/unswap": {
+            "delete": {
+                "tags": [
+                    "Connect Articles"
+                ],
+                "summary": "Permanently delete all connect articles of authenticated partner",
+                "operationId": "connectArticleUnswap",
+                "responses": {
+                    "200": {
+                        "description": "Articles deleted"
+                    },
+                    "404": {
+                        "description": "No articles found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/connect-categories": {
+            "post": {
+                "tags": [
+                    "Connect Categories"
+                ],
+                "summary": "Create a connect category",
+                "operationId": "connectCategoryStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category_code",
+                                    "name",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "category_code": {
+                                        "type": "string",
+                                        "example": "CAT_001"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Travel"
+                                    },
+                                    "icon_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://example.com/icon.png"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Connect Categories"
+                ],
+                "summary": "Permanently delete all connect categories of authenticated partner",
+                "operationId": "connectCategoryDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Categories deleted"
+                    },
+                    "404": {
+                        "description": "No categories found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/customers/register": {
             "post": {
                 "tags": [
@@ -121,6 +295,95 @@
                     },
                     "404": {
                         "description": "No customers found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/faqs/swap": {
+            "post": {
+                "tags": [
+                    "FAQs"
+                ],
+                "summary": "Bulk create or update FAQs (partner auto-set from API key)",
+                "operationId": "faqSwap",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "faqs"
+                                ],
+                                "properties": {
+                                    "faqs": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "faq_code",
+                                                "question",
+                                                "answer",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "faq_code": {
+                                                    "type": "string",
+                                                    "example": "FAQ_001"
+                                                },
+                                                "question": {
+                                                    "type": "string",
+                                                    "example": "What is SwapCircle?"
+                                                },
+                                                "answer": {
+                                                    "type": "string",
+                                                    "example": "SwapCircle is a platform..."
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "active"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "FAQs swapped successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/faqs/unswap": {
+            "delete": {
+                "tags": [
+                    "FAQs"
+                ],
+                "summary": "Permanently delete all FAQs of authenticated partner",
+                "operationId": "faqUnswap",
+                "responses": {
+                    "200": {
+                        "description": "FAQs deleted"
+                    },
+                    "404": {
+                        "description": "No FAQs found"
                     }
                 },
                 "security": [
@@ -465,6 +728,85 @@
                     }
                 ]
             }
+        },
+        "/api/v1/verify": {
+            "post": {
+                "tags": [
+                    "Connect"
+                ],
+                "summary": "Connect and verify an external partner platform",
+                "operationId": "partnerVerify",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "partner_code",
+                                    "api_key",
+                                    "base_url"
+                                ],
+                                "properties": {
+                                    "partner_code": {
+                                        "type": "string",
+                                        "example": "SWAP_CIRCLE"
+                                    },
+                                    "api_key": {
+                                        "type": "string",
+                                        "example": "your-api-key-here"
+                                    },
+                                    "base_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://app.swapcircle.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Partner verified and connected successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Partner connected successfully."
+                                        },
+                                        "partner_name": {
+                                            "type": "string",
+                                            "example": "SwapCircle"
+                                        },
+                                        "connected_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-01-01T10:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partner not found"
+                    },
+                    "401": {
+                        "description": "Invalid API key or partner inactive"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -587,6 +929,22 @@
         {
             "name": "Products",
             "description": "Product management APIs"
+        },
+        {
+            "name": "Connect",
+            "description": "Partner connection & verification APIs"
+        },
+        {
+            "name": "Connect Categories",
+            "description": "Connect category management APIs"
+        },
+        {
+            "name": "Connect Articles",
+            "description": "Connect article management APIs"
+        },
+        {
+            "name": "FAQs",
+            "description": "FAQ management APIs"
         },
         {
             "name": "Customer",

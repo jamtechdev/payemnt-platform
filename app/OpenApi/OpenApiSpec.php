@@ -20,6 +20,10 @@ use OpenApi\Attributes as OA;
     description: 'Send header: Authorization: Bearer {token}'
 )]
 #[OA\Tag(name: 'Products', description: 'Product management APIs')]
+#[OA\Tag(name: 'Connect', description: 'Partner connection & verification APIs')]
+#[OA\Tag(name: 'Connect Categories', description: 'Connect category management APIs')]
+#[OA\Tag(name: 'Connect Articles', description: 'Connect article management APIs')]
+#[OA\Tag(name: 'FAQs', description: 'FAQ management APIs')]
 final class OpenApiSpec
 {
 }

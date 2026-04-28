@@ -34,6 +34,12 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.swap-offers.index'), label: 'Swap Offers' });
     }
 
+    if (role === 'super_admin') {
+        items.push({ href: route('admin.connect-categories.index'), label: 'Connect Categories' });
+        items.push({ href: route('admin.connect-articles.index'), label: 'Connect Articles' });
+        items.push({ href: route('admin.faqs.index'), label: 'FAQs' });
+    }
+
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
         items.push({ href: route('admin.products.index'), label: 'Products' });
     }

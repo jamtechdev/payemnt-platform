@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\V1\Admin\AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\VerifyController;
+use App\Http\Controllers\Api\V1\ConnectArticleController;
+use App\Http\Controllers\Api\V1\ConnectCategoryController;
+use App\Http\Controllers\Api\V1\FaqController;
 use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -20,25 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')
     ->name('api.v1.')
     ->group(function (): void {
-        // Lightweight verify endpoint - accepts partner Bearer token
-        Route::get('/verify', function (\Illuminate\Http\Request $request) {
-            $bearer = $request->bearerToken();
-            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($bearer);
-            if (!$token) {
-                return response()->json(['success' => false, 'debug' => 'token_not_found', 'bearer_received' => $bearer ? substr($bearer, 0, 20).'...' : 'none'], 401);
-            }
-            if ($token->tokenable_type !== \App\Models\Partner::class) {
-                return response()->json(['success' => false, 'debug' => 'wrong_tokenable_type', 'type' => $token->tokenable_type], 401);
-            }
-            $partner = \App\Models\Partner::find($token->tokenable_id);
-            if (!$partner) {
-                return response()->json(['success' => false, 'debug' => 'partner_not_found'], 401);
-            }
-            if ($partner->status !== 'active') {
-                return response()->json(['success' => false, 'debug' => 'partner_inactive', 'status' => $partner->status], 401);
-            }
-            return response()->json(['success' => true, 'message' => 'Authenticated.', 'partner' => $partner->name]);
-        })->name('verify');
+        Route::post('/verify', VerifyController::class)->name('verify');
 
         Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
         Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
@@ -65,6 +51,12 @@ Route::prefix('v1')
         Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
         Route::post('/swap-offers', [SwapOfferController::class, 'store'])->name('partner.swap-offers.store');
         Route::delete('/swap-offers', [SwapOfferController::class, 'destroy'])->name('partner.swap-offers.destroy');
+        Route::post('/partner/connect-categories', [ConnectCategoryController::class, 'store'])->name('partner.connect-categories.store');
+        Route::delete('/partner/connect-categories', [ConnectCategoryController::class, 'destroy'])->name('partner.connect-categories.destroy');
+        Route::post('/partner/connect-articles/swap', [ConnectArticleController::class, 'swap'])->name('partner.connect-articles.swap');
+        Route::delete('/partner/connect-articles/unswap', [ConnectArticleController::class, 'unswap'])->name('partner.connect-articles.unswap');
+        Route::post('/partner/faqs/swap', [FaqController::class, 'swap'])->name('partner.faqs.swap');
+        Route::delete('/partner/faqs/unswap', [FaqController::class, 'unswap'])->name('partner.faqs.unswap');
     });
 
 Route::prefix('v1/admin')
