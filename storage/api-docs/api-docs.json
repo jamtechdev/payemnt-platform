@@ -12,180 +12,6 @@
         }
     ],
     "paths": {
-        "/api/v1/partner/connect-articles/swap": {
-            "post": {
-                "tags": [
-                    "Connect Articles"
-                ],
-                "summary": "Bulk create or update connect articles (partner auto-set from API key)",
-                "operationId": "connectArticleSwap",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "articles"
-                                ],
-                                "properties": {
-                                    "articles": {
-                                        "type": "array",
-                                        "items": {
-                                            "required": [
-                                                "article_code",
-                                                "category_code",
-                                                "title",
-                                                "status"
-                                            ],
-                                            "properties": {
-                                                "article_code": {
-                                                    "type": "string",
-                                                    "example": "ART_001"
-                                                },
-                                                "category_code": {
-                                                    "type": "string",
-                                                    "example": "CAT_001"
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Travel Tips"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "Article description"
-                                                },
-                                                "image_url": {
-                                                    "type": "string",
-                                                    "format": "uri",
-                                                    "example": "https://example.com/image.jpg"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "active"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Articles swapped successfully"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/partner/connect-articles/unswap": {
-            "delete": {
-                "tags": [
-                    "Connect Articles"
-                ],
-                "summary": "Permanently delete all connect articles of authenticated partner",
-                "operationId": "connectArticleUnswap",
-                "responses": {
-                    "200": {
-                        "description": "Articles deleted"
-                    },
-                    "404": {
-                        "description": "No articles found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/partner/connect-categories": {
-            "post": {
-                "tags": [
-                    "Connect Categories"
-                ],
-                "summary": "Create a connect category",
-                "operationId": "connectCategoryStore",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "category_code",
-                                    "name",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "category_code": {
-                                        "type": "string",
-                                        "example": "CAT_001"
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Travel"
-                                    },
-                                    "icon_url": {
-                                        "type": "string",
-                                        "format": "uri",
-                                        "example": "https://example.com/icon.png"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "active"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Category created or updated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Connect Categories"
-                ],
-                "summary": "Permanently delete all connect categories of authenticated partner",
-                "operationId": "connectCategoryDestroy",
-                "responses": {
-                    "200": {
-                        "description": "Categories deleted"
-                    },
-                    "404": {
-                        "description": "No categories found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/customers/register": {
             "post": {
                 "tags": [
@@ -1037,22 +863,6 @@
             "description": "Product management APIs"
         },
         {
-            "name": "Connect",
-            "description": "Partner connection & verification APIs"
-        },
-        {
-            "name": "Connect Categories",
-            "description": "Connect category management APIs"
-        },
-        {
-            "name": "Connect Articles",
-            "description": "Connect article management APIs"
-        },
-        {
-            "name": "FAQs",
-            "description": "FAQ management APIs"
-        },
-        {
             "name": "Customer",
             "description": "Customer registration & management"
         },
@@ -1075,6 +885,10 @@
         {
             "name": "Task Types",
             "description": "Task type lookup APIs"
+        },
+        {
+            "name": "Connect",
+            "description": "Connect"
         }
     ]
 }

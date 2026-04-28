@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\PartnerCustomerController;
 use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PurchaseController;
+use App\Http\Controllers\Api\V1\VerifyController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')
