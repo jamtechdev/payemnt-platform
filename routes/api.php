@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\ConnectArticleController;
 use App\Http\Controllers\Api\V1\ConnectCategoryController;
 use App\Http\Controllers\Api\V1\FaqController;
+use App\Http\Controllers\Api\V1\DataController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -67,6 +68,18 @@ Route::prefix('v1')
 
         Route::post('/task-types', [LookupController::class, 'taskTypeStore'])->name('partner.task-types.store');
         Route::delete('/task-types', [LookupController::class, 'taskTypeDestroy'])->name('partner.task-types.destroy');
+
+        Route::post('/referral-usages', [DataController::class, 'referralUsageStore'])->name('partner.referral-usages.store');
+        Route::delete('/referral-usages', [DataController::class, 'referralUsageDestroy'])->name('partner.referral-usages.destroy');
+
+        Route::post('/products-purchases', [DataController::class, 'productsPurchaseStore'])->name('partner.products-purchases.store');
+        Route::delete('/products-purchases', [DataController::class, 'productsPurchaseDestroy'])->name('partner.products-purchases.destroy');
+
+        Route::post('/products-purchases-claims', [DataController::class, 'productsPurchasesClaimStore'])->name('partner.products-purchases-claims.store');
+        Route::delete('/products-purchases-claims', [DataController::class, 'productsPurchasesClaimDestroy'])->name('partner.products-purchases-claims.destroy');
+
+        Route::post('/system-currencies', [DataController::class, 'systemCurrencyStore'])->name('partner.system-currencies.store');
+        Route::delete('/system-currencies', [DataController::class, 'systemCurrencyDestroy'])->name('partner.system-currencies.destroy');
     });
 
 Route::prefix('v1/admin')

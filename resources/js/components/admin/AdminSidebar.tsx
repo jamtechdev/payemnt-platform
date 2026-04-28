@@ -11,6 +11,7 @@ import {
     HelpCircle,
     LayoutDashboard,
     Layers,
+    ClipboardList,
     Newspaper,
     Settings,
     Shield,
@@ -46,6 +47,7 @@ const iconMap: Record<string, ReactNode> = {
     'Connect Articles': <Newspaper className="h-4 w-4" />,
     FAQs: <HelpCircle className="h-4 w-4" />,
     'App Resources': <Layers className="h-4 w-4" />,
+    'Data Records':   <ClipboardList className="h-4 w-4" />,
     'Task Types': <FileText className="h-4 w-4" />,
     'Occupations': <FileText className="h-4 w-4" />,
     'Relationships': <FileText className="h-4 w-4" />,
@@ -69,6 +71,7 @@ const sectionMap: Record<string, string> = {
     'Connect Articles': 'Connect',
     FAQs: 'Connect',
     'App Resources': 'Resources',
+    'Data Records':   'Resources',
 };
 
 export default function AdminSidebar({ url, navItems, collapsed, className, onNavigate }: AdminSidebarProps) {

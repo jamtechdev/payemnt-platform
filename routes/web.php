@@ -67,6 +67,10 @@ Route::prefix('admin')
             Route::get('/app-resources/task-types', [AppResourceController::class, 'taskTypes'])->name('app-resources.task-types');
             Route::get('/app-resources/occupations', [AppResourceController::class, 'occupations'])->name('app-resources.occupations');
             Route::get('/app-resources/relationships', [AppResourceController::class, 'relationships'])->name('app-resources.relationships');
+            Route::get('/app-resources/referral-usages', [AppResourceController::class, 'referralUsages'])->name('app-resources.referral-usages');
+            Route::get('/app-resources/products-purchases', [AppResourceController::class, 'productsPurchases'])->name('app-resources.products-purchases');
+            Route::get('/app-resources/products-purchases-claims', [AppResourceController::class, 'productsPurchasesClaims'])->name('app-resources.products-purchases-claims');
+            Route::get('/app-resources/system-currencies', [AppResourceController::class, 'systemCurrencies'])->name('app-resources.system-currencies');
             Route::get('/connect-categories', [ConnectCategoryController::class, 'index'])->name('connect-categories.index');
             Route::get('/connect-categories/{connectCategory}', [ConnectCategoryController::class, 'show'])->name('connect-categories.show');
             Route::get('/connect-articles', [ConnectArticleController::class, 'index'])->name('connect-articles.index');

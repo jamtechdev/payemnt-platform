@@ -3,8 +3,9 @@ import WelcomeBanner from '@/components/admin/WelcomeBanner';
 import AdminLayout from '@/layouts/AdminLayout';
 import { usePage } from '@inertiajs/react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Activity, CheckCircle2, Archive, Database, DollarSign, ShieldCheck, Users } from 'lucide-react';
+import { Activity, ArrowRight, CheckCircle2, Archive, Database, DollarSign, ShieldCheck, Users } from 'lucide-react';
 import { PageProps } from '@/Types';
+import { Link } from '@inertiajs/react';
 
 interface MonthlyPaymentPoint {
     label: string;
@@ -27,6 +28,17 @@ interface PlatformDashboardProps {
     monthlyPayments: MonthlyPaymentPoint[];
     recentAuditLogs: AuditLogRow[];
     dbHealth: Record<string, string | number | boolean>;
+    stats: {
+        transactions: number;
+        swap_offers: number;
+        occupations: number;
+        relationships: number;
+        task_types: number;
+        referral_usages: number;
+        purchases: number;
+        purchase_claims: number;
+        system_currencies: number;
+    };
 }
 
 export default function PlatformDashboard(props: PlatformDashboardProps) {

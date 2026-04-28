@@ -304,6 +304,360 @@
                 ]
             }
         },
+        "/api/v1/referral-usages": {
+            "post": {
+                "tags": [
+                    "Referral Usages"
+                ],
+                "summary": "Create or update a referral usage (partner auto-set from API key)",
+                "operationId": "referralUsageStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "referrer_email",
+                                    "used_by_email",
+                                    "refer_code"
+                                ],
+                                "properties": {
+                                    "referrer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "referrer@example.com"
+                                    },
+                                    "used_by_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "refer_code": {
+                                        "type": "string",
+                                        "example": "REF123"
+                                    },
+                                    "date_used": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Referral usage created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Referral Usages"
+                ],
+                "summary": "Delete all referral usages of authenticated partner",
+                "operationId": "referralUsageDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Referral usages deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products-purchases": {
+            "post": {
+                "tags": [
+                    "Products Purchases"
+                ],
+                "summary": "Create or update a product purchase (partner auto-set from API key)",
+                "operationId": "productsPurchaseStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_email",
+                                    "product_code",
+                                    "product_type",
+                                    "cover_duration",
+                                    "cover_start_date",
+                                    "cover_end_date",
+                                    "payment_status"
+                                ],
+                                "properties": {
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "product_code": {
+                                        "type": "string",
+                                        "example": "PROD_001"
+                                    },
+                                    "product_type": {
+                                        "type": "string",
+                                        "example": "A"
+                                    },
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "example": "Monthly"
+                                    },
+                                    "cover_start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-01-01"
+                                    },
+                                    "cover_end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-12-31"
+                                    },
+                                    "payment_status": {
+                                        "type": "string",
+                                        "example": "Successful"
+                                    },
+                                    "transaction_number": {
+                                        "type": "string",
+                                        "example": "TXN123"
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product purchase created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Products Purchases"
+                ],
+                "summary": "Delete all product purchases of authenticated partner",
+                "operationId": "productsPurchaseDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Product purchases deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products-purchases-claims": {
+            "post": {
+                "tags": [
+                    "Products Purchases Claims"
+                ],
+                "summary": "Create or update a product purchase claim (partner auto-set from API key)",
+                "operationId": "productsPurchasesClaimStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_email",
+                                    "product_code",
+                                    "date"
+                                ],
+                                "properties": {
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "product_code": {
+                                        "type": "string",
+                                        "example": "PROD_001"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2024-01-01"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Claim description"
+                                    },
+                                    "acknowledged": {
+                                        "type": "string",
+                                        "example": "No"
+                                    },
+                                    "date_added": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2024-01-01 10:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Claim created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Products Purchases Claims"
+                ],
+                "summary": "Delete all product purchase claims of authenticated partner",
+                "operationId": "productsPurchasesClaimDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Claims deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/system-currencies": {
+            "post": {
+                "tags": [
+                    "System Currencies"
+                ],
+                "summary": "Create or update a system currency (partner auto-set from API key)",
+                "operationId": "systemCurrencyStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "code",
+                                    "symbol",
+                                    "margin",
+                                    "admin_rate"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Nigerian Naira"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "NGN"
+                                    },
+                                    "symbol": {
+                                        "type": "string",
+                                        "example": "₦"
+                                    },
+                                    "margin": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 2.5
+                                    },
+                                    "admin_rate": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 1500
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Currency created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "System Currencies"
+                ],
+                "summary": "Delete all system currencies of authenticated partner",
+                "operationId": "systemCurrencyDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Currencies deleted"
+                    },
+                    "404": {
+                        "description": "No records found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/partner/faqs/swap": {
             "post": {
                 "tags": [
@@ -1148,6 +1502,22 @@
         {
             "name": "Task Types",
             "description": "Task type lookup APIs"
+        },
+        {
+            "name": "Referral Usages",
+            "description": "Referral usage APIs"
+        },
+        {
+            "name": "Products Purchases",
+            "description": "Product purchase APIs"
+        },
+        {
+            "name": "Products Purchases Claims",
+            "description": "Product purchase claim APIs"
+        },
+        {
+            "name": "System Currencies",
+            "description": "System currency APIs"
         },
         {
             "name": "Connect Articles",
