@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\V1\Admin\AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\ConnectArticleController;
+use App\Http\Controllers\Api\V1\ConnectCategoryController;
+use App\Http\Controllers\Api\V1\FaqController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -49,6 +52,12 @@ Route::prefix('v1')
         Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
         Route::post('/swap-offers', [SwapOfferController::class, 'store'])->name('partner.swap-offers.store');
         Route::delete('/swap-offers', [SwapOfferController::class, 'destroy'])->name('partner.swap-offers.destroy');
+        Route::post('/partner/connect-categories', [ConnectCategoryController::class, 'store'])->name('partner.connect-categories.store');
+        Route::delete('/partner/connect-categories', [ConnectCategoryController::class, 'destroy'])->name('partner.connect-categories.destroy');
+        Route::post('/partner/connect-articles/swap', [ConnectArticleController::class, 'swap'])->name('partner.connect-articles.swap');
+        Route::delete('/partner/connect-articles/unswap', [ConnectArticleController::class, 'unswap'])->name('partner.connect-articles.unswap');
+        Route::post('/partner/faqs/swap', [FaqController::class, 'swap'])->name('partner.faqs.swap');
+        Route::delete('/partner/faqs/unswap', [FaqController::class, 'unswap'])->name('partner.faqs.unswap');
 
         Route::post('/occupations', [LookupController::class, 'occupationStore'])->name('partner.occupations.store');
         Route::delete('/occupations', [LookupController::class, 'occupationDestroy'])->name('partner.occupations.destroy');
