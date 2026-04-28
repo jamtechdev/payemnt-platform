@@ -25,19 +25,24 @@ return new class extends Migration
         Schema::create('products_purchases', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('swap_offers_requests_id');
-            $table->unsignedBigInteger('from_users_customers_id');
-            $table->unsignedBigInteger('to_users_customers_id');
-            $table->unsignedBigInteger('from_system_currencies_id');
-            $table->unsignedBigInteger('to_system_currencies_id');
+            $table->string('from_user_name');
+            $table->string('from_user_email');
+            $table->string('to_user_name');
+            $table->string('to_user_email');
+            $table->string('from_currency_name');
+            $table->string('from_currency_code', 10);
+            $table->string('to_currency_name');
+            $table->string('to_currency_code', 10);
             $table->decimal('from_amount', 15, 2);
             $table->decimal('to_amount', 15, 2);
             $table->decimal('admin_share', 5, 2);
             $table->decimal('admin_share_amount', 15, 2);
-            $table->unsignedBigInteger('system_currencies_id');
             $table->decimal('base_amount', 15, 2);
-            $table->unsignedBigInteger('payment_method_id');
+            $table->string('payment_method');
             $table->string('status');
             $table->timestamps();
+
+            $table->index(['from_user_email', 'to_user_email']);
         });
 
         Schema::create('products_purchases_claims', function (Blueprint $table): void {

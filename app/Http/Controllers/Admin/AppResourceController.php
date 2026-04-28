@@ -72,8 +72,11 @@ class AppResourceController extends Controller
     public function productsPurchases(Request $request): Response
     {
         $items = ProductsPurchase::query()
-            ->with(['swapOffer:id,uuid', 'fromCustomer:id,first_name,last_name,email', 'toCustomer:id,first_name,last_name,email'])
-            ->when($request->filled('search'), fn ($q) => $q->where('swap_offers_requests_id', $request->string('search'))
+            ->when($request->filled('search'), fn ($q) => $q
+                ->where('from_user_name', 'like', '%'.$request->string('search').'%')
+                ->orWhere('from_user_email', 'like', '%'.$request->string('search').'%')
+                ->orWhere('to_user_name', 'like', '%'.$request->string('search').'%')
+                ->orWhere('to_user_email', 'like', '%'.$request->string('search').'%')
                 ->orWhere('status', 'like', '%'.$request->string('search').'%'))
             ->latest()->paginate(10)->withQueryString();
 

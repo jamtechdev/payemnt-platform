@@ -396,17 +396,20 @@
                             "schema": {
                                 "required": [
                                     "swap_offers_requests_id",
-                                    "from_users_customers_id",
-                                    "to_users_customers_id",
-                                    "from_system_currencies_id",
-                                    "to_system_currencies_id",
+                                    "from_user_name",
+                                    "from_user_email",
+                                    "to_user_name",
+                                    "to_user_email",
+                                    "from_currency_name",
+                                    "from_currency_code",
+                                    "to_currency_name",
+                                    "to_currency_code",
                                     "from_amount",
                                     "to_amount",
                                     "admin_share",
                                     "admin_share_amount",
-                                    "system_currencies_id",
                                     "base_amount",
-                                    "payment_method_id",
+                                    "payment_method",
                                     "status"
                                 ],
                                 "properties": {
@@ -414,21 +417,39 @@
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "from_users_customers_id": {
-                                        "type": "integer",
-                                        "example": 101
+                                    "from_user_name": {
+                                        "type": "string",
+                                        "example": "Ahmed Khan"
                                     },
-                                    "to_users_customers_id": {
-                                        "type": "integer",
-                                        "example": 102
+                                    "from_user_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ahmed@gmail.com"
                                     },
-                                    "from_system_currencies_id": {
-                                        "type": "integer",
-                                        "example": 3
+                                    "to_user_name": {
+                                        "type": "string",
+                                        "example": "Sara Ali"
                                     },
-                                    "to_system_currencies_id": {
-                                        "type": "integer",
-                                        "example": 5
+                                    "to_user_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "sara@gmail.com"
+                                    },
+                                    "from_currency_name": {
+                                        "type": "string",
+                                        "example": "Euro"
+                                    },
+                                    "from_currency_code": {
+                                        "type": "string",
+                                        "example": "EUR"
+                                    },
+                                    "to_currency_name": {
+                                        "type": "string",
+                                        "example": "US Dollar"
+                                    },
+                                    "to_currency_code": {
+                                        "type": "string",
+                                        "example": "USD"
                                     },
                                     "from_amount": {
                                         "type": "number",
@@ -450,18 +471,14 @@
                                         "format": "float",
                                         "example": 12.5
                                     },
-                                    "system_currencies_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "base_amount": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 500
                                     },
-                                    "payment_method_id": {
-                                        "type": "integer",
-                                        "example": 1
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "Wallet"
                                     },
                                     "status": {
                                         "type": "string",

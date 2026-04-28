@@ -37,7 +37,6 @@ interface PlatformDashboardProps {
         referral_usages: number;
         purchases: number;
         purchase_claims: number;
-        system_currencies: number;
     };
 }
 
