@@ -35,6 +35,17 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
     }
 
     if (role === 'super_admin') {
+        items.push({
+            label: 'App Resources',
+            children: [
+                { href: route('admin.app-resources.task-types'),   label: 'Task Types' },
+                { href: route('admin.app-resources.occupations'),  label: 'Occupations' },
+                { href: route('admin.app-resources.relationships'), label: 'Relationships' },
+            ],
+        });
+    }
+
+    if (role === 'super_admin') {
         items.push({ href: route('admin.connect-categories.index'), label: 'Connect Categories' });
         items.push({ href: route('admin.connect-articles.index'), label: 'Connect Articles' });
         items.push({ href: route('admin.faqs.index'), label: 'FAQs' });

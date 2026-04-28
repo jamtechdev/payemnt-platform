@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ConnectArticleController;
 use App\Http\Controllers\Admin\ConnectCategoryController;
 use App\Http\Controllers\Admin\FaqController;
+use App\Http\Controllers\Admin\AppResourceController;
 use App\Http\Controllers\Admin\SwapOfferController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -63,6 +64,9 @@ Route::prefix('admin')
             Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
             Route::get('/swap-offers', [SwapOfferController::class, 'index'])->name('swap-offers.index');
             Route::get('/swap-offers/{swapOffer}', [SwapOfferController::class, 'show'])->name('swap-offers.show');
+            Route::get('/app-resources/task-types', [AppResourceController::class, 'taskTypes'])->name('app-resources.task-types');
+            Route::get('/app-resources/occupations', [AppResourceController::class, 'occupations'])->name('app-resources.occupations');
+            Route::get('/app-resources/relationships', [AppResourceController::class, 'relationships'])->name('app-resources.relationships');
             Route::get('/connect-categories', [ConnectCategoryController::class, 'index'])->name('connect-categories.index');
             Route::get('/connect-categories/{connectCategory}', [ConnectCategoryController::class, 'show'])->name('connect-categories.show');
             Route::get('/connect-articles', [ConnectArticleController::class, 'index'])->name('connect-articles.index');

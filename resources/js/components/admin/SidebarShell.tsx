@@ -8,8 +8,9 @@ import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
 
 export interface NavItem {
-    href: string;
+    href?: string;
     label: string;
+    children?: NavItem[];
 }
 
 interface SidebarShellProps {
