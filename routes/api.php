@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminCustomerController;
 use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -65,6 +66,15 @@ Route::prefix('v1')
         Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
         Route::post('/swap-offers', [SwapOfferController::class, 'store'])->name('partner.swap-offers.store');
         Route::delete('/swap-offers', [SwapOfferController::class, 'destroy'])->name('partner.swap-offers.destroy');
+
+        Route::post('/occupations', [LookupController::class, 'occupationStore'])->name('partner.occupations.store');
+        Route::delete('/occupations', [LookupController::class, 'occupationDestroy'])->name('partner.occupations.destroy');
+
+        Route::post('/relationships', [LookupController::class, 'relationshipStore'])->name('partner.relationships.store');
+        Route::delete('/relationships', [LookupController::class, 'relationshipDestroy'])->name('partner.relationships.destroy');
+
+        Route::post('/task-types', [LookupController::class, 'taskTypeStore'])->name('partner.task-types.store');
+        Route::delete('/task-types', [LookupController::class, 'taskTypeDestroy'])->name('partner.task-types.destroy');
     });
 
 Route::prefix('v1/admin')

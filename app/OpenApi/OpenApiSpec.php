@@ -19,7 +19,13 @@ use OpenApi\Attributes as OA;
     bearerFormat: 'Sanctum token',
     description: 'Send header: Authorization: Bearer {token}'
 )]
-#[OA\Tag(name: 'Products', description: 'Product management APIs')]
+#[OA\Tag(name: 'Products',       description: 'Product management APIs')]
+#[OA\Tag(name: 'Customer',       description: 'Customer registration & management')]
+#[OA\Tag(name: 'Transactions',   description: 'Transaction APIs')]
+#[OA\Tag(name: 'Swap Offers',    description: 'Swap offer APIs')]
+#[OA\Tag(name: 'Occupations',    description: 'Occupation lookup APIs')]
+#[OA\Tag(name: 'Relationships',  description: 'Relationship lookup APIs')]
+#[OA\Tag(name: 'Task Types',     description: 'Task type lookup APIs')]
 final class OpenApiSpec
 {
 }

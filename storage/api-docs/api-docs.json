@@ -130,6 +130,201 @@
                 ]
             }
         },
+        "/api/v1/occupations": {
+            "post": {
+                "tags": [
+                    "Occupations"
+                ],
+                "summary": "Create or update an occupation (partner auto-set from API key)",
+                "operationId": "occupationStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Engineer"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Occupation created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Occupations"
+                ],
+                "summary": "Delete all occupations of authenticated partner",
+                "operationId": "occupationDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Occupations deleted"
+                    },
+                    "404": {
+                        "description": "No occupations found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/relationships": {
+            "post": {
+                "tags": [
+                    "Relationships"
+                ],
+                "summary": "Create or update a relationship (partner auto-set from API key)",
+                "operationId": "relationshipStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Spouse"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Relationship created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Relationships"
+                ],
+                "summary": "Delete all relationships of authenticated partner",
+                "operationId": "relationshipDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Relationships deleted"
+                    },
+                    "404": {
+                        "description": "No relationships found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/task-types": {
+            "post": {
+                "tags": [
+                    "Task Types"
+                ],
+                "summary": "Create or update a task type (partner auto-set from API key)",
+                "operationId": "taskTypeStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Follow Up"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Task type created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Task Types"
+                ],
+                "summary": "Delete all task types of authenticated partner",
+                "operationId": "taskTypeDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Task types deleted"
+                    },
+                    "404": {
+                        "description": "No task types found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/partner/products": {
             "post": {
                 "tags": [
@@ -590,15 +785,27 @@
         },
         {
             "name": "Customer",
-            "description": "Customer"
-        },
-        {
-            "name": "Swap Offers",
-            "description": "Swap Offers"
+            "description": "Customer registration & management"
         },
         {
             "name": "Transactions",
-            "description": "Transactions"
+            "description": "Transaction APIs"
+        },
+        {
+            "name": "Swap Offers",
+            "description": "Swap offer APIs"
+        },
+        {
+            "name": "Occupations",
+            "description": "Occupation lookup APIs"
+        },
+        {
+            "name": "Relationships",
+            "description": "Relationship lookup APIs"
+        },
+        {
+            "name": "Task Types",
+            "description": "Task type lookup APIs"
         }
     ]
 }
