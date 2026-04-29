@@ -20,46 +20,59 @@ class DataController extends BaseApiController
     #[OA\Post(
         path: '/api/v1/withdraw-wallets',
         operationId: 'withdrawWalletStore',
-        summary: 'Create or update a withdraw wallet entry (partner auto-set from API key)',
+        summary: 'Create or update multiple withdraw wallet entries (partner auto-set from API key)',
         security: [['sanctum' => []]],
         tags: ['Withdraw Wallets'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['customer_email', 'amount', 'currency_code', 'status'],
+                required: ['data'],
                 properties: [
-                    new OA\Property(property: 'customer_email', type: 'string', format: 'email', example: 'user@example.com'),
-                    new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 1000.00),
-                    new OA\Property(property: 'description',    type: 'string', example: 'Withdrawal request'),
-                    new OA\Property(property: 'currency_code',  type: 'string', example: 'NGN'),
-                    new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Approved', 'Rejected'], example: 'Pending'),
-                    new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
+                    new OA\Property(
+                        property: 'data',
+                        type: 'array',
+                        items: new OA\Items(
+                            required: ['customer_email', 'amount', 'currency_code', 'status'],
+                            properties: [
+                                new OA\Property(property: 'customer_email', type: 'string', format: 'email', example: 'user@example.com'),
+                                new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 1000.00),
+                                new OA\Property(property: 'description',    type: 'string', example: 'Withdrawal request'),
+                                new OA\Property(property: 'currency_code',  type: 'string', example: 'NGN'),
+                                new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Approved', 'Rejected'], example: 'Pending'),
+                                new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
+                            ]
+                        )
+                    ),
                 ]
             )
         ),
         responses: [
-            new OA\Response(response: 200, description: 'Withdraw wallet created or updated'),
+            new OA\Response(response: 200, description: 'Withdraw wallets created or updated'),
             new OA\Response(response: 422, description: 'Validation error'),
         ]
     )]
     public function withdrawWalletStore(Request $request): JsonResponse
     {
-        $partner   = $request->attributes->get('partner');
-        $validated = $request->validate([
-            'customer_email' => ['required', 'email'],
-            'amount'         => ['required', 'numeric', 'min:0'],
-            'description'    => ['nullable', 'string'],
-            'currency_code'  => ['required', 'string', 'max:10'],
-            'status'         => ['required', 'string', 'in:Pending,Approved,Rejected'],
-            'date_added'     => ['nullable', 'date'],
+        $partner = $request->attributes->get('partner');
+
+        $request->validate([
+            'data'                    => ['required', 'array', 'min:1'],
+            'data.*.customer_email'   => ['required', 'email'],
+            'data.*.amount'           => ['required', 'numeric', 'min:0'],
+            'data.*.description'      => ['nullable', 'string'],
+            'data.*.currency_code'    => ['required', 'string', 'max:10'],
+            'data.*.status'           => ['required', 'string', 'in:Pending,Approved,Rejected'],
+            'data.*.date_added'       => ['nullable', 'date'],
         ]);
 
-        $record = WithdrawWallet::updateOrCreate(
-            ['partner_id' => $partner->id, 'customer_email' => $validated['customer_email'], 'currency_code' => $validated['currency_code']],
-            array_merge($validated, ['partner_id' => $partner->id])
-        );
+        $records = [];
+        foreach ($request->input('data') as $item) {
+            $records[] = WithdrawWallet::create(
+                array_merge($item, ['partner_id' => $partner->id])
+            );
+        }
 
-        return $this->success($record, 200);
+        return $this->success($records, 200);
     }
 
     #[OA\Delete(

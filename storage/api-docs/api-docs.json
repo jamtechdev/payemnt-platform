@@ -309,7 +309,7 @@
                 "tags": [
                     "Withdraw Wallets"
                 ],
-                "summary": "Create or update a withdraw wallet entry (partner auto-set from API key)",
+                "summary": "Create or update multiple withdraw wallet entries (partner auto-set from API key)",
                 "operationId": "withdrawWalletStore",
                 "requestBody": {
                     "required": true,
@@ -317,43 +317,54 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "customer_email",
-                                    "amount",
-                                    "currency_code",
-                                    "status"
+                                    "data"
                                 ],
                                 "properties": {
-                                    "customer_email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "user@example.com"
-                                    },
-                                    "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 1000
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "Withdrawal request"
-                                    },
-                                    "currency_code": {
-                                        "type": "string",
-                                        "example": "NGN"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "Pending",
-                                        "enum": [
-                                            "Pending",
-                                            "Approved",
-                                            "Rejected"
-                                        ]
-                                    },
-                                    "date_added": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "example": "2024-01-01 10:00:00"
+                                    "data": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "customer_email",
+                                                "amount",
+                                                "currency_code",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "customer_email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "user@example.com"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 1000
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Withdrawal request"
+                                                },
+                                                "currency_code": {
+                                                    "type": "string",
+                                                    "example": "NGN"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending",
+                                                    "enum": [
+                                                        "Pending",
+                                                        "Approved",
+                                                        "Rejected"
+                                                    ]
+                                                },
+                                                "date_added": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-01-01 10:00:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -363,7 +374,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Withdraw wallet created or updated"
+                        "description": "Withdraw wallets created or updated"
                     },
                     "422": {
                         "description": "Validation error"
