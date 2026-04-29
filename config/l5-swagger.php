@@ -54,6 +54,7 @@ return [
                     base_path('app/Http/Controllers/Api/V1/ConnectCategoryController.php'),
                     base_path('app/Http/Controllers/Api/V1/ConnectArticleController.php'),
                     base_path('app/Http/Controllers/Api/V1/FaqController.php'),
+                    base_path('app/Http/Controllers/Api/V1/RateApiController.php'),
                     base_path('app/Http/Controllers/Api/V1/DataController.php')
                 ],
             ],

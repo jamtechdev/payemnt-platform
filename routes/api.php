@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\ConnectArticleController;
 use App\Http\Controllers\Api\V1\ConnectCategoryController;
 use App\Http\Controllers\Api\V1\FaqController;
 use App\Http\Controllers\Api\V1\DataController;
+use App\Http\Controllers\Api\V1\RateApiController;
 use App\Http\Controllers\Api\V1\LookupController;
 use App\Http\Controllers\Api\V1\SwapOfferController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -59,6 +60,8 @@ Route::prefix('v1')
         Route::delete('/partner/connect-articles/unswap', [ConnectArticleController::class, 'unswap'])->name('partner.connect-articles.unswap');
         Route::post('/partner/faqs/swap', [FaqController::class, 'swap'])->name('partner.faqs.swap');
         Route::delete('/partner/faqs/unswap', [FaqController::class, 'unswap'])->name('partner.faqs.unswap');
+        Route::post('/rate-apis', [RateApiController::class, 'store'])->name('partner.rate-apis.store');
+        Route::delete('/rate-apis', [RateApiController::class, 'destroy'])->name('partner.rate-apis.destroy');
 
         Route::post('/occupations', [LookupController::class, 'occupationStore'])->name('partner.occupations.store');
         Route::delete('/occupations', [LookupController::class, 'occupationDestroy'])->name('partner.occupations.destroy');

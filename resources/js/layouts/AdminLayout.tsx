@@ -65,6 +65,7 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.connect-categories.index'), label: 'Connect Categories' });
         items.push({ href: route('admin.connect-articles.index'), label: 'Connect Articles' });
         items.push({ href: route('admin.faqs.index'), label: 'FAQs' });
+        items.push({ href: route('admin.rate-apis.index'), label: 'Rate APIs' });
     }
 
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {

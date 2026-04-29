@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ConnectArticleController;
 use App\Http\Controllers\Admin\ConnectCategoryController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\AppResourceController;
+use App\Http\Controllers\Admin\RateApiController;
 use App\Http\Controllers\Admin\SwapOfferController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -78,6 +79,8 @@ Route::prefix('admin')
             Route::get('/connect-articles/{connectArticle}', [ConnectArticleController::class, 'show'])->name('connect-articles.show');
             Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
             Route::get('/faqs/{faq}', [FaqController::class, 'show'])->name('faqs.show');
+            Route::get('/rate-apis', [RateApiController::class, 'index'])->name('rate-apis.index');
+            Route::get('/rate-apis/{rateApi}', [RateApiController::class, 'show'])->name('rate-apis.show');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
             Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');

@@ -1182,6 +1182,89 @@
                 ]
             }
         },
+        "/api/v1/rate-apis": {
+            "post": {
+                "tags": [
+                    "Rate APIs"
+                ],
+                "summary": "Bulk create or update rate APIs (partner auto-set from API key)",
+                "operationId": "rateApiSwap",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "data"
+                                ],
+                                "properties": {
+                                    "data": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "name",
+                                                "url",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Exchangerate"
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "https://api.exchangerate.host/latest"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Active"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rate APIs swapped successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Rate APIs"
+                ],
+                "summary": "Permanently delete all rate APIs of authenticated partner",
+                "operationId": "rateApiUnswap",
+                "responses": {
+                    "200": {
+                        "description": "Rate APIs deleted"
+                    },
+                    "404": {
+                        "description": "No rate APIs found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/v1/swap-offers": {
             "post": {
                 "tags": [
@@ -1618,6 +1701,26 @@
     },
     "tags": [
         {
+            "name": "Connect",
+            "description": "Partner connection & verification APIs"
+        },
+        {
+            "name": "Connect Categories",
+            "description": "Connect category management APIs"
+        },
+        {
+            "name": "Connect Articles",
+            "description": "Connect article management APIs"
+        },
+        {
+            "name": "FAQs",
+            "description": "FAQ management APIs"
+        },
+        {
+            "name": "Rate APIs",
+            "description": "Rate API management"
+        },
+        {
             "name": "Products",
             "description": "Product management APIs"
         },
@@ -1658,28 +1761,12 @@
             "description": "Product purchase claim APIs"
         },
         {
-            "name": "Connect Articles",
-            "description": "Connect Articles"
-        },
-        {
-            "name": "Connect Categories",
-            "description": "Connect Categories"
-        },
-        {
             "name": "Withdraw Wallets",
             "description": "Withdraw Wallets"
         },
         {
             "name": "Fund Wallets",
             "description": "Fund Wallets"
-        },
-        {
-            "name": "FAQs",
-            "description": "FAQs"
-        },
-        {
-            "name": "Connect",
-            "description": "Connect"
         }
     ]
 }
