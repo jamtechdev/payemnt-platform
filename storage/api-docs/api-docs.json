@@ -350,12 +350,7 @@
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "Pending",
-                                                    "enum": [
-                                                        "Pending",
-                                                        "Approved",
-                                                        "Rejected"
-                                                    ]
+                                                    "example": "Pending"
                                                 },
                                                 "date_added": {
                                                     "type": "string",
@@ -450,12 +445,7 @@
                                     },
                                     "status": {
                                         "type": "string",
-                                        "example": "Pending",
-                                        "enum": [
-                                            "Pending",
-                                            "Funded",
-                                            "Rejected"
-                                        ]
+                                        "example": "Pending"
                                     },
                                     "date_added": {
                                         "type": "string",

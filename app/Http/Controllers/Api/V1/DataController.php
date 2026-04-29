@@ -38,7 +38,7 @@ class DataController extends BaseApiController
                                 new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 1000.00),
                                 new OA\Property(property: 'description',    type: 'string', example: 'Withdrawal request'),
                                 new OA\Property(property: 'currency_code',  type: 'string', example: 'NGN'),
-                                new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Approved', 'Rejected'], example: 'Pending'),
+                                new OA\Property(property: 'status',         type: 'string', example: 'Pending'),
                                 new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
                             ]
                         )
@@ -61,7 +61,7 @@ class DataController extends BaseApiController
             'data.*.amount'           => ['required', 'numeric', 'min:0'],
             'data.*.description'      => ['nullable', 'string'],
             'data.*.currency_code'    => ['required', 'string', 'max:10'],
-            'data.*.status'           => ['required', 'string', 'in:Pending,Approved,Rejected'],
+            'data.*.status'           => ['required', 'string', 'max:100'],
             'data.*.date_added'       => ['nullable', 'date'],
         ]);
 
@@ -116,7 +116,7 @@ class DataController extends BaseApiController
                     new OA\Property(property: 'amount',         type: 'number', format: 'float', example: 5000.00),
                     new OA\Property(property: 'description',    type: 'string', example: 'Wallet top-up'),
                     new OA\Property(property: 'image_url',      type: 'string', example: 'https://example.com/proof.jpg'),
-                    new OA\Property(property: 'status',         type: 'string', enum: ['Pending', 'Funded', 'Rejected'], example: 'Pending'),
+                    new OA\Property(property: 'status',         type: 'string', example: 'Pending'),
                     new OA\Property(property: 'date_added',     type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
                 ]
             )
@@ -135,7 +135,7 @@ class DataController extends BaseApiController
             'amount'         => ['required', 'numeric', 'min:0'],
             'description'    => ['nullable', 'string'],
             'image_url'      => ['nullable', 'string', 'max:500'],
-            'status'         => ['required', 'string', 'in:Pending,Funded,Rejected'],
+            'status'         => ['required', 'string', 'max:100'],
             'date_added'     => ['nullable', 'date'],
         ]);
 
