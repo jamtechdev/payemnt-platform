@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Payment;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,10 +37,48 @@ class TransactionController extends Controller
 
     public function show(Payment $transaction): Response
     {
-        $transaction->load(['customer:id,first_name,last_name,email,phone', 'partner:id,name', 'product:id,name,product_code']);
+        $transaction->load(['customer:id,first_name,last_name,email,phone,status,customer_data', 'partner:id,name', 'product:id,name,product_code']);
 
         return Inertia::render('Admin/Transactions/TransactionDetail', [
             'transaction' => $transaction,
         ]);
+    }
+
+    public function updateCustomerDetails(Request $request, Payment $transaction): RedirectResponse
+    {
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $customer = $transaction->customer;
+        $old = $customer?->only(['first_name', 'last_name', 'email', 'phone']) ?? [];
+        $transaction->customer()->update($validated);
+        AuditLog::record('transaction_customer_updated', $transaction, $old, $validated, $request->user());
+
+        return back()->with('success', 'Customer details updated.');
+    }
+
+    public function suspendPolicy(Payment $transaction): RedirectResponse
+    {
+        $oldStatus = $transaction->status;
+        $transaction->update(['status' => Payment::STATUS_SUSPENDED]);
+        AuditLog::record('transaction_policy_suspended', $transaction, ['status' => $oldStatus], ['status' => Payment::STATUS_SUSPENDED], request()->user());
+
+        return back()->with('success', 'Policy suspended successfully.');
+    }
+
+    public function addPolicyNote(Request $request, Payment $transaction): RedirectResponse
+    {
+        $validated = $request->validate([
+            'note' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $transaction->update(['notes' => $validated['note']]);
+        AuditLog::record('transaction_policy_note_added', $transaction, [], ['note' => $validated['note']], $request->user());
+
+        return back()->with('success', 'Policy note added.');
     }
 }

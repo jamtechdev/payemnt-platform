@@ -18,8 +18,10 @@ class UpdatePartnerRequest extends FormRequest
         return [
             'name'          => ['sometimes', 'required', 'string', 'max:255'],
             'contact_email' => ['sometimes', 'required', 'email', 'max:255', 'unique:partners,contact_email,'.$partnerId],
-            'contact_phone' => ['nullable', 'string', 'max:40'],
+            'contact_phone' => ['sometimes', 'required', 'string', 'max:40'],
             'status'        => ['sometimes', 'in:active,inactive'],
+            'product_ids' => ['nullable', 'array'],
+            'product_ids.*' => ['integer', 'exists:products,id'],
         ];
     }
 }

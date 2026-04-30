@@ -16,10 +16,13 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name'                     => ['required', 'string', 'max:255'],
+            'partner_id'               => ['required', 'integer', 'exists:partners,id'],
             'description'              => ['nullable', 'string'],
+            'base_price'               => ['nullable', 'numeric', 'min:0'],
+            'price'                    => ['nullable', 'numeric', 'min:0'],
             'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'status'                   => ['required', 'in:active,inactive'],
-            'cover_duration_options'   => ['required', 'array', 'min:1'],
+            'cover_duration_options'   => ['nullable', 'array'],
             'cover_duration_options.*' => ['integer', 'min:1'],
             'fields'                   => ['array'],
             'fields.*.name'            => ['required', 'string', 'max:100'],

@@ -39,7 +39,7 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
     };
 
     return (
-        <div className="h-screen overflow-hidden bg-gradient-to-br from-background via-background to-muted/30">
+        <div className="h-screen overflow-hidden bg-[#f3faf8]">
             <Toaster richColors position="top-right" closeButton />
 
             <div className="flex h-full">
@@ -58,10 +58,10 @@ export default function SidebarShell({ auth, url, title, navItems, children }: S
                         onOpenMobileNav={() => setMobileNavOpen(true)}
                     />
 
-                    <main className="animate-in fade-in-0 flex-1 overflow-y-auto px-4 py-6 duration-300 lg:px-8 dark:bg-gray-900">
+                    <main className="animate-in fade-in-0 flex-1 overflow-y-auto bg-white px-4 py-6 duration-300 lg:px-8">
                         <FlashMessage />
 
-                        <div className="rounded-2xl border border-slate-200/70 bg-white/95 p-4 shadow-[0_8px_30px_rgba(2,6,23,0.04)] lg:p-6 dark:border-slate-700/70 dark:bg-gray-800/95">
+                        <div className="rounded-2xl border border-[#cdebe4] bg-white p-4 shadow-[0_12px_34px_rgba(2,6,23,0.05)] lg:p-6">
                             {children}
                         </div>
                     </main>

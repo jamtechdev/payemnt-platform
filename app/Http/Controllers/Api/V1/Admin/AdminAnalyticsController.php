@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Exports\AnalyticsExport;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use App\Jobs\GenerateReportExportJob;
-use App\Services\ReportingService;
+use App\Services\InsurtechAnalyticsService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,23 +19,27 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AdminAnalyticsController extends BaseApiController
 {
-    public function __construct(private readonly ReportingService $reportingService)
+    public function __construct(private readonly InsurtechAnalyticsService $analyticsService)
     {
     }
 
     public function summary(Request $request): JsonResponse
     {
-        [$fromDate, $toDate] = $this->reportingService->resolveRange(
+        [$fromDate, $toDate] = $this->analyticsService->resolveRange(
             $request->string('from')->value(),
             $request->string('to')->value()
         );
         $period = $request->string('period', 'daily')->value();
 
         return $this->success([
-            'customers_per_partner' => $this->reportingService->customerCountPerPartner($fromDate, $toDate),
-            'customers_per_product' => $this->reportingService->customerCountPerProduct($fromDate, $toDate),
-            'revenue_per_product' => $this->reportingService->revenuePerProduct($fromDate, $toDate),
-            'revenue_timeline' => $this->reportingService->revenueTimeline($period, $fromDate, $toDate),
+            'customers_per_partner' => $this->analyticsService->customersPerPartner($fromDate, $toDate),
+            'estimated_revenue' => [
+                'daily' => $this->analyticsService->estimatedRevenueByPeriod('daily', $fromDate, $toDate),
+                'monthly' => $this->analyticsService->estimatedRevenueByPeriod('monthly', $fromDate, $toDate),
+                'yearly' => $this->analyticsService->estimatedRevenueByPeriod('yearly', $fromDate, $toDate),
+            ],
+            'partner_performance' => $this->analyticsService->partnerPerformanceMonthly($fromDate, $toDate),
+            'selected_period_revenue' => $this->analyticsService->estimatedRevenueByPeriod($period, $fromDate, $toDate),
         ]);
     }
 

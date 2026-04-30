@@ -1,10 +1,13 @@
 import AdminLayout from '@/layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
-import { ReactNode } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -43,6 +46,39 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
     const customer = (t.customer && typeof t.customer === 'object' ? t.customer : {}) as LooseRecord;
     const partner  = (t.partner  && typeof t.partner  === 'object' ? t.partner  : {}) as LooseRecord;
     const product  = (t.product  && typeof t.product  === 'object' ? t.product  : {}) as LooseRecord;
+
+    const [firstName, setFirstName] = useState(String(customer.first_name ?? ''));
+    const [lastName, setLastName] = useState(String(customer.last_name ?? ''));
+    const [email, setEmail] = useState(String(customer.email ?? ''));
+    const [phone, setPhone] = useState(String(customer.phone ?? ''));
+    const [note, setNote] = useState('');
+
+    const policyNotes = useMemo(() => {
+        const customerData = (customer.customer_data && typeof customer.customer_data === 'object')
+            ? (customer.customer_data as LooseRecord)
+            : {};
+        return Array.isArray(customerData.policy_notes) ? (customerData.policy_notes as LooseRecord[]) : [];
+    }, [customer.customer_data]);
+
+    const submitCustomerUpdate = () => {
+        router.patch(route('admin.transactions.customer.update', t.id), {
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            phone,
+        });
+    };
+
+    const suspendPolicy = () => {
+        if (!confirm('Suspend policy for this customer?')) return;
+        router.post(route('admin.transactions.policy.suspend', t.id));
+    };
+
+    const submitPolicyNote = () => {
+        if (!note.trim()) return;
+        router.post(route('admin.transactions.policy.notes.store', t.id), { note });
+        setNote('');
+    };
 
     return (
         <AdminLayout title="Transaction Detail">
@@ -93,6 +129,61 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                         <InfoRow label="Product"      value={product.name} />
                         <InfoRow label="Product Code" value={product.product_code} />
                         <InfoRow label="Product Type" value={t.product_type} />
+                    </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2">
+                    <CardHeader><CardTitle className="text-base">Action Functions</CardTitle></CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid gap-3 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>First name</Label>
+                                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Last name</Label>
+                                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Email</Label>
+                                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Phone</Label>
+                                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Button type="button" onClick={submitCustomerUpdate}>Edit customer details</Button>
+                            <Button type="button" variant="destructive" onClick={suspendPolicy}>Suspend policy</Button>
+                        </div>
+
+                        <div className="space-y-2 border-t border-border pt-4">
+                            <Label>Add note to policy</Label>
+                            <textarea
+                                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                placeholder="Add a policy note..."
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                            />
+                            <Button type="button" variant="outline" onClick={submitPolicyNote}>Add note</Button>
+                        </div>
+
+                        {policyNotes.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Policy notes</p>
+                                <div className="space-y-2">
+                                    {policyNotes.map((item, idx) => (
+                                        <div key={idx} className="rounded-md border border-border p-3 text-sm">
+                                            <p>{String(item.note ?? '')}</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {String(item.added_by ?? 'admin')} - {fmtDateTime(item.added_at)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

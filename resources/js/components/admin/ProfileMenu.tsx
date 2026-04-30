@@ -8,8 +8,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { PageProps } from '@/Types';
-import { Link, router } from '@inertiajs/react';
-import { ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { ChevronDown, LogOut } from 'lucide-react';
 
 interface ProfileMenuProps {
     auth: PageProps['auth'];
@@ -44,17 +44,6 @@ export default function ProfileMenu({ auth }: ProfileMenuProps) {
                     <p className="truncate font-medium">{auth.user.name}</p>
                     <p className="truncate text-xs font-normal text-slate-500">{auth.user.email}</p>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href={route('admin.profile.index')} className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" /> My profile
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href={route('admin.settings.index')} className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" /> Settings
-                    </Link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                     className="cursor-pointer text-red-600 focus:text-red-700"

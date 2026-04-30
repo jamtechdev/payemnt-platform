@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Customer;
+use App\Http\Requests\Api\V1\StorePartnerTransactionRequest;
+use App\Http\Resources\Api\V1\PartnerTransactionResource;
 use App\Models\Payment;
-use App\Models\Product;
+use App\Services\PartnerTransactionIngestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
@@ -35,6 +36,8 @@ class TransactionController extends BaseApiController
                     new OA\Property(property: 'payment_message', type: 'string', example: 'Payment done'),
                     new OA\Property(property: 'stripe_payment_intent', type: 'string', example: 'pi_xxx'),
                     new OA\Property(property: 'stripe_payment_status', type: 'string', example: 'succeeded'),
+                    new OA\Property(property: 'amount', type: 'number', format: 'float', nullable: true, example: 20000),
+                    new OA\Property(property: 'currency', type: 'string', nullable: true, example: 'NGN'),
                     new OA\Property(property: 'date_added', type: 'string', format: 'date-time', example: '2024-01-01 10:00:00'),
                 ]
             )
@@ -45,82 +48,32 @@ class TransactionController extends BaseApiController
             new OA\Response(response: 404, description: 'Customer or Product not found'),
         ]
     )]
-    public function store(Request $request): JsonResponse
+    public function store(StorePartnerTransactionRequest $request, PartnerTransactionIngestionService $ingestionService): JsonResponse
     {
         $partner = $request->attributes->get('partner');
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'transaction_number'    => ['required', 'string', 'max:100'],
-            'customer_email'        => ['required', 'email'],
-            'product_code'          => ['required', 'string', 'max:40'],
-            'product_type'          => ['nullable', 'string', 'max:100'],
-            'cover_duration'        => ['nullable', 'string', 'max:100'],
-            'cover_start_date'      => ['nullable', 'date'],
-            'cover_end_date'        => ['nullable', 'date'],
-            'payment_status'        => ['required', 'string', 'max:100'],
-            'payment_message'       => ['nullable', 'string', 'max:500'],
-            'stripe_payment_intent' => ['nullable', 'string', 'max:255'],
-            'stripe_payment_status' => ['nullable', 'string', 'max:100'],
-            'date_added'            => ['required', 'date'],
-        ]);
-
-        $customer = Customer::query()
-            ->where('email', $validated['customer_email'])
-            ->where('partner_id', $partner->id)
-            ->first();
-
-        if (! $customer) {
-            return $this->error('NOT_FOUND', 'Customer not found for this partner.', [], 404);
+        $idempotencyKey = $request->header('Idempotency-Key');
+        if ($idempotencyKey && $idempotencyKey !== $validated['transaction_number']) {
+            return $this->error('VALIDATION_ERROR', 'Idempotency-Key must match transaction_number when provided.', [], 422);
         }
 
-        $product = Product::query()
-            ->where('product_code', $validated['product_code'])
-            ->where('partner_id', $partner->id)
-            ->first();
+        $normalizedPayload = [
+            'transaction_number' => $validated['transaction_number'],
+            'customer_name' => $validated['customer_name'],
+            'customer_email' => $validated['customer_email'],
+            'product_code' => $validated['product_code'],
+            'cover_duration' => $validated['cover_duration'],
+            'status' => $validated['status'] ?? Payment::STATUS_PENDING,
+            'notes' => $validated['notes'] ?? null,
+            'date_added' => $validated['date_added'] ?? now()->toDateTimeString(),
+            'amount' => $validated['amount'] ?? 0,
+            'currency' => $validated['currency'] ?? 'USD',
+        ];
 
-        if (! $product) {
-            return $this->error('NOT_FOUND', 'Product not found for this partner.', [], 404);
-        }
+        $payment = $ingestionService->ingest($partner, $normalizedPayload);
 
-        $existing = Payment::query()
-            ->where('transaction_number', $validated['transaction_number'])
-            ->where('partner_id', $partner->id)
-            ->first();
-
-        if ($existing) {
-            $existing->update([
-                'product_type'          => $validated['product_type'] ?? null,
-                'cover_duration'        => $validated['cover_duration'] ?? null,
-                'cover_start_date'      => $validated['cover_start_date'] ?? null,
-                'cover_end_date'        => $validated['cover_end_date'] ?? null,
-                'status'                => $validated['payment_status'],
-                'payment_message'       => $validated['payment_message'] ?? null,
-                'stripe_payment_intent' => $validated['stripe_payment_intent'] ?? null,
-                'stripe_payment_status' => $validated['stripe_payment_status'] ?? null,
-                'paid_at'               => $validated['date_added'],
-            ]);
-            $payment = $existing->fresh();
-        } else {
-            $payment = Payment::create([
-                'transaction_number'    => $validated['transaction_number'],
-                'customer_id'           => $customer->id,
-                'partner_id'            => $partner->id,
-                'product_id'            => $product->id,
-                'product_type'          => $validated['product_type'] ?? null,
-                'cover_duration'        => $validated['cover_duration'] ?? null,
-                'cover_start_date'      => $validated['cover_start_date'] ?? null,
-                'cover_end_date'        => $validated['cover_end_date'] ?? null,
-                'amount'                => 0,
-                'currency'              => 'USD',
-                'status'                => $validated['payment_status'],
-                'payment_message'       => $validated['payment_message'] ?? null,
-                'stripe_payment_intent' => $validated['stripe_payment_intent'] ?? null,
-                'stripe_payment_status' => $validated['stripe_payment_status'] ?? null,
-                'paid_at'               => $validated['date_added'],
-            ]);
-        }
-
-        return $this->success($payment, 200);
+        return $this->success(new PartnerTransactionResource($payment), 200);
     }
 
     #[OA\Delete(

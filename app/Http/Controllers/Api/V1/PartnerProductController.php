@@ -27,7 +27,7 @@ class PartnerProductController extends BaseApiController
                     new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png'),
                     new OA\Property(property: 'name', type: 'string', example: 'Beneficiary Community Plan'),
                     new OA\Property(property: 'description', type: 'string', nullable: true, example: 'A community protection plan'),
-                    new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, example: 29.99),
+                    new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, example: 29.99, description: 'Stored as base_price. Guide price is set by admin later.'),
                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'], example: 'active'),
                 ]
             )
@@ -63,39 +63,12 @@ class PartnerProductController extends BaseApiController
     // }
     public function store(Request $request): JsonResponse
     {
-        $partner = $request->attributes->get('partner');
-
-        $validated = $request->validate([
-            'product_code' => ['required', 'string', 'max:40'],
-            'image_url'    => ['nullable', 'string', 'max:500'],
-            'name'         => ['required', 'string', 'max:255'],
-            'description'  => ['nullable', 'string'],
-            'price'        => ['nullable', 'numeric', 'min:0'],
-            'status'       => ['required', 'in:active,inactive'],
-        ]);
-
-        $slug        = Str::slug($validated['name'] . '-' . $validated['product_code'] . '-' . $partner->id);
-        $image       = $validated['image_url'] ?? null;
-        unset($validated['image_url']);
-
-        $existing = Product::withTrashed()
-            ->where('product_code', $validated['product_code'])
-            ->where('partner_id', $partner->id)
-            ->first();
-
-        if ($existing) {
-            $existing->restore() ?: null;
-            $existing->update(array_merge($validated, ['image' => $image, 'partner_id' => $partner->id]));
-            $product = $existing->fresh();
-        } else {
-            $product = Product::create(array_merge($validated, [
-                'slug'       => $slug,
-                'image'      => $image,
-                'partner_id' => $partner->id,
-            ]));
-        }
-
-        return $this->success($product, 200);
+        return $this->error(
+            'FORBIDDEN',
+            'Products can only be created by admin. Partner API supports update of assigned products only.',
+            [],
+            403
+        );
     }
 
     #[OA\Delete(
@@ -153,6 +126,11 @@ class PartnerProductController extends BaseApiController
 
         if (isset($validated['name'])) {
             $validated['slug'] = Str::slug($validated['name'] . '-' . $product->product_code);
+        }
+
+        if (array_key_exists('price', $validated)) {
+            $validated['base_price'] = $validated['price'];
+            unset($validated['price']);
         }
 
         $product->update($validated);

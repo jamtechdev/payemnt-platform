@@ -3,12 +3,18 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
 
-export default function PartnerCreate() {
+interface ProductOption {
+    id: number;
+    name: string;
+}
+
+export default function PartnerCreate({ products = [] }: { products?: ProductOption[] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         contact_email: '',
         contact_phone: '',
         partner_code: '',
+        product_ids: [] as number[],
     });
 
     const submit = (e: React.FormEvent) => {
@@ -82,6 +88,26 @@ export default function PartnerCreate() {
                             placeholder="e.g. +234 800 000 0000"
                         />
                         {errors.contact_phone && <p className="mt-1 text-sm text-red-500">{errors.contact_phone}</p>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Products partner can sell</label>
+                        <select
+                            multiple
+                            value={data.product_ids.map(String)}
+                            onChange={(e) => {
+                                const values = Array.from(e.target.selectedOptions).map((option) => Number(option.value));
+                                setData('product_ids', values);
+                            }}
+                            className="min-h-32 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        >
+                            {products.map((product) => (
+                                <option key={product.id} value={product.id}>
+                                    {product.name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-gray-400">Hold Ctrl/Cmd to select multiple products.</p>
                     </div>
 
                     <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">

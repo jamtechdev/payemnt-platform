@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye, Search } from 'lucide-react';
 
 interface TransactionRow {
@@ -48,6 +48,18 @@ export default function TransactionList({ transactions, filters }: { transaction
     };
 
     const columnHelper = createColumnHelper<TransactionRow>();
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            router.reload({
+                only: ['transactions'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }, 7000);
+
+        return () => window.clearInterval(intervalId);
+    }, []);
     const columns = [
         columnHelper.accessor((row) => row.transaction_number ?? '-', {
             id: 'transaction_number',
@@ -114,9 +126,9 @@ export default function TransactionList({ transactions, filters }: { transaction
                             onChange={(e) => setForm({ ...form, status: e.target.value })}
                         >
                             <option value="">All statuses</option>
-                            <option value="Successful">Successful</option>
-                            <option value="Failed">Failed</option>
-                            <option value="Pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="pending">Pending</option>
                         </select>
                         <Button onClick={applyFilters}>Search</Button>
                     </div>
@@ -129,15 +141,15 @@ export default function TransactionList({ transactions, filters }: { transaction
                     <CardContent className="text-2xl font-semibold">{rows.length}</CardContent>
                 </Card>
                 <Card className="border-emerald-200/70 bg-emerald-50/50">
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Successful</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-base">Active</CardTitle></CardHeader>
                     <CardContent className="text-2xl font-semibold text-emerald-600">
-                        {rows.filter((r) => r.status?.toLowerCase() === 'successful').length}
+                        {rows.filter((r) => r.status?.toLowerCase() === 'active').length}
                     </CardContent>
                 </Card>
                 <Card className="border-red-200/70 bg-red-50/50">
-                    <CardHeader className="pb-2"><CardTitle className="text-base">Failed</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-base">Suspended</CardTitle></CardHeader>
                     <CardContent className="text-2xl font-semibold text-red-600">
-                        {rows.filter((r) => r.status?.toLowerCase() === 'failed').length}
+                        {rows.filter((r) => r.status?.toLowerCase() === 'suspended').length}
                     </CardContent>
                 </Card>
             </div>

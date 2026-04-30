@@ -3,24 +3,13 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminPasswordController;
-use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PartnerController;
-use App\Http\Controllers\Admin\PersonalAccessTokenController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\ConnectArticleController;
-use App\Http\Controllers\Admin\ConnectCategoryController;
-use App\Http\Controllers\Admin\FaqController;
-use App\Http\Controllers\Admin\AppResourceController;
-use App\Http\Controllers\Admin\RateApiController;
-use App\Http\Controllers\Admin\SwapOfferController;
 use App\Http\Controllers\Admin\TransactionController;
-use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +33,8 @@ Route::middleware('guest')->group(function (): void {
 
 Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::get('/admin/super-admin/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))->name('public.api-docs');
+
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'session.timeout'])
@@ -61,26 +52,13 @@ Route::prefix('admin')
 
         Route::prefix('/super-admin')->middleware('role:super_admin')->group(function (): void {
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+            Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+            Route::post('/products', [ProductController::class, 'store'])->name('products.store');
             Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
             Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
-            Route::get('/swap-offers', [SwapOfferController::class, 'index'])->name('swap-offers.index');
-            Route::get('/swap-offers/{swapOffer}', [SwapOfferController::class, 'show'])->name('swap-offers.show');
-            Route::get('/app-resources/withdraw-wallets', [AppResourceController::class, 'withdrawWallets'])->name('app-resources.withdraw-wallets');
-            Route::get('/app-resources/fund-wallets', [AppResourceController::class, 'fundWallets'])->name('app-resources.fund-wallets');
-            Route::get('/app-resources/task-types', [AppResourceController::class, 'taskTypes'])->name('app-resources.task-types');
-            Route::get('/app-resources/occupations', [AppResourceController::class, 'occupations'])->name('app-resources.occupations');
-            Route::get('/app-resources/relationships', [AppResourceController::class, 'relationships'])->name('app-resources.relationships');
-            Route::get('/app-resources/referral-usages', [AppResourceController::class, 'referralUsages'])->name('app-resources.referral-usages');
-            Route::get('/app-resources/products-purchases', [AppResourceController::class, 'productsPurchases'])->name('app-resources.products-purchases');
-            Route::get('/app-resources/products-purchases-claims', [AppResourceController::class, 'productsPurchasesClaims'])->name('app-resources.products-purchases-claims');
-            Route::get('/connect-categories', [ConnectCategoryController::class, 'index'])->name('connect-categories.index');
-            Route::get('/connect-categories/{connectCategory}', [ConnectCategoryController::class, 'show'])->name('connect-categories.show');
-            Route::get('/connect-articles', [ConnectArticleController::class, 'index'])->name('connect-articles.index');
-            Route::get('/connect-articles/{connectArticle}', [ConnectArticleController::class, 'show'])->name('connect-articles.show');
-            Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
-            Route::get('/faqs/{faq}', [FaqController::class, 'show'])->name('faqs.show');
-            Route::get('/rate-apis', [RateApiController::class, 'index'])->name('rate-apis.index');
-            Route::get('/rate-apis/{rateApi}', [RateApiController::class, 'show'])->name('rate-apis.show');
+            Route::patch('/transactions/{transaction}/customer', [TransactionController::class, 'updateCustomerDetails'])->name('transactions.customer.update');
+            Route::post('/transactions/{transaction}/suspend-policy', [TransactionController::class, 'suspendPolicy'])->name('transactions.policy.suspend');
+            Route::post('/transactions/{transaction}/notes', [TransactionController::class, 'addPolicyNote'])->name('transactions.policy.notes.store');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
             Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
@@ -96,24 +74,8 @@ Route::prefix('admin')
             Route::post('/partners/{partner}/generate-api-key', [PartnerController::class, 'generateApiKey'])->name('partners.generate-api-key');
             Route::delete('/partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])->name('partners.revoke-api-key');
             Route::post('/partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])->name('partners.toggle-product-access');
-            Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
             Route::post('/partners/{id}/restore', [PartnerController::class, 'restore'])->name('partners.restore');
-
-            Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
-            Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
-            Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
-            Route::patch('/users/{user}/access-control', [UserManagementController::class, 'updateAccessControl'])->name('users.access-control.update');
-            Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
-
-            Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
-            Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('audit.show');
-            Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-            Route::patch('/settings/daily-report', [SettingsController::class, 'updateDailyReport'])->name('settings.daily-report.update');
+            Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
             Route::get('/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))->name('api-docs.index');
-            Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.index');
-            Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
-            Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
-            Route::post('/personal-access-tokens', [PersonalAccessTokenController::class, 'store'])->name('personal-access-tokens.store');
-            Route::delete('/personal-access-tokens/{token}', [PersonalAccessTokenController::class, 'destroy'])->name('personal-access-tokens.destroy');
         });
     });

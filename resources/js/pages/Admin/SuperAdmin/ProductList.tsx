@@ -6,7 +6,9 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -49,7 +51,13 @@ export default function ProductList({ products }: { products: unknown }) {
                 return <span className="text-xs text-muted-foreground">-</span>;
             },
         }),
-        columnHelper.accessor((row) => String(row.price ?? '-'), { id: 'price', header: 'Price' }),
+        columnHelper.accessor((row) => {
+            return String(row.base_price ?? '-');
+        }, { id: 'base_price', header: 'Base Price' }),
+        columnHelper.accessor((row) => {
+            if (!row.can_view_guide_price) return 'Hidden';
+            return String(row.price ?? '-');
+        }, { id: 'price', header: 'Guide Price' }),
         columnHelper.accessor((row) => String(row.status ?? 'inactive'), {
             id: 'status',
             header: 'Status',
@@ -71,6 +79,18 @@ export default function ProductList({ products }: { products: unknown }) {
                         >
                             <Pencil className="h-3.5 w-3.5" />
                         </Link>
+                        <button
+                            className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-50"
+                            onClick={() => {
+                                if (confirm('Delete this product?')) {
+                                    router.delete(route('admin.products.destroy', id), { preserveScroll: true });
+                                }
+                            }}
+                            aria-label="Delete product"
+                            title="Delete"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                     </div>
                 );
             },
@@ -79,6 +99,13 @@ export default function ProductList({ products }: { products: unknown }) {
 
     return (
         <AdminLayout title="Products">
+            {isSuperAdmin && (
+                <div className="mb-4 flex justify-end">
+                    <Link href={route('admin.products.create')}>
+                        <Button>Create product</Button>
+                    </Link>
+                </div>
+            )}
             <DataTable columns={columns} data={rows} stripedRows showRowCount clickableRows={false} emptyMessage="No products found." stickyHeader compact />
         </AdminLayout>
     );

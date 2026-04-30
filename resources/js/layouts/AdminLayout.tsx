@@ -22,50 +22,8 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         }
     }
 
-    if (modules.includes('customers') && permissions.includes('customers.view_list')) {
-        items.push({ href: route('admin.customers.index'), label: 'Customers' });
-    }
-
     if (role === 'super_admin' || permissions.includes('transactions.view')) {
-        items.push({
-            label: 'Transactions',
-            children: [
-                { href: route('admin.transactions.index'),                    label: 'Product Transactions' },
-                { href: route('admin.app-resources.fund-wallets'),            label: 'Fund Wallets' },
-                { href: route('admin.app-resources.withdraw-wallets'),        label: 'Withdraw Wallets' },
-                { href: route('admin.app-resources.products-purchases'),      label: 'Products Purchases' },
-            ],
-        });
-    }
-
-    if (role === 'super_admin' || permissions.includes('swap_offers.view')) {
-        items.push({ href: route('admin.swap-offers.index'), label: 'Swap Offers' });
-    }
-
-    if (role === 'super_admin') {
-        items.push({
-            label: 'App Resources',
-            children: [
-                { href: route('admin.app-resources.task-types'),   label: 'Task Types' },
-                { href: route('admin.app-resources.occupations'),  label: 'Occupations' },
-                { href: route('admin.app-resources.relationships'), label: 'Relationships' },
-            ],
-        });
-
-        items.push({
-            label: 'Data Records',
-            children: [
-                { href: route('admin.app-resources.referral-usages'),           label: 'Referral Usages' },
-                { href: route('admin.app-resources.products-purchases-claims'), label: 'Purchase Claims' },
-            ],
-        });
-    }
-
-    if (role === 'super_admin') {
-        items.push({ href: route('admin.connect-categories.index'), label: 'Connect Categories' });
-        items.push({ href: route('admin.connect-articles.index'), label: 'Connect Articles' });
-        items.push({ href: route('admin.faqs.index'), label: 'FAQs' });
-        items.push({ href: route('admin.rate-apis.index'), label: 'Rate APIs' });
+        items.push({ href: route('admin.transactions.index'), label: 'Transactions' });
     }
 
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
@@ -74,10 +32,6 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
 
     if (modules.includes('partners') && (permissions.includes('partners.view') || permissions.includes('partners.manage'))) {
         items.push({ href: route('admin.partners.index'), label: 'Partners' });
-    }
-
-    if (modules.includes('users') && (permissions.includes('users.view') || permissions.includes('users.manage'))) {
-        items.push({ href: route('admin.users.index'), label: 'Users' });
     }
 
     if (modules.includes('reports')) {
@@ -92,16 +46,8 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         }
     }
 
-    if (modules.includes('audit_logs') && permissions.includes('audit_logs.view')) {
-        items.push({ href: route('admin.audit.index'), label: 'Audit logs' });
-    }
-
-    if (modules.includes('settings') && permissions.includes('settings.system')) {
-        items.push({ href: route('admin.settings.index'), label: 'Settings' });
-    }
-
-    if (modules.includes('profile')) {
-        items.push({ href: route('admin.profile.index'), label: 'My profile' });
+    if (role === 'super_admin') {
+        items.push({ href: route('admin.api-docs.index'), label: 'API Guide' });
     }
 
     return items;

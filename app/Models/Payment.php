@@ -12,12 +12,18 @@ use Illuminate\Support\Str;
 
 class Payment extends Model
 {
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_SUSPENDED = 'suspended';
+    public const STATUS_PENDING = 'pending';
+
     protected $fillable = [
         'uuid',
         'customer_id',
         'partner_id',
         'product_id',
         'transaction_number',
+        'customer_name',
+        'customer_email',
         'product_type',
         'cover_duration',
         'cover_start_date',
@@ -28,6 +34,7 @@ class Payment extends Model
         'transaction_reference',
         'status',
         'payment_message',
+        'notes',
         'stripe_payment_intent',
         'stripe_payment_status',
         'metadata',
@@ -79,5 +86,12 @@ class Payment extends Model
     public function scopeSuccessful(Builder $query): Builder
     {
         return $query->where('status', 'success');
+    }
+
+    public function scopeForRange(Builder $query, ?CarbonInterface $from = null, ?CarbonInterface $to = null): Builder
+    {
+        return $query
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to));
     }
 }

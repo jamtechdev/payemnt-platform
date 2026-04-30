@@ -3,37 +3,159 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreProductRequest;
+use App\Models\Partner;
 use App\Models\Product;
+use App\Services\ProductSchemaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(private readonly ProductSchemaService $productSchemaService)
+    {
+    }
+
     public function index(): Response
     {
+        $viewer = request()->user();
+
         return Inertia::render('Admin/SuperAdmin/ProductList', [
             'products' => Product::query()
                 ->with(['partners:id,name', 'partnerDirect:id,name'])
-                ->paginate(15),
+                ->latest()
+                ->paginate(15)
+                ->through(function (Product $product) use ($viewer): array {
+                    $payload = $product->toArray();
+                    $canViewGuidePrice = $viewer?->hasRole('super_admin') || (int) $product->guide_price_set_by === (int) $viewer?->id;
+                    $payload['can_view_guide_price'] = $canViewGuidePrice;
+                    if (! $canViewGuidePrice) {
+                        $payload['price'] = null;
+                    }
+
+                    return $payload;
+                }),
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/ProductForm', [
+            'partners' => Partner::query()
+                ->select(['id', 'name'])
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(),
+        ]);
+    }
+
+    public function store(StoreProductRequest $request): RedirectResponse
+    {
+        abort_unless($request->user()?->hasAnyRole(['admin', 'super_admin']), 403);
+
+        $validated = $request->validated();
+
+        $product = Product::create([
+            'name' => $validated['name'],
+            'product_name' => $validated['name'],
+            'partner_id' => $validated['partner_id'] ?? null,
+            'product_code' => strtoupper(Str::slug($validated['name'].'-'.Str::random(4), '_')),
+            'slug' => Str::slug($validated['name'].'-'.Str::random(4)),
+            'description' => $validated['description'] ?? null,
+            'status' => $validated['status'],
+            'cover_duration_options' => $validated['cover_duration_options'] ?? [365],
+            'default_cover_duration_days' => (int) ($validated['cover_duration_options'][0] ?? 365),
+            'base_price' => $validated['base_price'] ?? null,
+            'price' => $validated['price'] ?? null,
+            'guide_price' => $validated['price'] ?? null,
+            'guide_price_set_by' => $request->user()?->id,
+            'image' => $request->hasFile('image') ? $request->file('image')?->store('products', 'public') : null,
+        ]);
+
+        if (! empty($validated['partner_id'])) {
+            $product->partners()->sync([
+                (int) $validated['partner_id'] => ['is_enabled' => true],
+            ]);
+        }
+
+        foreach ((array) ($validated['fields'] ?? []) as $index => $field) {
+            $product->fields()->create([
+                'field_key' => Str::slug((string) $field['name'], '_'),
+                'label' => (string) $field['label'],
+                'field_type' => (string) $field['type'],
+                'is_required' => (bool) ($field['is_required'] ?? false),
+                'options' => $field['options'] ?? null,
+                'sort_order' => $index,
+            ]);
+        }
+        $product->update(['api_schema' => $this->productSchemaService->generate($product)]);
+
+        return redirect()->route('admin.products.index')->with('success', 'Product created.');
     }
 
     public function edit(Product $product): Response
     {
         return Inertia::render('Admin/SuperAdmin/ProductForm', [
             'product' => $product->load('fields'),
+            'partners' => Partner::query()
+                ->select(['id', 'name'])
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        $product->update($request->validate([
+        $validated = $request->validate([
             'name'        => ['sometimes', 'string', 'max:255'],
+            'product_name'=> ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status'      => ['sometimes', 'in:active,inactive'],
-        ]));
+            'partner_id'  => ['nullable', 'integer', 'exists:partners,id'],
+            'base_price'  => ['nullable', 'numeric', 'min:0'],
+            'price'       => ['nullable', 'numeric', 'min:0'],
+            'guide_price' => ['nullable', 'numeric', 'min:0'],
+            'fields' => ['nullable', 'array'],
+            'fields.*.name' => ['required_with:fields', 'string', 'max:100'],
+            'fields.*.label' => ['required_with:fields', 'string', 'max:255'],
+            'fields.*.type' => ['required_with:fields', 'in:text,textarea,number,date,datetime,dropdown,boolean,email,phone'],
+            'fields.*.is_required' => ['boolean'],
+            'fields.*.options' => ['nullable', 'array'],
+        ]);
+
+        $product->update(collect($validated)->except(['fields'])->all());
+
+        if ($request->filled('partner_id')) {
+            $product->partners()->sync([
+                (int) $request->integer('partner_id') => ['is_enabled' => true],
+            ]);
+        }
+
+        if ($request->filled('price')) {
+            $product->forceFill([
+                'guide_price_set_by' => $request->user()?->id,
+                'guide_price' => $request->input('guide_price', $request->input('price')),
+            ])->save();
+        }
+
+        if (array_key_exists('fields', $validated)) {
+            $product->fields()->delete();
+            foreach ((array) $validated['fields'] as $index => $field) {
+                $product->fields()->create([
+                    'field_key' => Str::slug((string) $field['name'], '_'),
+                    'label' => (string) $field['label'],
+                    'field_type' => (string) $field['type'],
+                    'is_required' => (bool) ($field['is_required'] ?? false),
+                    'options' => $field['options'] ?? null,
+                    'sort_order' => $index,
+                ]);
+            }
+        }
+        $product->update(['api_schema' => $this->productSchemaService->generate($product)]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }

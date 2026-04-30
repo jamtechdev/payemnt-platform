@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePartnerRequest;
 use App\Http\Requests\Admin\UpdatePartnerRequest;
+use App\Models\AuditLog;
 use App\Models\Partner;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -24,6 +26,7 @@ class PartnerController extends Controller
 
         $partners->getCollection()->transform(function ($partner) {
             $partner->api_key_status = $partner->hasActiveApiKey() ? 'active' : 'inactive';
+            $partner->connection_status = $partner->connected_at ? 'connected' : 'not_connected';
             return $partner;
         });
 
@@ -46,7 +49,9 @@ class PartnerController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/SuperAdmin/PartnerCreate');
+        return Inertia::render('Admin/SuperAdmin/PartnerCreate', [
+            'products' => Product::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
+        ]);
     }
 
     // public function store(StorePartnerRequest $request): RedirectResponse
@@ -94,6 +99,15 @@ class PartnerController extends Controller
             'status'        => 'active',
         ]);
 
+        $partner->products()->sync(
+            collect((array) $request->input('product_ids', []))
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->mapWithKeys(fn ($id) => [$id => ['is_enabled' => true]])
+                ->all()
+        );
+
         // Create partner profile if relation exists
         if (method_exists($partner, 'profile')) {
             $partner->profile()->firstOrCreate([
@@ -113,7 +127,7 @@ class PartnerController extends Controller
     public function show(Partner $partner): Response
     {
         $viewer = request()->user();
-        $canViewPartnerPricing = (bool) $viewer?->hasRole('super_admin');
+        $canViewPartnerPricing = (bool) $viewer?->hasAnyRole(['super_admin', 'reconciliation_admin', 'partner']);
         $partner->load([
             'products' => function ($query) {
                 $query->withPivot(['is_enabled', 'partner_price', 'partner_currency', 'cover_duration_days_override', 'rule_overrides']);
@@ -137,7 +151,10 @@ class PartnerController extends Controller
         // Get API key status
         $apiKeyStatus = $partner->hasActiveApiKey() ? 'active' : 'inactive';
         
-        // Get customer and revenue stats
+        $apiUsage = AuditLog::query()
+            ->where('action', 'api_usage')
+            ->where('partner_id', $partner->id);
+
         $stats = [
             'total_customers' => $partner->customers()->count(),
             'active_customers' => $partner->customers()->whereHas('payments', function ($query) {
@@ -146,7 +163,11 @@ class PartnerController extends Controller
             'total_revenue' => $partner->payments()->sum('amount'),
             'monthly_revenue' => $partner->payments()->where('created_at', '>=', now()->startOfMonth())->sum('amount'),
             'api_key_status' => $apiKeyStatus,
-            'last_api_activity' => $partner->api_key_last_generated_at?->format('M j, Y g:i A') ?? 'Never'
+            'last_api_activity' => optional($apiUsage->latest('occurred_at')->first()?->occurred_at)?->format('M j, Y g:i A') ?? 'Never',
+            'api_success_count' => (clone $apiUsage)->where('changes->outcome', 'success')->count(),
+            'api_failure_count' => (clone $apiUsage)->where('changes->outcome', 'failure')->count(),
+            'api_avg_latency_ms' => (int) round((clone $apiUsage)->avg('changes->duration_ms') ?? 0),
+            'token_last_used_at' => optional($partner->tokens()->latest('last_used_at')->first()?->last_used_at)?->format('M j, Y g:i A') ?? 'Never',
         ];
 
         return Inertia::render('Admin/SuperAdmin/PartnerDetail', [
@@ -160,6 +181,7 @@ class PartnerController extends Controller
     {
         return Inertia::render('Admin/SuperAdmin/PartnerEdit', [
             'partner' => $partner,
+            'products' => Product::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
 
@@ -182,6 +204,17 @@ class PartnerController extends Controller
             'contact_phone' => $request->contact_phone ?? $partner->contact_phone,
             'status'        => $request->status ?? $partner->status,
         ]);
+
+        if ($request->has('product_ids')) {
+            $partner->products()->sync(
+                collect((array) $request->input('product_ids', []))
+                    ->map(fn ($id) => (int) $id)
+                    ->filter()
+                    ->unique()
+                    ->mapWithKeys(fn ($id) => [$id => ['is_enabled' => true]])
+                    ->all()
+            );
+        }
 
         return redirect()
             ->route('admin.partners.index')
@@ -225,6 +258,7 @@ class PartnerController extends Controller
         abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         $apiKey = $partner->generateApiKey();
+        AuditLog::record('partner_api_key_generated', $partner, [], ['partner_id' => $partner->id], request()->user());
 
         $partner->forceFill(['connected_at' => now()])->save();
 
@@ -247,6 +281,7 @@ class PartnerController extends Controller
         abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
         $partner->tokens()->delete();
+        AuditLog::record('partner_api_key_revoked', $partner, [], ['partner_id' => $partner->id], request()->user());
 
         return back()->with('success', 'API key revoked successfully.');
     }

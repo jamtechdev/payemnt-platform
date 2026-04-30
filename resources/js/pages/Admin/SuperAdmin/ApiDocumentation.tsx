@@ -1,277 +1,293 @@
-import AdminLayout from '@/layouts/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Key, Code, Book } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Copy, ExternalLink } from 'lucide-react';
 
 export default function ApiDocumentation() {
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-    };
+    const baseUrl = window.location.origin;
+    const productsEndpoint = `${baseUrl}/api/v1/partner/products`;
+    const schemaEndpoint = `${baseUrl}/api/v1/partner/products/{uuid}/schema`;
+    const transactionEndpoint = `${baseUrl}/api/v1/transactions`;
+    const machineReadableGuide = `${baseUrl}/api/v1/partner/guide`;
+    const swaggerEndpoint = `${baseUrl}/api/documentation`;
 
-    const samplePayload = `{
-  "partner_id": "PARTNER_001",
-  "product_id": "PROD_123",
-  "customer_data": {
-    "first_name": "John",
-    "last_name": "Doe",
-    "email": "john.doe@example.com",
-    "phone": "+1234567890",
-    "date_of_birth": "1985-03-15",
-    "cover_start_date": "2026-04-01",
-    "cover_duration_months": 12,
-    "custom_field_1": "value",
-    "custom_field_2": 100.00
-  },
-  "payment": {
-    "amount": 150.00,
-    "currency": "USD",
-    "payment_date": "2026-04-01T10:30:00Z",
-    "transaction_reference": "TXN_789456"
-  }
+    const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
+
+    const transactionPayload = `{
+  "transaction_number": "SWAP-TXN-1001",
+  "customer_name": "John Doe",
+  "customer_email": "john.doe@example.com",
+  "product_code": "NIGERIA_BENEFICIARY_COMMUNITY",
+  "cover_duration": "12_months",
+  "status": "active",
+  "notes": "Captured from swap checkout",
+  "amount": 10000,
+  "currency": "NGN",
+  "date_added": "2026-05-01 10:00:00"
 }`;
 
-    const successResponse = `{
-  "status": "success",
-  "data": {
-    "customer_id": "CUST_987654",
-    "message": "Customer record created successfully"
-  }
-}`;
+    const verifyCurl = `curl -X POST "${baseUrl}/api/v1/verify" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "partner_code": "SWAP_CIRCLE",
+    "api_key": "YOUR_PARTNER_API_KEY",
+    "base_url": "https://swapcircle.com"
+  }'`;
 
-    const errorResponse = `{
-  "status": "error",
-  "error_code": "VALIDATION_ERROR",
-  "message": "Invalid field: date_of_birth format must be YYYY-MM-DD",
-  "details": [...]
-}`;
+    const productsCurl = `curl -X GET "${productsEndpoint}" \\
+  -H "Authorization: Bearer YOUR_PARTNER_TOKEN" \\
+  -H "Accept: application/json"`;
+
+    const schemaCurl = `curl -X GET "${baseUrl}/api/v1/partner/products/{uuid}/schema" \\
+  -H "Authorization: Bearer YOUR_PARTNER_TOKEN" \\
+  -H "Accept: application/json"`;
+
+    const transactionCurl = `curl -X POST "${transactionEndpoint}" \\
+  -H "Authorization: Bearer YOUR_PARTNER_TOKEN" \\
+  -H "Idempotency-Key: SWAP-TXN-1001" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "transaction_number": "SWAP-TXN-1001",
+    "customer_name": "John Doe",
+    "customer_email": "john.doe@example.com",
+    "product_code": "NIGERIA_BENEFICIARY_COMMUNITY",
+    "cover_duration": "12_months",
+    "status": "active",
+    "notes": "Captured from swap checkout",
+    "amount": 10000,
+    "currency": "NGN",
+    "date_added": "2026-05-01 10:00:00"
+  }'`;
+
+    const partnerEnv = `# Partner (Swap) environment
+INSURETECH_ADMIN_BASE_URL=http://127.0.0.1:8000
+INSURETECH_PARTNER_TOKEN=PASTE_PARTNER_BEARER_TOKEN_HERE
+INSURETECH_REQUEST_TIMEOUT=20
+INSURETECH_AUTO_PULL_BEFORE_PUSH=true
+INSURETECH_DEFAULT_SYNC_LIMIT=25
+INSURETECH_MAX_SYNC_LIMIT=200`;
+
+    const adminEnvNotes = `# Admin portal values used for partner onboarding
+# (Configured by admin team; not shared directly as .env file)
+- Partner Code (example: SWAP_CIRCLE)
+- Generated Partner API Token (share securely with partner backend only)
+- Assigned Product Codes (example: NIGERIA_BENEFICIARY_COMMUNITY)
+- Active product schema fields from /api/v1/partner/products/{uuid}/schema`;
 
     return (
-        <AdminLayout title="API Documentation">
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                    <Book className="h-8 w-8 text-blue-600" />
-                    <div>
-                        <h1 className="text-2xl font-bold">API Documentation</h1>
-                        <p className="text-gray-600">Integration guide for partner API access</p>
-                    </div>
+        <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
+            <div className="mx-auto max-w-5xl space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h1 className="text-2xl font-bold text-slate-900">Insurtech Partner API Documentation</h1>
+                    <p className="mt-2 text-sm text-slate-600">
+                        Full step-by-step partner guide with endpoint details, payload examples, and ready-to-use cURL commands.
+                    </p>
                 </div>
 
-                {/* Authentication */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Key className="h-5 w-5" />
-                            Authentication
-                        </CardTitle>
+                        <CardTitle>Overview</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <h4 className="font-medium mb-2">API Key Authentication</h4>
-                            <p className="text-sm text-gray-600 mb-3">
-                                All API requests must include your API key in the Authorization header:
-                            </p>
-                            <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm flex items-center justify-between">
-                                <code>Authorization: Bearer YOUR_API_KEY</code>
-                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard('Authorization: Bearer YOUR_API_KEY')}>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <p><strong>Base URL:</strong> <code>{baseUrl}/api/v1</code></p>
+                        <p><strong>Authentication:</strong> Bearer token per partner.</p>
+                        <p><strong>Data flow:</strong> Admin creates products, partner pulls products, partner pushes transactions on sales.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Step 1 - Admin Onboarding for Partner</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <ol className="list-decimal space-y-2 pl-5">
+                            <li>Create partner (name, code, email, phone) in admin portal.</li>
+                            <li>Create products in admin portal and configure product fields.</li>
+                            <li>Assign enabled products to the partner.</li>
+                            <li>Generate partner token from admin and share securely.</li>
+                        </ol>
+                        <pre className="rounded bg-slate-100 p-3 font-mono text-xs">Authorization: Bearer {'{PARTNER_TOKEN}'}</pre>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Step 1.1 - Environment Configuration</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-700">
+                        <p><strong>Partner backend .env (required):</strong></p>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">.env Example</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(partnerEnv)} className="text-slate-300 hover:text-white">
                                     <Copy className="h-4 w-4" />
                                 </Button>
                             </div>
+                            <pre className="overflow-x-auto text-xs">{partnerEnv}</pre>
                         </div>
-                        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                            <p className="text-sm text-yellow-800">
-                                <strong>Important:</strong> Keep your API key secure and never expose it in client-side code.
-                            </p>
+
+                        <p><strong>Admin must provide these onboarding values:</strong></p>
+                        <div className="rounded bg-slate-100 p-3">
+                            <pre className="overflow-x-auto text-xs text-slate-700">{adminEnvNotes}</pre>
                         </div>
+
+                        <p className="text-xs text-slate-500">
+                            Important: Keep `INSURETECH_PARTNER_TOKEN` server-side only. Do not expose in frontend/mobile apps.
+                        </p>
                     </CardContent>
                 </Card>
 
-                {/* Endpoint Details */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Code className="h-5 w-5" />
-                            Customer Submission Endpoint
-                        </CardTitle>
+                        <CardTitle>Step 2 - Verify Partner Setup</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-medium text-gray-600">Method</label>
-                                <Badge variant="default" className="ml-2">POST</Badge>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-600">Content-Type</label>
-                                <code className="ml-2 text-sm">application/json</code>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label className="text-sm font-medium text-gray-600">URL</label>
-                            <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm flex items-center justify-between mt-1">
-                                <code>{window.location.origin}/api/v1/customers</code>
-                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${window.location.origin}/api/v1/customers`)}>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <pre className="rounded bg-slate-100 p-3 font-mono text-xs">POST {baseUrl}/api/v1/verify</pre>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">cURL</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(verifyCurl)} className="text-slate-300 hover:text-white">
                                     <Copy className="h-4 w-4" />
                                 </Button>
                             </div>
+                            <pre className="overflow-x-auto text-xs">{verifyCurl}</pre>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Request Format */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Request Format</CardTitle>
+                        <CardTitle>Step 3 - Pull Products Assigned by Admin</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            <p className="text-sm text-gray-600">Sample request payload:</p>
-                            <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs text-gray-400">JSON</span>
-                                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(samplePayload)} className="text-gray-400 hover:text-white">
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <pre className="text-sm"><code>{samplePayload}</code></pre>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <p>Partner can only consume products created by admin and assigned to that partner.</p>
+                        <pre className="rounded bg-slate-100 p-3 font-mono text-xs">GET {productsEndpoint}</pre>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">cURL</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(productsCurl)} className="text-slate-300 hover:text-white">
+                                    <Copy className="h-4 w-4" />
+                                </Button>
                             </div>
+                            <pre className="overflow-x-auto text-xs">{productsCurl}</pre>
+                        </div>
+                        <p className="text-xs text-slate-500">Partner-side product creation is disabled by design.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Step 4 - Fetch Product Schema</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <pre className="rounded bg-slate-100 p-3 font-mono text-xs">GET {schemaEndpoint}</pre>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">cURL</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(schemaCurl)} className="text-slate-300 hover:text-white">
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <pre className="overflow-x-auto text-xs">{schemaCurl}</pre>
+                        </div>
+                        <p>Build partner-side form using returned schema fields.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Step 5 - Push Transaction on Every Sale</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <pre className="rounded bg-slate-100 p-3 font-mono text-xs">POST {transactionEndpoint}</pre>
+                        <p>Use `Idempotency-Key` header equal to `transaction_number`.</p>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">Example JSON Payload</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(transactionPayload)} className="text-slate-300 hover:text-white">
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <pre className="overflow-x-auto text-xs">{transactionPayload}</pre>
+                        </div>
+                        <div className="rounded bg-slate-900 p-4 text-green-400">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs text-slate-300">cURL</span>
+                                <Button size="sm" variant="ghost" onClick={() => copyToClipboard(transactionCurl)} className="text-slate-300 hover:text-white">
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <pre className="overflow-x-auto text-xs">{transactionCurl}</pre>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Response Format */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Response Format</CardTitle>
+                        <CardTitle>Step 6 - Validate on Admin Portal</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <h4 className="font-medium mb-2 text-green-600">Success Response (201)</h4>
-                            <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs text-gray-400">JSON</span>
-                                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(successResponse)} className="text-gray-400 hover:text-white">
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <pre className="text-sm"><code>{successResponse}</code></pre>
-                            </div>
-                        </div>
+                    <CardContent className="space-y-2 text-sm text-slate-700">
+                        <p>- Check transactions list for new partner sales.</p>
+                        <p>- Verify acquisition counts per partner/date.</p>
+                        <p>- Verify revenue report (transactions × guide price).</p>
+                        <p>- Check partner performance graph monthly trend.</p>
+                    </CardContent>
+                </Card>
 
-                        <div>
-                            <h4 className="font-medium mb-2 text-red-600">Error Response (400/401/429)</h4>
-                            <div className="bg-gray-900 text-red-400 p-4 rounded-lg overflow-x-auto">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs text-gray-400">JSON</span>
-                                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(errorResponse)} className="text-gray-400 hover:text-white">
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <pre className="text-sm"><code>{errorResponse}</code></pre>
-                            </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Error Handling & Retry Rules</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-slate-700">
+                        <p><strong>401/403:</strong> Invalid or inactive partner token.</p>
+                        <p><strong>404:</strong> Product not assigned/found for partner.</p>
+                        <p><strong>422:</strong> Validation error in request body.</p>
+                        <p><strong>Retry:</strong> Use same `transaction_number` and same `Idempotency-Key`.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Security Rules</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-slate-700">
+                        <p>- Guide price is internal and never exposed to partner APIs.</p>
+                        <p>- Keep token on backend only; do not expose in frontend/mobile code.</p>
+                        <p>- Use HTTPS in production and rotate tokens regularly.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Reference URLs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-3">
+                            <code className="text-xs">{machineReadableGuide}</code>
+                            <Button size="sm" variant="outline" onClick={() => copyToClipboard(machineReadableGuide)}>Copy</Button>
+                        </div>
+                        <div className="flex items-center justify-between rounded border border-slate-200 bg-white p-3">
+                            <code className="text-xs">{swaggerEndpoint}</code>
+                            <a href={swaggerEndpoint} target="_blank" rel="noreferrer" className="inline-flex items-center text-emerald-700 hover:underline">
+                                Open <ExternalLink className="ml-1 h-4 w-4" />
+                            </a>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Rate Limiting */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Rate Limiting</CardTitle>
+                        <CardTitle>Quick Go-Live Checklist (Partner)</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-blue-50 p-3 rounded-lg">
-                                    <h4 className="font-medium text-blue-800">Request Limit</h4>
-                                    <p className="text-sm text-blue-600">1000 requests per hour</p>
-                                </div>
-                                <div className="bg-orange-50 p-3 rounded-lg">
-                                    <h4 className="font-medium text-orange-800">Rate Limit Headers</h4>
-                                    <p className="text-sm text-orange-600">Check X-RateLimit-* headers</p>
-                                </div>
-                            </div>
-                            <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
-                                <p className="text-sm text-red-800">
-                                    <strong>429 Too Many Requests:</strong> You'll receive this status code if you exceed the rate limit.
-                                </p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Field Validation */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Field Validation Rules</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b">
-                                        <th className="text-left p-2">Field</th>
-                                        <th className="text-left p-2">Type</th>
-                                        <th className="text-left p-2">Required</th>
-                                        <th className="text-left p-2">Validation</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-gray-600">
-                                    <tr className="border-b">
-                                        <td className="p-2 font-mono">partner_id</td>
-                                        <td className="p-2">string</td>
-                                        <td className="p-2"><Badge variant="destructive" className="text-xs">Yes</Badge></td>
-                                        <td className="p-2">Must match your assigned partner ID</td>
-                                    </tr>
-                                    <tr className="border-b">
-                                        <td className="p-2 font-mono">product_id</td>
-                                        <td className="p-2">string</td>
-                                        <td className="p-2"><Badge variant="destructive" className="text-xs">Yes</Badge></td>
-                                        <td className="p-2">Must be an active product for your partner</td>
-                                    </tr>
-                                    <tr className="border-b">
-                                        <td className="p-2 font-mono">email</td>
-                                        <td className="p-2">string</td>
-                                        <td className="p-2"><Badge variant="destructive" className="text-xs">Yes</Badge></td>
-                                        <td className="p-2">Valid email format</td>
-                                    </tr>
-                                    <tr className="border-b">
-                                        <td className="p-2 font-mono">date_of_birth</td>
-                                        <td className="p-2">date</td>
-                                        <td className="p-2"><Badge variant="secondary" className="text-xs">No</Badge></td>
-                                        <td className="p-2">Format: YYYY-MM-DD</td>
-                                    </tr>
-                                    <tr className="border-b">
-                                        <td className="p-2 font-mono">payment.amount</td>
-                                        <td className="p-2">decimal</td>
-                                        <td className="p-2"><Badge variant="destructive" className="text-xs">Yes</Badge></td>
-                                        <td className="p-2">Must be greater than 0</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Support */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Support & Contact</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-2">
-                                For technical support or questions about the API integration:
-                            </p>
-                            <ul className="text-sm text-gray-600 space-y-1">
-                                <li>• Email: api-support@company.com</li>
-                                <li>• Response time: Within 24 hours</li>
-                                <li>• Include your partner ID in all support requests</li>
-                            </ul>
-                        </div>
+                    <CardContent className="space-y-2 text-sm text-slate-700">
+                        <p>1. `.env` configured with correct admin base URL and partner token.</p>
+                        <p>2. Verify endpoint returns success.</p>
+                        <p>3. Pull products and confirm assigned product codes are visible.</p>
+                        <p>4. Fetch schema and bind form fields accordingly.</p>
+                        <p>5. Push test transaction with idempotency key.</p>
+                        <p>6. Confirm transaction + acquisition + revenue visibility on admin portal.</p>
                     </CardContent>
                 </Card>
             </div>
-        </AdminLayout>
+        </div>
     );
 }

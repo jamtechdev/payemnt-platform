@@ -30,6 +30,12 @@ function formatPartnerPrice(amount: unknown, currency: unknown): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(value);
 }
 
+function formatAmount(amount: unknown): string {
+    const value = Number(amount);
+    if (!Number.isFinite(value)) return '—';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+}
+
 function labelize(key: string): string {
     return key.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -101,7 +107,14 @@ export default function PartnerDetail({
     const products  = Array.isArray(model.products)  ? (model.products  as LooseRecord[]) : [];
     const customers = Array.isArray(model.customers) ? (model.customers as LooseRecord[]) : [];
     const dateFields = ['created_at', 'updated_at', 'connected_at', 'last_seen_at'];
-    const hiddenFields = ['products', 'customers', 'payments', 'tokens', 'pivot', 'api_key'];
+    const usefulFields = [
+        'partner_code',
+        'contact_email',
+        'contact_phone',
+        'connected_at',
+        'last_seen_at',
+        'status',
+    ];
 
     const isConnected = Boolean(model.connected_at);
 
@@ -165,74 +178,90 @@ export default function PartnerDetail({
                 </div>
             )}
 
-            <div className="mx-auto w-full max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="mx-auto w-full max-w-6xl space-y-6">
 
                 {/* Header */}
-                <div className="mb-6 flex items-start justify-between gap-4">
-                    <div>
-                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">{String(model.name ?? 'Partner')}</h2>
-                        <p className="text-sm text-slate-500">{String(model.contact_email ?? '—')}</p>
-                        <p className="mt-1 font-mono text-xs text-slate-400">Code: {String(model.partner_code ?? '—')}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            String(model.status ?? '').toLowerCase() === 'active'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
-                        }`}>
-                            {String(model.status ?? 'unknown').toUpperCase()}
-                        </span>
-                        {/* Connection Status Badge */}
-                        <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                            isConnected
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-500'
-                        }`}>
-                            {isConnected
-                                ? <><Link2 className="h-3 w-3" /> Connected</>
-                                : <><Link2Off className="h-3 w-3" /> Not Connected</>
-                            }
-                        </span>
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Partner Profile</p>
+                            <h2 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-white">{String(model.name ?? 'Partner')}</h2>
+                            <p className="text-sm text-slate-500">{String(model.contact_email ?? '—')}</p>
+                            <p className="mt-1 font-mono text-xs text-slate-400">Code: {String(model.partner_code ?? '—')}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                String(model.status ?? '').toLowerCase() === 'active'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-red-100 text-red-700'
+                            }`}>
+                                {String(model.status ?? 'unknown').toUpperCase()}
+                            </span>
+                            <span className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                                isConnected
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-500'
+                            }`}>
+                                {isConnected
+                                    ? <><Link2 className="h-3 w-3" /> API Connected</>
+                                    : <><Link2Off className="h-3 w-3" /> API Not Connected</>
+                                }
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* Connection Info */}
                 {isConnected && (
-                    <div className="mb-6 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
                         <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
                             🔗 Connected since {formatDate(model.connected_at)}
                         </p>
                         <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                            This partner is actively connected. Connection remains until API key is revoked.
+                            API integration is active. This status tracks partner data-connection only (not payment collection).
                         </p>
                     </div>
                 )}
 
                 {/* Stats */}
-                <div className="mb-6 grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-800 md:grid-cols-4">
-                    <div className="text-center">
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.total_customers || 0}</div>
                         <div className="text-xs text-slate-500">Total Customers</div>
                     </div>
-                    <div className="text-center">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.active_customers || 0}</div>
                         <div className="text-xs text-slate-500">Active Customers</div>
                     </div>
-                    <div className="text-center">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div className="text-2xl font-bold text-slate-800 dark:text-white">{formatCurrency(Number(statistics.total_revenue) || 0)}</div>
                         <div className="text-xs text-slate-500">Total Revenue</div>
                     </div>
-                    <div className="text-center">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div className={`text-2xl font-bold ${statistics.api_key_status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
                             {String(statistics.api_key_status ?? 'none').toUpperCase()}
                         </div>
-                        <div className="text-xs text-slate-500">API Status</div>
+                        <div className="text-xs text-slate-500">API Integration Status</div>
+                    </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="text-2xl font-bold text-green-600">{Number(statistics.api_success_count) || 0}</div>
+                        <div className="text-xs text-slate-500">API success calls</div>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="text-2xl font-bold text-red-500">{Number(statistics.api_failure_count) || 0}</div>
+                        <div className="text-xs text-slate-500">API failed calls</div>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div className="text-2xl font-bold text-slate-800 dark:text-white">{Number(statistics.api_avg_latency_ms) || 0} ms</div>
+                        <div className="text-xs text-slate-500">Avg API latency</div>
                     </div>
                 </div>
 
                 {/* API Key Management */}
                 {canEdit && (
-                    <div className="mb-6 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <h3 className="mb-1 font-medium text-slate-800 dark:text-white">API Key Management</h3>
                         <p className="mb-3 text-sm text-slate-500">
                             Generate an API key for this partner. Copy it immediately — it won't be shown again.
@@ -252,9 +281,11 @@ export default function PartnerDetail({
                 )}
 
                 {/* Partner Fields */}
-                <div className="mb-6 space-y-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Partner Information</h3>
+                    <div className="space-y-2">
                     {Object.entries(model)
-                        .filter(([key]) => !hiddenFields.includes(key))
+                        .filter(([key]) => usefulFields.includes(key))
                         .map(([key, value]) => (
                             <div key={key} className="flex items-start justify-between border-b border-slate-100 pb-2 last:border-none dark:border-slate-700">
                                 <span className="min-w-[160px] text-sm font-medium text-slate-500">{labelize(key)}</span>
@@ -273,28 +304,47 @@ export default function PartnerDetail({
                                 </span>
                             </div>
                         ))}
+                    </div>
                 </div>
 
                 {/* Product Access */}
                 {products.length > 0 && (
-                    <div className="mb-6">
-                        <h3 className="mb-3 font-medium text-slate-800 dark:text-white">Product Access</h3>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <h3 className="mb-3 font-medium text-slate-800 dark:text-white">Product Access & Pricing</h3>
                         <div className="space-y-2">
                             {products.map((product) => {
                                 const pivot = asRecord(product.pivot);
                                 const isActive = Boolean(pivot.is_enabled);
+                                const image = typeof product.image === 'string' && product.image !== ''
+                                    ? (product.image.startsWith('http') ? product.image : `/storage/${product.image}`)
+                                    : null;
                                 return (
-                                    <div key={String(product.id ?? Math.random())} className="flex items-center justify-between gap-3 rounded border border-slate-200 p-3 dark:border-slate-700">
-                                        <div>
-                                            <span className="font-medium text-slate-800 dark:text-white">{String(product.name ?? '—')}</span>
-                                            <span className={`ml-2 rounded px-2 py-0.5 text-xs ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                                                {isActive ? 'ACTIVE' : 'INACTIVE'}
-                                            </span>
+                                    <div key={String(product.id ?? Math.random())} className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3 md:flex-row md:items-center md:justify-between dark:border-slate-700">
+                                        <div className="flex items-start gap-3">
+                                            {image ? (
+                                                <img src={image} alt={String(product.name ?? 'product')} className="h-14 w-14 rounded-md border border-slate-200 object-cover" />
+                                            ) : (
+                                                <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
+                                                    No image
+                                                </div>
+                                            )}
+                                            <div>
+                                                <span className="font-medium text-slate-800 dark:text-white">{String(product.name ?? '—')}</span>
+                                                <span className={`ml-2 rounded px-2 py-0.5 text-xs ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                                    {isActive ? 'ACTIVE' : 'INACTIVE'}
+                                                </span>
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    Base price: {formatAmount(product.base_price)}
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    Guide price: {formatAmount(product.price)}
+                                                </p>
                                             {canViewPartnerPricing && (
                                                 <p className="mt-1 text-xs text-slate-500">
                                                     Price: {formatPartnerPrice(pivot.partner_price, pivot.partner_currency)}
                                                 </p>
                                             )}
+                                            </div>
                                         </div>
                                         {canEdit && (
                                             <Button size="sm" variant={isActive ? 'destructive' : 'default'}
@@ -311,7 +361,7 @@ export default function PartnerDetail({
 
                 {/* Recent Customers */}
                 {customers.length > 0 && (
-                    <div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <h3 className="mb-3 font-medium text-slate-800 dark:text-white">Recent Customers</h3>
                         <div className="space-y-2">
                             {customers.slice(0, 5).map((customer) => (

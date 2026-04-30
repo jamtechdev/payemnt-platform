@@ -25,6 +25,9 @@ class AdminPartnerController extends BaseApiController
     {
         $validated = $request->validated();
         $validated['slug'] = Str::slug($validated['name'].'-'.$validated['partner_code']);
+        $validated['partner_name'] = $validated['partner_name'] ?? $validated['name'];
+        $validated['email'] = $validated['email'] ?? ($validated['contact_email'] ?? null);
+        $validated['phone'] = $validated['phone'] ?? ($validated['contact_phone'] ?? null);
 
         return $this->success(Partner::query()->create($validated), 201);
     }
@@ -38,8 +41,11 @@ class AdminPartnerController extends BaseApiController
     {
         $partner->update($request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
+            'partner_name' => ['sometimes', 'string', 'max:255'],
             'contact_email' => ['nullable', 'email'],
+            'email' => ['nullable', 'email'],
             'contact_phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'status' => ['sometimes', 'in:active,inactive,suspended'],
             'settings' => ['nullable', 'array'],
         ]));

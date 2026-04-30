@@ -1,7 +1,7 @@
 import AdminLayout from '@/layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AcquisitionRow {
     product_id: number;
@@ -20,8 +20,35 @@ interface Filters {
     product_id?: string;
 }
 
-export default function CustomerAcquisitionReport({ rows, filters }: { rows: AcquisitionRow[]; filters: Filters }) {
+interface OptionItem {
+    id: number;
+    name: string;
+}
+
+export default function CustomerAcquisitionReport({
+    rows,
+    filters,
+    partners = [],
+    products = [],
+}: {
+    rows: AcquisitionRow[];
+    filters: Filters;
+    partners?: OptionItem[];
+    products?: OptionItem[];
+}) {
     const [form, setForm] = useState<Filters>(filters ?? {});
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            router.reload({
+                only: ['rows'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }, 9000);
+
+        return () => window.clearInterval(intervalId);
+    }, []);
 
     const applyFilters = () => {
         router.get(route('admin.reports.customer-acquisition'), form as Record<string, string>, { preserveState: true });
@@ -43,8 +70,8 @@ export default function CustomerAcquisitionReport({ rows, filters }: { rows: Acq
                                 onChange={(e) => setForm({ ...form, period: e.target.value })}
                             >
                                 <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
                                 <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
                             </select>
                             <input
                                 type="date"
@@ -60,13 +87,14 @@ export default function CustomerAcquisitionReport({ rows, filters }: { rows: Acq
                                 onChange={(e) => setForm({ ...form, date_to: e.target.value })}
                                 placeholder="To date"
                             />
-                            <input
-                                type="text"
-                                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                value={form.partner_id ?? ''}
-                                onChange={(e) => setForm({ ...form, partner_id: e.target.value })}
-                                placeholder="Partner ID"
-                            />
+                            <select className="rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.partner_id ?? ''} onChange={(e) => setForm({ ...form, partner_id: e.target.value })}>
+                                <option value="">All partners</option>
+                                {partners.map((partner) => <option key={partner.id} value={String(partner.id)}>{partner.name}</option>)}
+                            </select>
+                            <select className="rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.product_id ?? ''} onChange={(e) => setForm({ ...form, product_id: e.target.value })}>
+                                <option value="">All products</option>
+                                {products.map((product) => <option key={product.id} value={String(product.id)}>{product.name}</option>)}
+                            </select>
                             <button
                                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                                 onClick={applyFilters}

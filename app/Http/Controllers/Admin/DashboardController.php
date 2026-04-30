@@ -79,15 +79,18 @@ class DashboardController extends Controller
 
         // BRD REC-003: Income per product line
         $revenueByProduct = Payment::query()
-            ->selectRaw('customers.product_id, SUM(payments.amount) as total_revenue')
-            ->join('customers', 'customers.id', '=', 'payments.customer_id')
-            ->whereMonth('payments.paid_at', now()->month)
-            ->groupBy('customers.product_id')
+            ->selectRaw('payments.product_id, COUNT(payments.id) as transactions_count, SUM(COALESCE(products.guide_price, products.price, 0)) as total_revenue')
+            ->join('products', 'products.id', '=', 'payments.product_id')
+            ->whereMonth('payments.created_at', now()->month)
+            ->groupBy('payments.product_id')
             ->get();
 
         return Inertia::render('Admin/Reconciliation/Dashboard', [
             'monthlyCustomers' => Customer::query()->whereMonth('created_at', now()->month)->count(),
-            'monthlyRevenue' => (float) Payment::query()->whereMonth('paid_at', now()->month)->sum('amount'),
+            'monthlyRevenue' => (float) Payment::query()
+                ->join('products', 'products.id', '=', 'payments.product_id')
+                ->whereMonth('payments.created_at', now()->month)
+                ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(products.guide_price, products.price, 0)')),
             'customersByProduct' => $customersByProduct,
             'revenueByProduct' => $revenueByProduct,
         ]);

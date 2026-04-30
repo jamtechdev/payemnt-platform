@@ -10,11 +10,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use SoftDeletes;
+
+    private static ?bool $hasProductNameColumn = null;
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
 
     protected $fillable = [
         'uuid',
@@ -23,9 +30,13 @@ class Product extends Model
         'partner_code',
         'country',
         'name',
+        'product_name',
         'slug',
         'description',
         'price',
+        'base_price',
+        'guide_price',
+        'guide_price_set_by',
         'image',
         'cover_duration_mode',
         'cover_duration_type',
@@ -33,6 +44,7 @@ class Product extends Model
         'cover_duration_options',
         'status',
         'settings',
+        'api_schema',
     ];
 
     protected function casts(): array
@@ -41,6 +53,7 @@ class Product extends Model
             'cover_duration_options' => 'array',
             'default_cover_duration_days' => 'integer',
             'settings' => 'array',
+            'api_schema' => 'array',
         ];
     }
 
@@ -53,6 +66,27 @@ class Product extends Model
         });
     }
 
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: function (?string $value, array $attributes): array {
+                $resolved = $value ?? ($attributes['product_name'] ?? null);
+                $hasProductNameColumn = self::$hasProductNameColumn ??= Schema::hasColumn($this->getTable(), 'product_name');
+
+                if (! $hasProductNameColumn) {
+                    return [
+                        'name' => $resolved,
+                    ];
+                }
+
+                return [
+                    'name' => $resolved,
+                    'product_name' => $attributes['product_name'] ?? $resolved,
+                ];
+            }
+        );
+    }
+
     public function fields(): HasMany
     {
         return $this->hasMany(ProductField::class)->orderBy('sort_order');
@@ -61,6 +95,11 @@ class Product extends Model
     public function partnerDirect(): BelongsTo
     {
         return $this->belongsTo(Partner::class, 'partner_id');
+    }
+
+    public function guidePriceCreator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'guide_price_set_by');
     }
 
     public function partners(): BelongsToMany
@@ -75,8 +114,13 @@ class Product extends Model
         return $this->hasMany(Customer::class);
     }
 
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 }

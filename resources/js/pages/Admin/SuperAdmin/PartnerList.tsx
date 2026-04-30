@@ -47,6 +47,27 @@ export default function PartnerList({ partners, deletedPartners }: { partners: u
                 );
             },
         }),
+        columnHelper.accessor((row) => String(row.connection_status ?? 'not_connected'), {
+            id: 'connection_status',
+            header: 'Connection',
+            cell: (info) => {
+                const status = info.getValue();
+                const connectedAt = String(info.row.original.connected_at ?? '');
+                const isConnected = status === 'connected';
+                return (
+                    <div className="flex flex-col gap-1">
+                        <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${isConnected ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                            {isConnected ? 'CONNECTED' : 'NOT CONNECTED'}
+                        </span>
+                        {isConnected && connectedAt ? (
+                            <span className="text-[11px] text-gray-500">
+                                Since: {new Date(connectedAt).toLocaleDateString('en-GB')}
+                            </span>
+                        ) : null}
+                    </div>
+                );
+            },
+        }),
         columnHelper.accessor((row) => String(row.status ?? 'inactive'), {
             id: 'status',
             header: 'Status',

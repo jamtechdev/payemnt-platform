@@ -74,6 +74,7 @@ class PlatformSeeder extends Seeder
             ['product_code' => 'NIGERIA_BENEFICIARY_COMMUNITY'],
             [
                 'name' => 'Nigerian Beneficiary Community Product',
+                'product_name' => 'Nigerian Beneficiary Community Product',
                 'slug' => Str::slug('Nigerian Beneficiary Community Product'),
                 'country' => 'NG',
                 'cover_duration_mode' => 'custom',
@@ -81,6 +82,7 @@ class PlatformSeeder extends Seeder
                 'default_cover_duration_days' => 30,
                 'cover_duration_options' => [30, 365],
                 'status' => 'active',
+                'guide_price' => 100.00,
             ]
         );
         if ($nigeriaProduct->trashed()) {
@@ -91,6 +93,7 @@ class PlatformSeeder extends Seeder
             ['product_code' => 'GHANA_BENEFICIARY_COMMUNITY'],
             [
                 'name' => 'Ghana Beneficiary Community Product',
+                'product_name' => 'Ghana Beneficiary Community Product',
                 'slug' => Str::slug('Ghana Beneficiary Community Product'),
                 'country' => 'GH',
                 'cover_duration_mode' => 'custom',
@@ -98,6 +101,7 @@ class PlatformSeeder extends Seeder
                 'default_cover_duration_days' => 30,
                 'cover_duration_options' => [30, 365],
                 'status' => 'active',
+                'guide_price' => 25.00,
             ]
         );
         if ($ghanaProduct->trashed()) {

@@ -78,7 +78,6 @@ const sectionMap: Record<string, string> = {
     'Rate APIs': 'Connect',
     'App Resources': 'Resources',
     'Data Records':   'Resources',
-    'Transactions':   'Resources',
 };
 
 export default function AdminSidebar({ url, navItems, collapsed, className, onNavigate }: AdminSidebarProps) {
@@ -138,12 +137,12 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                         onClick={() => toggleGroup(item.label)}
                         className={`group flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                             active
-                                ? 'bg-sidebar-primary/14 text-sidebar-primary ring-1 ring-sidebar-primary/30'
-                                : 'text-sidebar-foreground/85 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
+                                : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                         }`}
                     >
                         <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg transition ${
-                            active ? 'bg-sidebar-primary/18 text-sidebar-primary' : 'bg-sidebar-accent/90 text-sidebar-foreground/75'
+                            active ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-500'
                         }`}>
                             {iconMap[item.label] ?? <FileText className="h-4 w-4" />}
                         </span>
@@ -155,7 +154,7 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                         )}
                     </button>
                     {open && !collapsed && (
-                        <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border/60 pl-3">
+                        <div className="ml-4 mt-1 space-y-1 border-l border-emerald-100 pl-3">
                             {item.children.map((child) => {
                                 if (child.children) {
                                     const subOpen = openGroups[child.label] ?? false;
@@ -166,8 +165,8 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                                                 onClick={() => toggleGroup(child.label)}
                                                 className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all ${
                                                     subActive
-                                                        ? 'font-medium text-sidebar-primary'
-                                                        : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                                        ? 'font-medium text-emerald-700'
+                                                        : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                                                 }`}
                                             >
                                                 <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
@@ -175,7 +174,7 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                                                 {subOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                                             </button>
                                             {subOpen && (
-                                                <div className="ml-4 mt-1 space-y-1 border-l border-sidebar-border/40 pl-3">
+                                                <div className="ml-4 mt-1 space-y-1 border-l border-emerald-100/80 pl-3">
                                                     {child.children.map((sub) => {
                                                         const subChildActive = isItemActive(sub.href);
                                                         return (
@@ -185,8 +184,8 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                                                                 onClick={onNavigate}
                                                                 className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-all ${
                                                                     subChildActive
-                                                                        ? 'font-medium text-sidebar-primary'
-                                                                        : 'text-sidebar-foreground/65 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                                                        ? 'font-medium text-emerald-700'
+                                                                        : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'
                                                                 }`}
                                                             >
                                                                 <span className="h-1 w-1 rounded-full bg-current opacity-50" />
@@ -207,8 +206,8 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all ${
                                             childActive
-                                                ? 'bg-sidebar-primary/14 font-medium text-sidebar-primary'
-                                                : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                                                ? 'bg-emerald-100 font-medium text-emerald-700'
+                                                : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                                         }`}
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
@@ -230,14 +229,14 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
                 onClick={onNavigate}
                 className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     active
-                        ? 'bg-sidebar-primary/14 text-sidebar-primary ring-1 ring-sidebar-primary/30'
-                        : 'text-sidebar-foreground/85 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground'
+                        ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
+                        : 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-700'
                 }`}
                 style={{ animationDelay: `${index * 35}ms` }}
                 title={collapsed ? item.label : undefined}
             >
                 <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg transition ${
-                    active ? 'bg-sidebar-primary/18 text-sidebar-primary' : 'bg-sidebar-accent/90 text-sidebar-foreground/75 group-hover:bg-sidebar-accent'
+                    active ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-500 group-hover:bg-emerald-50'
                 }`}>
                     {iconMap[item.label] ?? <FileText className="h-4 w-4" />}
                 </span>
@@ -254,40 +253,40 @@ export default function AdminSidebar({ url, navItems, collapsed, className, onNa
     return (
         <aside
             className={cn(
-                'h-screen shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 lg:flex lg:flex-col',
+                'h-screen shrink-0 border-r border-[#cdebe4] bg-[#f3faf8] text-slate-800 transition-all duration-300 lg:flex lg:flex-col',
                 collapsed ? 'w-20' : 'w-72',
                 className,
             )}
         >
             <div className="px-4 py-5">
-                <Link href={navItems[0]?.href ?? route('login')} className="block rounded-xl border border-sidebar-border/80 bg-sidebar-accent/40 px-3 py-3 shadow-sm">
+                <Link href={navItems[0]?.href ?? route('login')} className="block rounded-xl border border-[#cdebe4] bg-white/95 px-3 py-3 shadow-sm">
                     {collapsed ? (
-                        <span className="text-lg font-bold text-sidebar-primary">PS</span>
+                        <span className="text-lg font-bold text-emerald-700">PS</span>
                     ) : (
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary/20 text-sidebar-primary">
+                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
                                     <Bolt className="h-4 w-4" />
                                 </span>
-                                <p className="text-base font-semibold tracking-tight text-sidebar-foreground">
-                                    Partner<span className="text-sidebar-primary">Sales</span>
+                                <p className="text-base font-semibold tracking-tight text-slate-900">
+                                    Partner<span className="text-emerald-700">Sales</span>
                                 </p>
                             </div>
-                            <p className="text-[11px] uppercase tracking-wide text-sidebar-foreground/60">Admin command center</p>
+                            <p className="text-[11px] uppercase tracking-wide text-slate-500">Admin command center</p>
                         </div>
                     )}
                 </Link>
 
-            <Separator className="bg-sidebar-border/80" />
+            <Separator className="bg-[#cdebe4]" />
             <nav className="sidebar-panal flex-1 space-y-5 overflow-auto px-3 py-4">
                 {Object.entries(groupedItems).map(([section, items]) => (
                     <div key={section} className="space-y-1.5">
-                        {!collapsed && <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/70">{section}</p>}
+                        {!collapsed && <p className="px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{section}</p>}
                         {items.map((item, index) => renderItem(item, index))}
                     </div>
                 ))}
             </nav>
-            <Separator className="bg-sidebar-border/80" />
+            <Separator className="bg-[#cdebe4]" />
             </div>
         </aside>
     );
