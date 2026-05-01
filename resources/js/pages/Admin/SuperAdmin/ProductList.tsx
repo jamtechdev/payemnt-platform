@@ -6,9 +6,10 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
+import ActionBtn from '@/components/shared/ActionBtn';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -70,27 +71,25 @@ export default function ProductList({ products }: { products: unknown }) {
                 const row = info.row.original;
                 const id = Number(row.id ?? 0);
                 return (
-                    <div className="flex items-center justify-center gap-2">
-                        <Link
-                            className="inline-flex items-center rounded-md p-1.5 text-primary transition-colors hover:bg-accent/70"
-                            href={route('admin.products.edit', id)}
-                            aria-label="Edit product"
-                            title="Edit"
+                    <div className="flex items-center gap-1.5">
+                        <ActionBtn tone="primary" href={route('admin.products.edit', id)} title="Edit">
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                        </ActionBtn>
+                        <ActionBtn
+                            tone={row.status === 'active' ? 'success' : 'muted'}
+                            title={row.status === 'active' ? 'Deactivate' : 'Activate'}
+                            onClick={() => router.post(route('admin.products.toggle-status', id), {}, { preserveScroll: true })}
                         >
-                            <Pencil className="h-3.5 w-3.5" />
-                        </Link>
-                        <button
-                            className="inline-flex items-center rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-50"
-                            onClick={() => {
-                                if (confirm('Delete this product?')) {
-                                    router.delete(route('admin.products.destroy', id), { preserveScroll: true });
-                                }
-                            }}
-                            aria-label="Delete product"
+                            {row.status === 'active' ? <ToggleRight className="h-3.5 w-3.5" /> : <ToggleLeft className="h-3.5 w-3.5" />}
+                            {row.status === 'active' ? 'Active' : 'Inactive'}
+                        </ActionBtn>
+                        <ActionBtn
+                            tone="danger"
                             title="Delete"
+                            onClick={() => { if (confirm('Delete this product?')) router.delete(route('admin.products.destroy', id), { preserveScroll: true }); }}
                         >
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </ActionBtn>
                     </div>
                 );
             },

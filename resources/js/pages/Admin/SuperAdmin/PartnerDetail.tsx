@@ -286,6 +286,10 @@ export default function PartnerDetail({
                     <div className="space-y-2">
                     {Object.entries(model)
                         .filter(([key]) => usefulFields.includes(key))
+                        .filter(([key, value]) => {
+                            if (dateFields.includes(key)) return Boolean(value);
+                            return value !== null && value !== undefined && value !== '';
+                        })
                         .map(([key, value]) => (
                             <div key={key} className="flex items-start justify-between border-b border-slate-100 pb-2 last:border-none dark:border-slate-700">
                                 <span className="min-w-[160px] text-sm font-medium text-slate-500">{labelize(key)}</span>
@@ -346,12 +350,14 @@ export default function PartnerDetail({
                                             )}
                                             </div>
                                         </div>
+                                        {/* Activate/Deactivate button commented out — use Product List page to manage product status globally
                                         {canEdit && (
                                             <Button size="sm" variant={isActive ? 'destructive' : 'default'}
                                                 onClick={() => toggleProductAccess(Number(product.id), isActive)}>
                                                 {isActive ? 'Deactivate' : 'Activate'}
                                             </Button>
                                         )}
+                                        */}
                                     </div>
                                 );
                             })}

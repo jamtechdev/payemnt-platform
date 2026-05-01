@@ -19,24 +19,9 @@ use OpenApi\Attributes as OA;
     bearerFormat: 'Sanctum token',
     description: 'Send header: Authorization: Bearer {token}'
 )]
-#[OA\Tag(name: 'Connect',                   description: 'Partner connection & verification APIs')]
-#[OA\Tag(name: 'Connect Categories',         description: 'Connect category management APIs')]
-#[OA\Tag(name: 'Connect Articles',           description: 'Connect article management APIs')]
-#[OA\Tag(name: 'FAQs',                       description: 'FAQ management APIs')]
-#[OA\Tag(name: 'Rate APIs',                  description: 'Rate API management')]
-#[OA\Tag(name: 'Products',                   description: 'Product management APIs')]
-#[OA\Tag(name: 'Customer',                  description: 'Customer registration & management')]
-#[OA\Tag(name: 'Transactions',              description: 'Transaction APIs')]
-#[OA\Tag(name: 'Distribution',              description: 'Product code based policy submission APIs')]
-#[OA\Tag(name: 'Webhooks',                  description: 'Webhook callback and delivery APIs')]
-#[OA\Tag(name: 'Swap Offers',               description: 'Swap offer APIs')]
-#[OA\Tag(name: 'Occupations',               description: 'Occupation lookup APIs')]
-#[OA\Tag(name: 'Relationships',             description: 'Relationship lookup APIs')]
-#[OA\Tag(name: 'Task Types',                description: 'Task type lookup APIs')]
-#[OA\Tag(name: 'Referral Usages',           description: 'Referral usage APIs')]
-#[OA\Tag(name: 'Products Purchases',        description: 'Product purchase APIs')]
-#[OA\Tag(name: 'Products Purchases Claims', description: 'Product purchase claim APIs')]
-#[OA\Tag(name: 'System Currencies',         description: 'System currency APIs')]
+#[OA\Tag(name: 'Connect',      description: 'Partner connection & verification APIs')]
+#[OA\Tag(name: 'Products',     description: 'Product sync APIs')]
+#[OA\Tag(name: 'Transactions', description: 'Transaction sync APIs')]
 final class OpenApiSpec
 {
 }

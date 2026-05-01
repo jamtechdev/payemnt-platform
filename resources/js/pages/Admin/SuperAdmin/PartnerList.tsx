@@ -4,8 +4,9 @@ import DataTable from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { router, usePage } from '@inertiajs/react';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Eye, RotateCcw } from 'lucide-react';
+import { Eye, RotateCcw, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import ActionBtn from '@/components/shared/ActionBtn';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -101,32 +102,21 @@ export default function PartnerList({ partners, deletedPartners }: { partners: u
             cell: (info) => {
                 const id = Number(info.row.original.id ?? 0);
                 return (
-                    <div className="flex items-center gap-2">
-                        <button
-                            className="text-primary hover:bg-accent/70 inline-flex items-center rounded-md p-1.5 transition-colors"
-                            onClick={() => router.visit(route('admin.partners.show', id))}
-                            title="View"
-                        >
-                            <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                            className="text-[#0e9f84] hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                            onClick={() => router.visit(route('admin.partners.edit', id))}
-                            disabled={!canEdit}
-                        >
-                            Edit
-                        </button>
-                        <button
-                            className="text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    <div className="flex items-center gap-1.5">
+                        <ActionBtn tone="primary" href={route('admin.partners.show', id)} title="View">
+                            <Eye className="h-3.5 w-3.5" /> View
+                        </ActionBtn>
+                        <ActionBtn tone="warning" onClick={() => router.visit(route('admin.partners.edit', id))} disabled={!canEdit} title="Edit">
+                            <Pencil className="h-3.5 w-3.5" /> Edit
+                        </ActionBtn>
+                        <ActionBtn
+                            tone="danger"
                             disabled={!canDelete}
-                            onClick={() => {
-                                if (confirm('Delete this partner? You can restore it later from the deleted list.')) {
-                                    router.delete(route('admin.partners.destroy', id), { preserveScroll: true });
-                                }
-                            }}
+                            title="Delete"
+                            onClick={() => { if (confirm('Delete this partner? You can restore it later.')) router.delete(route('admin.partners.destroy', id), { preserveScroll: true }); }}
                         >
-                            Delete
-                        </button>
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </ActionBtn>
                     </div>
                 );
             },

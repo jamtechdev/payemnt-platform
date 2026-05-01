@@ -90,6 +90,7 @@ class TransactionController extends BaseApiController
             new OA\Response(response: 404, description: 'No transactions found'),
         ]
     )]
+    // Hidden from Swagger — internal use only
     public function destroy(Request $request): JsonResponse
     {
         $partner = $request->attributes->get('partner');

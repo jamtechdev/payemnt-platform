@@ -100,11 +100,21 @@ class DashboardController extends Controller
     public function superAdminDashboard(): Response
     {
         $monthlyPayments = Payment::query()
-            ->selectRaw("DATE_FORMAT(paid_at, '%b %e') as label, SUM(amount) as total")
+            ->selectRaw("DATE_FORMAT(paid_at, '%b %e') as label, SUM(COALESCE(products.guide_price, products.price, 0)) as total")
+            ->join('products', 'products.id', '=', 'payments.product_id')
             ->whereDate('paid_at', '>=', now()->subDays(30))
             ->groupBy('label')
             ->orderByRaw('MIN(paid_at)')
             ->get();
+
+        $totalRevenue = Payment::query()
+            ->join('products', 'products.id', '=', 'payments.product_id')
+            ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(products.guide_price, products.price, 0)'));
+
+        $monthlyRevenue = Payment::query()
+            ->join('products', 'products.id', '=', 'payments.product_id')
+            ->whereMonth('payments.paid_at', now()->month)
+            ->sum(\Illuminate\Support\Facades\DB::raw('COALESCE(products.guide_price, products.price, 0)'));
 
         $dbHealth = [
             'users' => \App\Models\User::query()->count(),
@@ -122,7 +132,8 @@ class DashboardController extends Controller
         return Inertia::render('Admin/SuperAdmin/PlatformDashboard', [
             'totalCustomers' => Customer::query()->count(),
             'totalPartners' => Partner::query()->count(),
-            'allRevenue' => Payment::query()->sum('amount'),
+            'allRevenue'    => (float) $totalRevenue,
+            'monthlyRevenue'=> (float) $monthlyRevenue,
             'recentAuditLogs' => AuditLog::query()->latest('created_at')->limit(10)->get(),
             'activeUsers' => \App\Models\User::query()->where('is_active', true)->count(),
             'activeProducts' => \App\Models\Product::query()->where('status', 'active')->count(),

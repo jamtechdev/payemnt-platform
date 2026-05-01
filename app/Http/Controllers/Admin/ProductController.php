@@ -97,9 +97,9 @@ class ProductController extends Controller
             ]);
         }
         $product->update([
-            'api_schema' => $this->productSchemaService->generate($product),
-            'api_endpoint' => "/api/v1/products/{$product->product_code}",
-            'api_documentation' => route('public.api-docs'),
+            'api_schema'        => $this->productSchemaService->generate($product),
+            'api_endpoint'      => "/api/v1/products/{$product->product_code}",
+            'api_documentation' => route('admin.api-docs.index'),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
@@ -138,9 +138,14 @@ class ProductController extends Controller
             'fields.*.type' => ['required_with:fields', 'in:text,textarea,number,date,datetime,dropdown,boolean,email,phone'],
             'fields.*.is_required' => ['boolean'],
             'fields.*.options' => ['nullable', 'array'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $product->update(collect($validated)->except(['fields'])->all());
+        $updateData = collect($validated)->except(['fields'])->all();
+        if ($request->hasFile('image')) {
+            $updateData['image'] = $request->file('image')->store('products', 'public');
+        }
+        $product->update($updateData);
 
         if ($request->filled('partner_id')) {
             $product->partners()->sync([
@@ -169,12 +174,21 @@ class ProductController extends Controller
             }
         }
         $product->update([
-            'api_schema' => $this->productSchemaService->generate($product),
-            'api_endpoint' => "/api/v1/products/{$product->product_code}",
-            'api_documentation' => route('public.api-docs'),
+            'api_schema'        => $this->productSchemaService->generate($product),
+            'api_endpoint'      => "/api/v1/products/{$product->product_code}",
+            'api_documentation' => route('admin.api-docs.index'),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
+    }
+
+    public function toggleStatus(Product $product): RedirectResponse
+    {
+        $product->update([
+            'status' => $product->status === 'active' ? 'inactive' : 'active',
+        ]);
+
+        return back()->with('success', 'Product status updated.');
     }
 
     public function destroy(Product $product): RedirectResponse

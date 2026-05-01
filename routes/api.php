@@ -38,6 +38,7 @@ Route::prefix('v1')
         Route::get('/partner/products', [ProductController::class, 'index'])->name('partner.products.index');
         Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
         Route::get('/partner/products/{uuid}/schema', [ProductController::class, 'schema'])->name('partner.products.schema');
+        Route::get('/partner/products', [PartnerProductController::class, 'index'])->name('partner.products.index');
         Route::post('/partner/products', [PartnerProductController::class, 'store'])->name('partner.products.store');
         Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
         Route::delete('/partner/products', [PartnerProductController::class, 'destroyByPartner'])->name('partner.products.destroy-by-partner');

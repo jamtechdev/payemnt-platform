@@ -7,6 +7,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Eye, Search } from 'lucide-react';
+import ActionBtn from '@/components/shared/ActionBtn';
 
 interface FaqRow {
     faq_id: number;
@@ -71,12 +72,9 @@ export default function FaqList({ faqs, filters }: { faqs: Paginated; filters?: 
         columnHelper.display({
             id: 'actions', header: 'Actions',
             cell: (info) => (
-                <Link
-                    href={route('admin.faqs.show', info.row.original.faq_id)}
-                    className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-primary transition-colors hover:bg-accent"
-                >
-                    <Eye className="h-4 w-4" /> View
-                </Link>
+                <ActionBtn tone="primary" href={route('admin.faqs.show', info.row.original.faq_id)} title="View">
+                    <Eye className="h-3.5 w-3.5" /> View
+                </ActionBtn>
             ),
         }),
     ];

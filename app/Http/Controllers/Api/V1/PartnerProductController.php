@@ -12,55 +12,63 @@ use OpenApi\Attributes as OA;
 
 class PartnerProductController extends BaseApiController
 {
-    #[OA\Post(
+    #[OA\Get(
         path: '/api/v1/partner/products',
-        operationId: 'partnerProductCreate',
-        summary: 'Create or update a product (partner auto-set from API key)',
+        operationId: 'partnerProductsList',
+        summary: 'Get all products of authenticated partner (used by Swap Circle to pull products)',
         security: [['sanctum' => []]],
         tags: ['Products'],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(
-                required: ['product_code', 'name', 'status'],
-                properties: [
-                    new OA\Property(property: 'product_code', type: 'string', example: 'PROD_001', description: 'Unique product code'),
-                    new OA\Property(property: 'image_url', type: 'string', nullable: true, example: 'https://example.com/image.png'),
-                    new OA\Property(property: 'name', type: 'string', example: 'Beneficiary Community Plan'),
-                    new OA\Property(property: 'description', type: 'string', nullable: true, example: 'A community protection plan'),
-                    new OA\Property(property: 'price', type: 'number', format: 'float', nullable: true, example: 29.99, description: 'Stored as base_price. Guide price is set by admin later.'),
-                    new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive'], example: 'active'),
-                ]
-            )
-        ),
         responses: [
-            new OA\Response(response: 200, description: 'Product created or updated'),
-            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(
+                response: 200,
+                description: 'Products list',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'string', example: 'success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'product_code', type: 'string',  example: 'NIGERIA_BENEFICIARY_COMMUNITY'),
+                                    new OA\Property(property: 'name',         type: 'string',  example: 'Beneficiary Community Plan'),
+                                    new OA\Property(property: 'description',  type: 'string',  example: 'A community protection plan'),
+                                    new OA\Property(property: 'price',        type: 'number',  example: 739.00),
+                                    new OA\Property(property: 'status',       type: 'string',  example: 'active'),
+                                    new OA\Property(property: 'image_url',    type: 'string',  example: 'https://example.com/image.png'),
+                                ]
+                            )
+                        ),
+                    ]
+                )
+            ),
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
-    // public function store(Request $request): JsonResponse
-    // {
-    //     $partner = $request->attributes->get('partner');
+    public function index(Request $request): JsonResponse
+    {
+        $partner = $request->attributes->get('partner');
 
-    //     $validated = $request->validate([
-    //         'partner_id'   => ['required', 'integer'],
-    //         'partner_code' => ['required', 'string', 'max:40'],
-    //         'product_code' => ['required', 'string', 'max:40', 'unique:products,product_code'],
-    //         'image_url'    => ['nullable', 'string', 'max:500'],
-    //         'name'         => ['required', 'string', 'max:255'],
-    //         'description'  => ['nullable', 'string'],
-    //         'price'        => ['nullable', 'numeric', 'min:0'],
-    //         'status'       => ['required', 'in:active,inactive'],
-    //     ]);
+        $products = Product::query()
+            ->where('partner_id', $partner->id)
+            ->where('status', 'active')
+            ->whereHas('partners', fn ($q) => $q->where('partner_product.partner_id', $partner->id)->where('partner_product.is_enabled', true))
+            ->get()
+            ->map(fn (Product $p) => [
+                'product_code' => $p->product_code,
+                'name'         => $p->name,
+                'description'  => $p->description,
+                'price'        => $p->base_price,
+                'status'       => $p->status,
+                'image_url'    => $p->image
+                    ? (str_starts_with($p->image, 'http') ? $p->image : rtrim(config('app.url'), '/').'/storage/'.$p->image)
+                    : null,
+            ]);
 
-    //     $validated['slug']  = Str::slug($validated['name'] . '-' . $validated['product_code']);
-    //     $validated['image'] = $validated['image_url'] ?? null;
-    //     unset($validated['image_url']);
+        return $this->success($products);
+    }
 
-    //     $product = Product::query()->create($validated);
-
-    //     return $this->success($product, 201);
-    // }
+    // POST, PUT, DELETE — internal use only, hidden from Swagger
     public function store(Request $request): JsonResponse
     {
         return $this->error(
@@ -71,18 +79,7 @@ class PartnerProductController extends BaseApiController
         );
     }
 
-    #[OA\Delete(
-        path: '/api/v1/partner/products',
-        operationId: 'partnerProductsDeleteByPartner',
-        summary: 'Delete all products of authenticated partner',
-        security: [['sanctum' => []]],
-        tags: ['Products'],
-        responses: [
-            new OA\Response(response: 200, description: 'Products deleted successfully'),
-            new OA\Response(response: 404, description: 'No products found'),
-            new OA\Response(response: 401, description: 'Unauthorized'),
-        ]
-    )]
+    // DELETE — internal use only, hidden from Swagger
     public function destroyByPartner(Request $request): JsonResponse
     {
         $partner = $request->attributes->get('partner');
@@ -98,6 +95,7 @@ class PartnerProductController extends BaseApiController
         return $this->success(['deleted_count' => $deleted], 200);
     }
 
+    // PUT — internal use only, hidden from Swagger
     public function update(Request $request, string $product_code): JsonResponse
     {
         $partner = $request->attributes->get('partner');

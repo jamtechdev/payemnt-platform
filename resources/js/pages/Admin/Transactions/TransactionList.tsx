@@ -7,6 +7,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Eye, Search } from 'lucide-react';
+import ActionBtn from '@/components/shared/ActionBtn';
 
 interface TransactionRow {
     id: number;
@@ -93,13 +94,9 @@ export default function TransactionList({ transactions, filters }: { transaction
             id: 'actions',
             header: 'Actions',
             cell: (info) => (
-                <Link
-                    className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-primary transition-colors hover:bg-accent"
-                    href={route('admin.transactions.show', info.row.original.id)}
-                >
-                    <Eye className="h-4 w-4" />
-                    View
-                </Link>
+                <ActionBtn tone="primary" href={route('admin.transactions.show', info.row.original.id)} title="View">
+                    <Eye className="h-3.5 w-3.5" /> View
+                </ActionBtn>
             ),
         }),
     ];

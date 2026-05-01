@@ -12,599 +12,64 @@
         }
     ],
     "paths": {
-        "/api/v1/customers/register": {
-            "post": {
-                "tags": [
-                    "Customer"
-                ],
-                "summary": "Create or update customer by email (partner_id auto-set from API key)",
-                "operationId": "partnerCustomerStore",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "first_name",
-                                    "last_name",
-                                    "email",
-                                    "password",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "company_name": {
-                                        "type": "string",
-                                        "example": "Acme Corp"
-                                    },
-                                    "first_name": {
-                                        "type": "string",
-                                        "example": "John"
-                                    },
-                                    "last_name": {
-                                        "type": "string",
-                                        "example": "Doe"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
-                                    },
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "+923001234567"
-                                    },
-                                    "location": {
-                                        "type": "string",
-                                        "example": "Karachi"
-                                    },
-                                    "valid_document": {
-                                        "type": "string",
-                                        "example": "CNIC-12345"
-                                    },
-                                    "id_front_image": {
-                                        "type": "string",
-                                        "example": "https://example.com/id_front.jpg"
-                                    },
-                                    "id_back_image": {
-                                        "type": "string",
-                                        "example": "https://example.com/id_back.jpg"
-                                    },
-                                    "profile_pic": {
-                                        "type": "string",
-                                        "example": "https://example.com/profile.jpg"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "Pending",
-                                            "Active",
-                                            "Inactive",
-                                            "Deleted"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Customer created or updated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/customers": {
-            "delete": {
-                "tags": [
-                    "Customer"
-                ],
-                "summary": "Permanently delete all customers of authenticated partner",
-                "operationId": "partnerCustomerDestroy",
-                "responses": {
-                    "200": {
-                        "description": "Customers permanently deleted"
-                    },
-                    "404": {
-                        "description": "No customers found"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/partner/products": {
-            "post": {
+            "get": {
                 "tags": [
                     "Products"
                 ],
-                "summary": "Create or update a product (partner auto-set from API key)",
-                "operationId": "partnerProductCreate",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "product_code",
-                                    "name",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "product_code": {
-                                        "description": "Unique product code",
-                                        "type": "string",
-                                        "example": "PROD_001"
-                                    },
-                                    "image_url": {
-                                        "type": "string",
-                                        "example": "https://example.com/image.png",
-                                        "nullable": true
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Beneficiary Community Plan"
-                                    },
-                                    "description": {
-                                        "type": "string",
-                                        "example": "A community protection plan",
-                                        "nullable": true
-                                    },
-                                    "price": {
-                                        "description": "Stored as base_price. Guide price is set by admin later.",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 29.99,
-                                        "nullable": true
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "example": "active",
-                                        "enum": [
-                                            "active",
-                                            "inactive"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
+                "summary": "Get all products of authenticated partner (used by Swap Circle to pull products)",
+                "operationId": "partnerProductsList",
                 "responses": {
                     "200": {
-                        "description": "Product created or updated"
-                    },
-                    "422": {
-                        "description": "Validation error"
+                        "description": "Products list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "product_code": {
+                                                        "type": "string",
+                                                        "example": "NIGERIA_BENEFICIARY_COMMUNITY"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Beneficiary Community Plan"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "A community protection plan"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "example": 739
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "active"
+                                                    },
+                                                    "image_url": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/image.png"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Unauthorized"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Products"
-                ],
-                "summary": "Delete all products of authenticated partner",
-                "operationId": "partnerProductsDeleteByPartner",
-                "responses": {
-                    "200": {
-                        "description": "Products deleted successfully"
-                    },
-                    "404": {
-                        "description": "No products found"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/submit": {
-            "post": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Submit customer policy for a product",
-                "operationId": "distributionSubmitPolicy",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "Idempotency-Key",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "transaction_number",
-                                    "customer_name",
-                                    "customer_email",
-                                    "cover_duration"
-                                ],
-                                "properties": {
-                                    "transaction_number": {
-                                        "type": "string",
-                                        "example": "SWAP-TXN-1001"
-                                    },
-                                    "customer_name": {
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "customer_email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
-                                    },
-                                    "phone": {
-                                        "type": "string",
-                                        "example": "+23480000000",
-                                        "nullable": true
-                                    },
-                                    "policy_number": {
-                                        "type": "string",
-                                        "example": "POL-1001",
-                                        "nullable": true
-                                    },
-                                    "cover_duration": {
-                                        "type": "string",
-                                        "example": "12_months"
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "active",
-                                            "suspended",
-                                            "pending",
-                                            "cancelled",
-                                            "failed"
-                                        ]
-                                    },
-                                    "kyc": {
-                                        "type": "object",
-                                        "nullable": true
-                                    },
-                                    "customer_data": {
-                                        "type": "object",
-                                        "nullable": true
-                                    },
-                                    "notes": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "nullable": true
-                                    },
-                                    "currency": {
-                                        "type": "string",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Submitted"
-                    },
-                    "409": {
-                        "description": "Idempotency conflict"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/transactions/{transaction_number}/kyc": {
-            "post": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Submit KYC for an existing transaction",
-                "operationId": "distributionSubmitKyc",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "transaction_number",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "kyc"
-                                ],
-                                "properties": {
-                                    "kyc": {
-                                        "type": "object"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "KYC saved"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/transactions/{transaction_number}": {
-            "put": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Update existing policy/transaction",
-                "operationId": "distributionUpdatePolicy",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "transaction_number",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "cover_duration": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "active",
-                                            "suspended",
-                                            "pending",
-                                            "cancelled",
-                                            "failed"
-                                        ]
-                                    },
-                                    "notes": {
-                                        "type": "string",
-                                        "nullable": true
-                                    },
-                                    "policy_number": {
-                                        "type": "string",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Policy updated"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/transactions/{transaction_number}/cancel": {
-            "post": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Cancel policy",
-                "operationId": "distributionCancelPolicy",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "transaction_number",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Policy cancelled"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/fields": {
-            "get": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Get partner product fields/schema",
-                "operationId": "distributionGetProductFields",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Fields returned"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/verify-token": {
-            "get": {
-                "tags": [
-                    "Distribution"
-                ],
-                "summary": "Verify partner bearer token",
-                "operationId": "distributionVerifyToken",
-                "responses": {
-                    "200": {
-                        "description": "Token valid"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/products/{product_code}/transactions/{transaction_number}/callback": {
-            "post": {
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Receive webhook callback payload",
-                "operationId": "distributionWebhookCallback",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "transaction_number",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "X-Webhook-Signature",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Webhook accepted"
                     }
                 },
                 "security": [
@@ -740,85 +205,6 @@
                     }
                 ]
             }
-        },
-        "/api/v1/verify": {
-            "post": {
-                "tags": [
-                    "Connect"
-                ],
-                "summary": "Connect and verify an external partner platform",
-                "operationId": "partnerVerify",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "partner_code",
-                                    "api_key",
-                                    "base_url"
-                                ],
-                                "properties": {
-                                    "partner_code": {
-                                        "type": "string",
-                                        "example": "SWAP_CIRCLE"
-                                    },
-                                    "api_key": {
-                                        "type": "string",
-                                        "example": "your-api-key-here"
-                                    },
-                                    "base_url": {
-                                        "type": "string",
-                                        "format": "uri",
-                                        "example": "https://app.swapcircle.com"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Partner verified and connected successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Partner connected successfully."
-                                        },
-                                        "partner_name": {
-                                            "type": "string",
-                                            "example": "SwapCircle"
-                                        },
-                                        "connected_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2024-01-01T10:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Partner not found"
-                    },
-                    "401": {
-                        "description": "Invalid API key or partner inactive"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                }
-            }
         }
     },
     "components": {
@@ -939,28 +325,12 @@
     },
     "tags": [
         {
-            "name": "Distribution",
-            "description": "Product code based policy submission APIs"
-        },
-        {
-            "name": "Connect",
-            "description": "Partner connection & verification APIs"
-        },
-        {
             "name": "Products",
-            "description": "Product management APIs"
-        },
-        {
-            "name": "Customer",
-            "description": "Customer registration & management"
+            "description": "Product sync APIs"
         },
         {
             "name": "Transactions",
-            "description": "Transaction APIs"
-        },
-        {
-            "name": "Webhooks",
-            "description": "Webhook callback and delivery APIs"
+            "description": "Transaction sync APIs"
         }
     ]
 }

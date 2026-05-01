@@ -33,7 +33,6 @@ Route::middleware('guest')->group(function (): void {
 
 Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-Route::get('/admin/super-admin/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))->name('public.api-docs');
 
 Route::prefix('admin')
     ->name('admin.')
@@ -61,11 +60,13 @@ Route::prefix('admin')
             Route::post('/transactions/{transaction}/notes', [TransactionController::class, 'addPolicyNote'])->name('transactions.policy.notes.store');
             Route::post('/transactions/{transaction}/retry', [TransactionController::class, 'retryFailedRequest'])->name('transactions.retry');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-            Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+            Route::match(['PATCH', 'POST'], '/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+            Route::post('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
 
             Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
             Route::get('/partners/create', [PartnerController::class, 'create'])->name('partners.create');
+            Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
             Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
             Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');
             Route::get('/partners/{partner}/edit', [PartnerController::class, 'edit'])->name('partners.edit');
@@ -76,7 +77,6 @@ Route::prefix('admin')
             Route::delete('/partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])->name('partners.revoke-api-key');
             Route::post('/partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])->name('partners.toggle-product-access');
             Route::post('/partners/{id}/restore', [PartnerController::class, 'restore'])->name('partners.restore');
-            Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
             Route::get('/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))->name('api-docs.index');
         });
     });

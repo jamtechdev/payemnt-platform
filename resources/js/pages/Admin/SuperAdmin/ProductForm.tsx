@@ -61,7 +61,7 @@ export default function ProductForm({ product, partners = [] }: { product?: Prod
         ? isSuperAdmin || (auth.permissions.includes('products.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''))
         : isSuperAdmin || (auth.permissions.includes('products.create') && ['admin', 'super_admin'].includes(auth.role ?? ''));
 
-    const { data, setData, post, patch, errors, processing } = useForm<ProductFormData>({
+    const { data, setData, post, errors, processing } = useForm<ProductFormData>({
         name: product?.name ?? '',
         description: product?.description ?? '',
         image: null,
@@ -114,7 +114,11 @@ export default function ProductForm({ product, partners = [] }: { product?: Prod
     const submit = () => {
         if (!canSubmit) return;
         if (product?.id) {
-            patch(route('admin.products.update', product.id), { preserveScroll: true });
+            post(route('admin.products.update', product.id), {
+                forceFormData: true,
+                preserveScroll: true,
+                data: { ...data, _method: 'PATCH' } as any,
+            });
             return;
         }
         post(route('admin.products.store'), { preserveScroll: true, forceFormData: true });

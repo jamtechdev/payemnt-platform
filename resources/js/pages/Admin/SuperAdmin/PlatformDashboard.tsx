@@ -28,6 +28,8 @@ interface PlatformDashboardProps {
     monthlyPayments: MonthlyPaymentPoint[];
     recentAuditLogs: AuditLogRow[];
     dbHealth: Record<string, string | number | boolean>;
+    allRevenue: number;
+    monthlyRevenue: number;
     apiHealth?: {
         requests_24h: number;
         failed_24h: number;
@@ -116,20 +118,34 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                         <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm transition-all duration-200 hover:border-amber-300 dark:border-amber-500/25 dark:bg-amber-500/10">
                             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <DollarSign className="h-4 w-4 shrink-0" />
-                                <span>Payments (this month)</span>
+                                <span>Revenue (guide price)</span>
                             </div>
-                            <div className="mt-3 h-28">
+                            <div className="mt-3 space-y-2 text-sm">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">This month</span>
+                                    <span className="font-semibold text-emerald-600">
+                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(props.monthlyRevenue ?? 0)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-muted-foreground">All time</span>
+                                    <span className="font-semibold text-foreground">
+                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(props.allRevenue ?? 0)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-3 h-20">
                                 <Chart
                                     type="area"
-                                    height={110}
-                                    series={[{ name: 'Estimated Revenue', data: monthlyPayments.map((entry) => Number(entry.total ?? 0)) }]}
+                                    height={80}
+                                    series={[{ name: 'Revenue', data: monthlyPayments.map((e) => Number(e.total ?? 0)) }]}
                                     options={{
                                         chart: { toolbar: { show: false }, sparkline: { enabled: true } },
                                         stroke: { curve: 'smooth', width: 2 },
                                         fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
-                                        xaxis: { categories: monthlyPayments.map((entry) => entry.label) },
-                                        colors: ['#0e9f84'],
-                                        tooltip: { x: { show: true } },
+                                        xaxis: { categories: monthlyPayments.map((e) => e.label) },
+                                        colors: ['#10b981'],
+                                        tooltip: { x: { show: true }, y: { formatter: (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v) } },
                                     }}
                                 />
                             </div>

@@ -30,7 +30,12 @@ function fmtDateTime(value: unknown): string {
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function hasValue(value: unknown): boolean {
+    return value !== null && value !== undefined && value !== '' && value !== '—';
+}
+
 function InfoRow({ label, value }: { label: string; value: unknown | ReactNode }) {
+    if (!hasValue(value)) return null;
     return (
         <div className="flex items-center justify-between border-b border-border/60 py-2 last:border-none">
             <span className="text-sm font-medium text-muted-foreground">{label}</span>
@@ -108,7 +113,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                     </CardContent>
                 </Card>
 
-                <Card>
+                {/* <Card>
                     <CardHeader><CardTitle className="text-base">Payment Info</CardTitle></CardHeader>
                     <CardContent>
                         <InfoRow label="Stripe Payment Intent" value={t.stripe_payment_intent} />
@@ -117,7 +122,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                         <InfoRow label="Amount"                value={t.amount} />
                         <InfoRow label="Currency"              value={t.currency} />
                     </CardContent>
-                </Card>
+                </Card> */}
 
                 <Card>
                     <CardHeader><CardTitle className="text-base">Customer Info</CardTitle></CardHeader>
@@ -138,6 +143,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                     </CardContent>
                 </Card>
 
+                {/* Action Functions - commented out: data comes from swap, not editable
                 <Card className="lg:col-span-2">
                     <CardHeader><CardTitle className="text-base">Action Functions</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
@@ -207,6 +213,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                         )}
                     </CardContent>
                 </Card>
+                */}
             </div>
         </AdminLayout>
     );
