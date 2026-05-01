@@ -181,6 +181,20 @@ POST /api/v1/products/{product_code}/transactions/{transaction_number}/callback`
 
                 <Card>
                     <CardHeader>
+                        <CardTitle>Swap Circle Sync Mode (Centralized)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-slate-700">
+                        <p>Swap integration now uses one centralized sync strategy.</p>
+                        <p>- Auto sync runs from purchase APIs (`purchase_product` and Stripe success flow).</p>
+                        <p>- Manual fallback sync endpoint on Swap side: <code>POST /api/insuretech/sync-all</code></p>
+                        <p>- This one endpoint runs full pipeline: connection verify, then pull products, then push purchases.</p>
+                        <p>- Legacy scattered sync endpoints were removed to avoid duplicate/inconsistent sync behavior.</p>
+                        <p>- Ultra low-code endpoint: <code>POST /api/insuretech/one-click-sale</code> (single call submit + kyc + sync).</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle>Quick Endpoint List</CardTitle>
                     </CardHeader>
                     <CardContent>
