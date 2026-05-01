@@ -8,10 +8,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminPartnerController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminTransactionController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
-use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\CustomerController;
-use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\PartnerApiGuideController;
 use App\Http\Controllers\Api\V1\ProductDistributionController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -36,17 +33,6 @@ Route::prefix('v1')
     ->middleware(['auth.partner', 'throttle:partner_api', 'audit.api'])
     ->group(function (): void {
         Route::get('/partner/products', [ProductController::class, 'index'])->name('partner.products.index');
-        Route::get('/partner/products/{uuid}/fields', [ProductController::class, 'fields'])->name('partner.products.fields');
-        Route::get('/partner/products/{uuid}/schema', [ProductController::class, 'schema'])->name('partner.products.schema');
-        Route::post('/partner/products', [PartnerProductController::class, 'store'])->name('partner.products.store');
-        Route::put('/partner/products/{product_code}', [PartnerProductController::class, 'update'])->name('partner.products.update');
-        Route::delete('/partner/products', [PartnerProductController::class, 'destroyByPartner'])->name('partner.products.destroy-by-partner');
-        Route::post('/customers/register', [CustomerController::class, 'store'])->name('partner.customers.store');
-        Route::put('/customers/{customer_code}', [CustomerController::class, 'update'])->name('partner.customers.update');
-        Route::delete('/customers', [CustomerController::class, 'destroy'])->name('partner.customers.destroy');
-        Route::post('/transactions', [TransactionController::class, 'store'])->name('partner.transactions.store');
-        Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
-        Route::get('/products/{product_code}/fields', [ProductDistributionController::class, 'getProductFields'])->name('partner.distribution.fields');
         Route::post('/products/{product_code}/submit', [ProductDistributionController::class, 'submit'])->name('partner.distribution.submit');
         Route::post('/products/{product_code}/transactions/{transaction_number}/kyc', [ProductDistributionController::class, 'submitKyc'])->name('partner.distribution.kyc');
         Route::put('/products/{product_code}/transactions/{transaction_number}', [ProductDistributionController::class, 'updatePolicy'])->name('partner.distribution.update');

@@ -9,7 +9,6 @@ use App\Models\Payment;
 use App\Models\PartnerRequestIdempotency;
 use App\Models\Product;
 use App\Models\WebhookLog;
-use App\Services\DynamicProductValidationService;
 use App\Services\PartnerTransactionIngestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,8 +18,7 @@ use OpenApi\Attributes as OA;
 class ProductDistributionController extends BaseApiController
 {
     public function __construct(
-        private readonly PartnerTransactionIngestionService $ingestionService,
-        private readonly DynamicProductValidationService $dynamicValidationService
+        private readonly PartnerTransactionIngestionService $ingestionService
     ) {
     }
 
@@ -47,7 +45,6 @@ class ProductDistributionController extends BaseApiController
                     new OA\Property(property: 'cover_duration', type: 'string', example: '12_months'),
                     new OA\Property(property: 'status', type: 'string', enum: ['active', 'suspended', 'pending', 'cancelled', 'failed']),
                     new OA\Property(property: 'kyc', type: 'object', nullable: true),
-                    new OA\Property(property: 'customer_data', type: 'object', nullable: true),
                     new OA\Property(property: 'notes', type: 'string', nullable: true),
                     new OA\Property(property: 'amount', type: 'number', format: 'float', nullable: true),
                     new OA\Property(property: 'currency', type: 'string', nullable: true),
@@ -77,7 +74,6 @@ class ProductDistributionController extends BaseApiController
             'cover_duration' => ['required', 'string', 'max:100'],
             'status' => ['nullable', 'in:active,suspended,pending,cancelled,failed'],
             'kyc' => ['nullable', 'array'],
-            'customer_data' => ['nullable', 'array'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
@@ -103,10 +99,6 @@ class ProductDistributionController extends BaseApiController
             }
 
             return response()->json($existing->response_payload, $existing->status_code);
-        }
-
-        if (isset($validated['customer_data']) && $product->relationLoaded('fields')) {
-            $validated['customer_data'] = $this->dynamicValidationService->validateAndNormalize($product, $validated['customer_data']);
         }
 
         $payment = $this->ingestionService->ingest($partner, array_merge($validated, [
@@ -271,32 +263,6 @@ class ProductDistributionController extends BaseApiController
     }
 
     #[OA\Get(
-        path: '/api/v1/products/{product_code}/fields',
-        operationId: 'distributionGetProductFields',
-        summary: 'Get partner product fields/schema',
-        security: [['sanctum' => []]],
-        tags: ['Distribution'],
-        parameters: [
-            new OA\Parameter(name: 'product_code', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-        ],
-        responses: [new OA\Response(response: 200, description: 'Fields returned')]
-    )]
-    public function getProductFields(Request $request, string $productCode): JsonResponse
-    {
-        $partner = $request->attributes->get('partner');
-        $product = $this->resolvePartnerProduct($partner, $productCode);
-        if (! $product) {
-            return $this->error('NOT_FOUND', 'Product not found or not assigned to partner.', [], 404);
-        }
-
-        return $this->success([
-            'product_code' => $product->product_code,
-            'fields' => $product->fields()->orderBy('sort_order')->get(),
-            'schema' => $product->api_schema,
-        ]);
-    }
-
-    #[OA\Get(
         path: '/api/v1/verify-token',
         operationId: 'distributionVerifyToken',
         summary: 'Verify partner bearer token',
@@ -378,7 +344,6 @@ class ProductDistributionController extends BaseApiController
         }
 
         return Product::query()
-            ->with('fields')
             ->where('product_code', $productCode)
             ->where(function ($query) use ($partner): void {
                 $query->where('partner_id', $partner->id)
