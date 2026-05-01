@@ -33,6 +33,7 @@ class Product extends Model
         'product_name',
         'slug',
         'description',
+         'category',
         'price',
         'base_price',
         'guide_price',
@@ -45,6 +46,12 @@ class Product extends Model
         'status',
         'settings',
         'api_schema',
+         'validation_rules',
+         'api_endpoint',
+         'api_documentation',
+         'terms_and_conditions',
+         'features',
+         'created_by',
     ];
 
     protected function casts(): array
@@ -54,6 +61,8 @@ class Product extends Model
             'default_cover_duration_days' => 'integer',
             'settings' => 'array',
             'api_schema' => 'array',
+             'validation_rules' => 'array',
+             'features' => 'array',
         ];
     }
 

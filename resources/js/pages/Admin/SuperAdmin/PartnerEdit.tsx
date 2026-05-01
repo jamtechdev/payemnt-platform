@@ -13,6 +13,10 @@ export default function PartnerEdit({ partner, products = [] }: { partner: any; 
         name: partner.name || '',
         contact_email: partner.contact_email || partner.email || '',
         contact_phone: partner.contact_phone || partner.phone || '',
+        company_name: partner.company_name || '',
+        website_url: partner.website_url || '',
+        webhook_url: partner.webhook_url || '',
+        notes: partner.notes || '',
         status: partner.status || 'active',
         product_ids: Array.isArray(partner.products) ? partner.products.map((p: any) => Number(p.id)) : [],
     });
@@ -86,6 +90,23 @@ export default function PartnerEdit({ partner, products = [] }: { partner: any; 
                         {errors.contact_phone && <p className="mt-1 text-sm text-red-500">{errors.contact_phone}</p>}
                     </div>
 
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.company_name} onChange={(e) => setData('company_name', e.target.value as any)} />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
+                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Webhook URL</label>
+                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.webhook_url} onChange={(e) => setData('webhook_url', e.target.value as any)} />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.notes} onChange={(e) => setData('notes', e.target.value as any)} rows={3} />
+                    </div>
+
                     {/* Status */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
@@ -96,6 +117,7 @@ export default function PartnerEdit({ partner, products = [] }: { partner: any; 
                         >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
                         </select>
                         {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
                     </div>

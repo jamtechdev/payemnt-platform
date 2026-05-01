@@ -65,13 +65,18 @@ class ProductController extends Controller
             'product_code' => strtoupper(Str::slug($validated['name'].'-'.Str::random(4), '_')),
             'slug' => Str::slug($validated['name'].'-'.Str::random(4)),
             'description' => $validated['description'] ?? null,
+            'category' => $validated['category'] ?? null,
             'status' => $validated['status'],
             'cover_duration_options' => $validated['cover_duration_options'] ?? [365],
             'default_cover_duration_days' => (int) ($validated['cover_duration_options'][0] ?? 365),
             'base_price' => $validated['base_price'] ?? null,
             'price' => $validated['price'] ?? null,
-            'guide_price' => $validated['price'] ?? null,
+            'guide_price' => $validated['guide_price'] ?? ($validated['price'] ?? null),
             'guide_price_set_by' => $request->user()?->id,
+            'created_by' => $request->user()?->id,
+            'features' => $validated['features'] ?? null,
+            'validation_rules' => $validated['validation_rules'] ?? null,
+            'terms_and_conditions' => $validated['terms_and_conditions'] ?? null,
             'image' => $request->hasFile('image') ? $request->file('image')?->store('products', 'public') : null,
         ]);
 
@@ -91,7 +96,11 @@ class ProductController extends Controller
                 'sort_order' => $index,
             ]);
         }
-        $product->update(['api_schema' => $this->productSchemaService->generate($product)]);
+        $product->update([
+            'api_schema' => $this->productSchemaService->generate($product),
+            'api_endpoint' => "/api/v1/products/{$product->product_code}",
+            'api_documentation' => route('public.api-docs'),
+        ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
     }
@@ -114,11 +123,15 @@ class ProductController extends Controller
             'name'        => ['sometimes', 'string', 'max:255'],
             'product_name'=> ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:120'],
             'status'      => ['sometimes', 'in:active,inactive'],
             'partner_id'  => ['nullable', 'integer', 'exists:partners,id'],
             'base_price'  => ['nullable', 'numeric', 'min:0'],
             'price'       => ['nullable', 'numeric', 'min:0'],
             'guide_price' => ['nullable', 'numeric', 'min:0'],
+            'features' => ['nullable', 'array'],
+            'validation_rules' => ['nullable', 'array'],
+            'terms_and_conditions' => ['nullable', 'string'],
             'fields' => ['nullable', 'array'],
             'fields.*.name' => ['required_with:fields', 'string', 'max:100'],
             'fields.*.label' => ['required_with:fields', 'string', 'max:255'],
@@ -155,7 +168,11 @@ class ProductController extends Controller
                 ]);
             }
         }
-        $product->update(['api_schema' => $this->productSchemaService->generate($product)]);
+        $product->update([
+            'api_schema' => $this->productSchemaService->generate($product),
+            'api_endpoint' => "/api/v1/products/{$product->product_code}",
+            'api_documentation' => route('public.api-docs'),
+        ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
     }

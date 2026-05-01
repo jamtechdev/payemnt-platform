@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreProductRequest extends FormRequest
@@ -18,12 +17,18 @@ class StoreProductRequest extends FormRequest
             'name'                     => ['required', 'string', 'max:255'],
             'partner_id'               => ['required', 'integer', 'exists:partners,id'],
             'description'              => ['nullable', 'string'],
+            'category'                 => ['nullable', 'string', 'max:120'],
             'base_price'               => ['nullable', 'numeric', 'min:0'],
             'price'                    => ['nullable', 'numeric', 'min:0'],
+            'guide_price'              => ['nullable', 'numeric', 'min:0'],
             'image'                    => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'status'                   => ['required', 'in:active,inactive'],
             'cover_duration_options'   => ['nullable', 'array'],
             'cover_duration_options.*' => ['integer', 'min:1'],
+            'features'                 => ['nullable', 'array'],
+            'features.*'               => ['string', 'max:255'],
+            'validation_rules'         => ['nullable', 'array'],
+            'terms_and_conditions'     => ['nullable', 'string'],
             'fields'                   => ['array'],
             'fields.*.name'            => ['required', 'string', 'max:100'],
             'fields.*.label'           => ['required', 'string', 'max:255'],

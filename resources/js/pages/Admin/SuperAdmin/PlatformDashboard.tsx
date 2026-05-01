@@ -2,10 +2,10 @@ import MetricCard from '@/components/admin/MetricCard';
 import WelcomeBanner from '@/components/admin/WelcomeBanner';
 import AdminLayout from '@/layouts/AdminLayout';
 import { usePage } from '@inertiajs/react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Activity, ArrowRight, CheckCircle2, Archive, Database, DollarSign, ShieldCheck, Users } from 'lucide-react';
 import { PageProps } from '@/Types';
 import { Link } from '@inertiajs/react';
+import Chart from 'react-apexcharts';
 
 interface MonthlyPaymentPoint {
     label: string;
@@ -28,6 +28,11 @@ interface PlatformDashboardProps {
     monthlyPayments: MonthlyPaymentPoint[];
     recentAuditLogs: AuditLogRow[];
     dbHealth: Record<string, string | number | boolean>;
+    apiHealth?: {
+        requests_24h: number;
+        failed_24h: number;
+        avg_latency_ms_24h: number;
+    };
     stats: {
         transactions: number;
         swap_offers: number;
@@ -46,6 +51,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
     const monthlyPayments = Array.isArray(props.monthlyPayments) ? props.monthlyPayments : [];
     const recentAuditLogs = Array.isArray(props.recentAuditLogs) ? props.recentAuditLogs : [];
     const dbHealth = props.dbHealth && typeof props.dbHealth === 'object' ? props.dbHealth : {};
+    const apiHealth = props.apiHealth ?? { requests_24h: 0, failed_24h: 0, avg_latency_ms_24h: 0 };
 
     return (
         <AdminLayout title="Platform overview">
@@ -113,21 +119,19 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                 <span>Payments (this month)</span>
                             </div>
                             <div className="mt-3 h-28">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={monthlyPayments}>
-                                        <XAxis dataKey="label" hide />
-                                        <YAxis hide />
-                                        <Tooltip
-                                            contentStyle={{
-                                                borderRadius: 10,
-                                                border: '1px solid hsl(var(--border))',
-                                                backgroundColor: 'hsl(var(--card))',
-                                                color: 'hsl(var(--foreground))',
-                                            }}
-                                        />
-                                        <Area type="monotone" dataKey="total" stroke="#0e9f84" fill="#0e9f84" fillOpacity={0.2} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                                <Chart
+                                    type="area"
+                                    height={110}
+                                    series={[{ name: 'Estimated Revenue', data: monthlyPayments.map((entry) => Number(entry.total ?? 0)) }]}
+                                    options={{
+                                        chart: { toolbar: { show: false }, sparkline: { enabled: true } },
+                                        stroke: { curve: 'smooth', width: 2 },
+                                        fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
+                                        xaxis: { categories: monthlyPayments.map((entry) => entry.label) },
+                                        colors: ['#0e9f84'],
+                                        tooltip: { x: { show: true } },
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
@@ -182,6 +186,24 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                         <span className="font-mono text-foreground">{String(value)}</span>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                            <div className="mb-3 text-sm font-semibold text-foreground">API health (24h)</div>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-muted-foreground">Requests</span>
+                                    <span className="font-mono text-foreground">{apiHealth.requests_24h}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-muted-foreground">Failed</span>
+                                    <span className="font-mono text-foreground">{apiHealth.failed_24h}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-muted-foreground">Avg latency</span>
+                                    <span className="font-mono text-foreground">{apiHealth.avg_latency_ms_24h} ms</span>
+                                </div>
                             </div>
                         </div>
 

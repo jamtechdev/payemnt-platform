@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Partner API Platform",
-        "description": "Admin API for product management.",
-        "version": "2.0.0"
+        "title": "InsurTech Partner Distribution API",
+        "description": "Partner product distribution, customer/kyc submission, transaction and webhook APIs.",
+        "version": "3.0.0"
     },
     "servers": [
         {
@@ -220,6 +220,391 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/submit": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Submit customer policy for a product",
+                "operationId": "distributionSubmitPolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "transaction_number",
+                                    "customer_name",
+                                    "customer_email",
+                                    "cover_duration"
+                                ],
+                                "properties": {
+                                    "transaction_number": {
+                                        "type": "string",
+                                        "example": "SWAP-TXN-1001"
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+23480000000",
+                                        "nullable": true
+                                    },
+                                    "policy_number": {
+                                        "type": "string",
+                                        "example": "POL-1001",
+                                        "nullable": true
+                                    },
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "example": "12_months"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "pending",
+                                            "cancelled",
+                                            "failed"
+                                        ]
+                                    },
+                                    "kyc": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "customer_data": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submitted"
+                    },
+                    "409": {
+                        "description": "Idempotency conflict"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/kyc": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Submit KYC for an existing transaction",
+                "operationId": "distributionSubmitKyc",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kyc"
+                                ],
+                                "properties": {
+                                    "kyc": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "KYC saved"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}": {
+            "put": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Update existing policy/transaction",
+                "operationId": "distributionUpdatePolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "pending",
+                                            "cancelled",
+                                            "failed"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "policy_number": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Policy updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/cancel": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Cancel policy",
+                "operationId": "distributionCancelPolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Policy cancelled"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/fields": {
+            "get": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Get partner product fields/schema",
+                "operationId": "distributionGetProductFields",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fields returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/verify-token": {
+            "get": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Verify partner bearer token",
+                "operationId": "distributionVerifyToken",
+                "responses": {
+                    "200": {
+                        "description": "Token valid"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/callback": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive webhook callback payload",
+                "operationId": "distributionWebhookCallback",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook accepted"
                     }
                 },
                 "security": [
@@ -554,6 +939,10 @@
     },
     "tags": [
         {
+            "name": "Distribution",
+            "description": "Product code based policy submission APIs"
+        },
+        {
             "name": "Connect",
             "description": "Partner connection & verification APIs"
         },
@@ -568,6 +957,10 @@
         {
             "name": "Transactions",
             "description": "Transaction APIs"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Webhook callback and delivery APIs"
         }
     ]
 }

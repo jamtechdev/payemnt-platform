@@ -31,13 +31,19 @@ class Partner extends Model
         'api_key',
         'name',
         'partner_name',
+         'company_name',
         'slug',
         'contact_email',
         'email',
         'contact_phone',
         'phone',
+         'website_url',
+         'webhook_url',
+         'webhook_secret',
         'status',
         'settings',
+         'notes',
+         'created_by',
         'connected_base_url',
         'connected_at',
         'last_seen_at',
@@ -89,6 +95,16 @@ class Partner extends Model
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
+    }
+
+    public function apiLogs(): HasMany
+    {
+        return $this->hasMany(ApiLog::class);
+    }
+
+    public function webhookLogs(): HasMany
+    {
+        return $this->hasMany(WebhookLog::class);
     }
 
     public function payments(): HasMany

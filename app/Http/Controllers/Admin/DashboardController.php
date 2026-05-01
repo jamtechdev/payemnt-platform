@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\ApiLog;
 use App\Models\Customer;
 use App\Models\FundWallet;
 use App\Models\Occupation;
@@ -112,6 +113,11 @@ class DashboardController extends Controller
             'customers' => Customer::query()->count(),
             'payments' => Payment::query()->count(),
         ];
+        $apiHealth = [
+            'requests_24h' => ApiLog::query()->where('requested_at', '>=', now()->subDay())->count(),
+            'failed_24h' => ApiLog::query()->where('requested_at', '>=', now()->subDay())->where('status_code', '>=', 400)->count(),
+            'avg_latency_ms_24h' => (int) round(ApiLog::query()->where('requested_at', '>=', now()->subDay())->avg('response_time_ms') ?? 0),
+        ];
 
         return Inertia::render('Admin/SuperAdmin/PlatformDashboard', [
             'totalCustomers' => Customer::query()->count(),
@@ -125,6 +131,7 @@ class DashboardController extends Controller
             'notCoveredCustomers' => Customer::query()->where('status', '!=', 'active')->count(),
             'monthlyPayments' => $monthlyPayments,
             'dbHealth'        => $dbHealth,
+            'apiHealth' => $apiHealth,
             'stats' => [
                 'transactions'      => \App\Models\Payment::query()->count(),
                 'swap_offers'       => SwapOffer::query()->count(),

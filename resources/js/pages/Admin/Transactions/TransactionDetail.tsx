@@ -46,6 +46,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
     const customer = (t.customer && typeof t.customer === 'object' ? t.customer : {}) as LooseRecord;
     const partner  = (t.partner  && typeof t.partner  === 'object' ? t.partner  : {}) as LooseRecord;
     const product  = (t.product  && typeof t.product  === 'object' ? t.product  : {}) as LooseRecord;
+    const transactionLogs = Array.isArray(t.transaction_logs) ? (t.transaction_logs as LooseRecord[]) : [];
 
     const [firstName, setFirstName] = useState(String(customer.first_name ?? ''));
     const [lastName, setLastName] = useState(String(customer.last_name ?? ''));
@@ -78,6 +79,11 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
         if (!note.trim()) return;
         router.post(route('admin.transactions.policy.notes.store', t.id), { note });
         setNote('');
+    };
+
+    const retryRequest = () => {
+        if (!confirm('Retry this failed/cancelled request?')) return;
+        router.post(route('admin.transactions.retry', t.id));
     };
 
     return (
@@ -156,6 +162,7 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                         <div className="flex flex-wrap gap-2">
                             <Button type="button" onClick={submitCustomerUpdate}>Edit customer details</Button>
                             <Button type="button" variant="destructive" onClick={suspendPolicy}>Suspend policy</Button>
+                            <Button type="button" variant="outline" onClick={retryRequest}>Retry failed request</Button>
                         </div>
 
                         <div className="space-y-2 border-t border-border pt-4">
@@ -179,6 +186,20 @@ export default function TransactionDetail({ transaction }: { transaction: unknow
                                             <p className="mt-1 text-xs text-muted-foreground">
                                                 {String(item.added_by ?? 'admin')} - {fmtDateTime(item.added_at)}
                                             </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {transactionLogs.length > 0 && (
+                            <div className="space-y-2 border-t border-border pt-4">
+                                <p className="text-sm font-medium text-muted-foreground">API history</p>
+                                <div className="space-y-2">
+                                    {transactionLogs.map((log) => (
+                                        <div key={String(log.id)} className="rounded-md border border-border p-3 text-xs">
+                                            <p className="font-medium">{String(log.event ?? 'event')}</p>
+                                            <p className="text-muted-foreground">{fmtDateTime(log.occurred_at)}</p>
                                         </div>
                                     ))}
                                 </div>

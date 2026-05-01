@@ -27,6 +27,10 @@ class StorePartnerRequest extends FormRequest
             'contact_email' => ['required', 'email', 'max:255', 'unique:partners,contact_email'],
             'contact_phone' => ['required', 'string', 'max:40'],
             'partner_code'  => ['nullable', 'string', 'max:40', 'unique:partners,partner_code'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'website_url' => ['nullable', 'url', 'max:255'],
+            'webhook_url' => ['nullable', 'url', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:3000'],
             'product_ids' => ['nullable', 'array'],
             'product_ids.*' => ['integer', 'exists:products,id'],
         ];

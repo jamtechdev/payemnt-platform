@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdatePartnerRequest;
 use App\Models\AuditLog;
 use App\Models\Partner;
 use App\Models\Product;
+use App\Support\SortSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -17,11 +18,28 @@ use Illuminate\Support\Facades\Hash;
 
 class PartnerController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $sortConfig = SortSanitizer::resolve(
+            $request->string('sort', 'created_at')->toString(),
+            $request->string('direction', 'desc')->toString(),
+            ['created_at', 'name', 'partner_code', 'status'],
+            'created_at'
+        );
+
         $partners = Partner::query()
             ->withCount(['customers', 'products'])
             ->with('tokens')
+            ->when($request->filled('search'), function ($query) use ($request): void {
+                $search = $request->string('search')->toString();
+                $query->where(function ($scoped) use ($search): void {
+                    $scoped->where('name', 'like', "%{$search}%")
+                        ->orWhere('partner_code', 'like', "%{$search}%")
+                        ->orWhere('contact_email', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->orderBy($sortConfig['column'], $sortConfig['direction'])
             ->paginate(15);
 
         $partners->getCollection()->transform(function ($partner) {
@@ -44,6 +62,7 @@ class PartnerController extends Controller
         return Inertia::render('Admin/SuperAdmin/PartnerList', [
             'partners'        => $partners,
             'deletedPartners' => $deletedPartners,
+            'filters' => $request->only(['search', 'status', 'sort', 'direction']),
         ]);
     }
 
@@ -96,6 +115,12 @@ class PartnerController extends Controller
             'partner_code'  => $code,
             'contact_email' => $request->contact_email,
             'contact_phone' => $request->contact_phone,
+            'company_name' => $request->input('company_name'),
+            'website_url' => $request->input('website_url'),
+            'webhook_url' => $request->input('webhook_url'),
+            'notes' => $request->input('notes'),
+            'created_by' => $request->user()?->id,
+            'webhook_secret' => Str::random(48),
             'status'        => 'active',
         ]);
 
@@ -202,6 +227,10 @@ class PartnerController extends Controller
             'name'          => $request->name ?? $partner->name,
             'contact_email' => $request->contact_email ?? $partner->contact_email,
             'contact_phone' => $request->contact_phone ?? $partner->contact_phone,
+            'company_name' => $request->input('company_name', $partner->company_name),
+            'website_url' => $request->input('website_url', $partner->website_url),
+            'webhook_url' => $request->input('webhook_url', $partner->webhook_url),
+            'notes' => $request->input('notes', $partner->notes),
             'status'        => $request->status ?? $partner->status,
         ]);
 

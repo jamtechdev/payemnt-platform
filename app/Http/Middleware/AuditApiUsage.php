@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Models\ApiLog;
 use App\Models\AuditLog;
+use App\Support\ApiPayloadSanitizer;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +22,8 @@ class AuditApiUsage
         if ($request->is('api/*')) {
             $actor = $request->user();
             $partner = $request->attributes->get('partner');
+            $responseBody = json_decode((string) $response->getContent(), true);
+            $requestBody = ApiPayloadSanitizer::sanitize($request->all());
 
             AuditLog::query()->create([
                 'actor_user_id' => $actor?->id,
@@ -38,6 +42,22 @@ class AuditApiUsage
                     'outcome' => $response->getStatusCode() >= 400 ? 'failure' : 'success',
                 ],
                 'occurred_at' => now(),
+            ]);
+
+            ApiLog::query()->create([
+                'partner_id' => $partner?->id,
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'endpoint_group' => str($request->path())->before('/')->value(),
+                'request_body' => $requestBody,
+                'response_body' => is_array($responseBody) ? $responseBody : null,
+                'status_code' => $response->getStatusCode(),
+                'response_time_ms' => $durationMs,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'source' => 'partner_api',
+                'correlation_id' => (string) ($request->headers->get('X-Correlation-Id') ?? $request->headers->get('X-Request-Id')),
+                'requested_at' => now(),
             ]);
         }
 

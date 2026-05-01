@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Payment;
+use App\Models\TransactionLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,7 +38,12 @@ class TransactionController extends Controller
 
     public function show(Payment $transaction): Response
     {
-        $transaction->load(['customer:id,first_name,last_name,email,phone,status,customer_data', 'partner:id,name', 'product:id,name,product_code']);
+        $transaction->load([
+            'customer:id,first_name,last_name,email,phone,status,customer_data',
+            'partner:id,name',
+            'product:id,name,product_code',
+            'transactionLogs' => fn ($query) => $query->latest()->limit(30),
+        ]);
 
         return Inertia::render('Admin/Transactions/TransactionDetail', [
             'transaction' => $transaction,
@@ -80,5 +86,28 @@ class TransactionController extends Controller
         AuditLog::record('transaction_policy_note_added', $transaction, [], ['note' => $validated['note']], $request->user());
 
         return back()->with('success', 'Policy note added.');
+    }
+
+    public function retryFailedRequest(Payment $transaction): RedirectResponse
+    {
+        if (! in_array($transaction->status, [Payment::STATUS_FAILED, Payment::STATUS_CANCELLED], true)) {
+            return back()->with('error', 'Only failed or cancelled policies can be retried.');
+        }
+
+        $oldStatus = $transaction->status;
+        $transaction->update(['status' => Payment::STATUS_PENDING]);
+        TransactionLog::query()->create([
+            'payment_id' => $transaction->id,
+            'partner_id' => $transaction->partner_id,
+            'event' => 'retry_requested_by_admin',
+            'request_payload' => [],
+            'response_payload' => ['status' => Payment::STATUS_PENDING],
+            'status_code' => 202,
+            'source' => 'admin',
+            'occurred_at' => now(),
+        ]);
+        AuditLog::record('transaction_retry_requested', $transaction, ['status' => $oldStatus], ['status' => Payment::STATUS_PENDING], request()->user());
+
+        return back()->with('success', 'Retry queued successfully.');
     }
 }

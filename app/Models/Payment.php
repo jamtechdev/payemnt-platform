@@ -8,6 +8,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Payment extends Model
@@ -15,6 +16,8 @@ class Payment extends Model
     public const STATUS_ACTIVE = 'active';
     public const STATUS_SUSPENDED = 'suspended';
     public const STATUS_PENDING = 'pending';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_FAILED = 'failed';
 
     protected $fillable = [
         'uuid',
@@ -24,6 +27,8 @@ class Payment extends Model
         'transaction_number',
         'customer_name',
         'customer_email',
+        'phone',
+        'policy_number',
         'product_type',
         'cover_duration',
         'cover_start_date',
@@ -35,6 +40,9 @@ class Payment extends Model
         'status',
         'payment_message',
         'notes',
+        'kyc_data',
+        'submitted_payload',
+        'api_response',
         'stripe_payment_intent',
         'stripe_payment_status',
         'metadata',
@@ -48,6 +56,9 @@ class Payment extends Model
             'cover_start_date' => 'date',
             'cover_end_date'   => 'date',
             'metadata'         => 'array',
+            'kyc_data' => 'array',
+            'submitted_payload' => 'array',
+            'api_response' => 'array',
         ];
     }
 
@@ -81,6 +92,16 @@ class Payment extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function transactionLogs(): HasMany
+    {
+        return $this->hasMany(TransactionLog::class, 'payment_id');
+    }
+
+    public function webhookLogs(): HasMany
+    {
+        return $this->hasMany(WebhookLog::class, 'payment_id');
     }
 
     public function scopeSuccessful(Builder $query): Builder

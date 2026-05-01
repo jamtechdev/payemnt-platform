@@ -14,6 +14,10 @@ export default function PartnerCreate({ products = [] }: { products?: ProductOpt
         contact_email: '',
         contact_phone: '',
         partner_code: '',
+        company_name: '',
+        website_url: '',
+        webhook_url: '',
+        notes: '',
         product_ids: [] as number[],
     });
 
@@ -88,6 +92,26 @@ export default function PartnerCreate({ products = [] }: { products?: ProductOpt
                             placeholder="e.g. +234 800 000 0000"
                         />
                         {errors.contact_phone && <p className="mt-1 text-sm text-red-500">{errors.contact_phone}</p>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.company_name} onChange={(e) => setData('company_name', e.target.value)} />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
+                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.website_url} onChange={(e) => setData('website_url', e.target.value)} placeholder="https://partner.com" />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Webhook URL</label>
+                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.webhook_url} onChange={(e) => setData('webhook_url', e.target.value)} placeholder="https://partner.com/hooks/insurtech" />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.notes} onChange={(e) => setData('notes', e.target.value)} rows={3} />
                     </div>
 
                     <div>

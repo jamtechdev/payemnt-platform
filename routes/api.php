@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\PartnerApiGuideController;
+use App\Http\Controllers\Api\V1\ProductDistributionController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\VerifyController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,15 @@ Route::prefix('v1')
         Route::delete('/customers', [CustomerController::class, 'destroy'])->name('partner.customers.destroy');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('partner.transactions.store');
         Route::delete('/transactions', [TransactionController::class, 'destroy'])->name('partner.transactions.destroy');
+        Route::get('/products/{product_code}/fields', [ProductDistributionController::class, 'getProductFields'])->name('partner.distribution.fields');
+        Route::post('/products/{product_code}/submit', [ProductDistributionController::class, 'submit'])->name('partner.distribution.submit');
+        Route::post('/products/{product_code}/transactions/{transaction_number}/kyc', [ProductDistributionController::class, 'submitKyc'])->name('partner.distribution.kyc');
+        Route::put('/products/{product_code}/transactions/{transaction_number}', [ProductDistributionController::class, 'updatePolicy'])->name('partner.distribution.update');
+        Route::post('/products/{product_code}/transactions/{transaction_number}/cancel', [ProductDistributionController::class, 'cancelPolicy'])->name('partner.distribution.cancel');
+        Route::post('/products/{product_code}/transactions/{transaction_number}/callback', [ProductDistributionController::class, 'webhookCallback'])
+            ->middleware('verify.webhook.signature')
+            ->name('partner.distribution.callback');
+        Route::get('/verify-token', [ProductDistributionController::class, 'verifyToken'])->name('partner.distribution.verify-token');
     });
 
 Route::prefix('v1/admin')

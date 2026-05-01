@@ -59,6 +59,7 @@ Route::prefix('admin')
             Route::patch('/transactions/{transaction}/customer', [TransactionController::class, 'updateCustomerDetails'])->name('transactions.customer.update');
             Route::post('/transactions/{transaction}/suspend-policy', [TransactionController::class, 'suspendPolicy'])->name('transactions.policy.suspend');
             Route::post('/transactions/{transaction}/notes', [TransactionController::class, 'addPolicyNote'])->name('transactions.policy.notes.store');
+            Route::post('/transactions/{transaction}/retry', [TransactionController::class, 'retryFailedRequest'])->name('transactions.retry');
             Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
             Route::patch('/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
