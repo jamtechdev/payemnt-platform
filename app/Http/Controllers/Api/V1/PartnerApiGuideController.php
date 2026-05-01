@@ -31,8 +31,8 @@ class PartnerApiGuideController extends BaseApiController
             'integration_flow' => [
                 'Admin creates product',
                 'Admin assigns product access to partner',
-                'Partner fetches product list and schema',
-                'Partner sends customer sales to transactions endpoint',
+                'Partner fetches product list',
+                'Partner submits customer sale and KYC through product distribution endpoints',
                 'Admin monitors transactions and analytics',
             ],
             'endpoints' => [
@@ -40,34 +40,31 @@ class PartnerApiGuideController extends BaseApiController
                     'method' => 'GET',
                     'endpoint' => '/api/v1/partner/products',
                 ],
-                'product_schema' => [
+                'verify_token' => [
                     'method' => 'GET',
-                    'endpoint' => '/api/v1/partner/products/{uuid}/schema',
+                    'endpoint' => '/api/v1/verify-token',
                 ],
-                'create_or_upsert_transaction' => [
+                'submit_policy' => [
                     'method' => 'POST',
-                    'endpoint' => '/api/v1/transactions',
-                    'idempotency_header' => 'Idempotency-Key: {transaction_number}',
+                    'endpoint' => '/api/v1/products/{product_code}/submit',
+                    'idempotency_header' => 'Idempotency-Key: {unique_key}',
                     'payload' => [
                         'transaction_number' => 'TXN-2026-0001',
                         'customer_name' => 'John Doe',
                         'customer_email' => 'john@example.com',
-                        'product_code' => 'NIGERIA_BENEFICIARY_COMMUNITY',
                         'cover_duration' => '12_months',
                         'status' => 'active',
-                        'notes' => 'Captured from partner checkout',
-                        'date_added' => '2026-04-30 12:00:00',
+                        'kyc' => [
+                            'id_type' => 'national_id',
+                            'id_number' => 'ABC12345',
+                        ],
                     ],
                     'success_response' => [
                         'status' => 'success',
                         'data' => [
                             'transaction_number' => 'TXN-2026-0001',
-                            'customer_name' => 'John Doe',
-                            'customer_email' => 'john@example.com',
-                            'cover_duration' => '12_months',
                             'status' => 'active',
-                            'notes' => 'Captured from partner checkout',
-                            'created_at' => '2026-04-30T12:00:00+00:00',
+                            'policy_number' => 'POL-1001',
                         ],
                     ],
                 ],

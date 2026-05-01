@@ -55,76 +55,55 @@ class PlatformSeeder extends Seeder
         $partner = Partner::query()->updateOrCreate(
             ['partner_code' => 'SWAP_CIRCLE'],
             [
-                'name' => 'Swap Circle',
+                'name' => 'Swap',
+                'partner_name' => 'Swap',
                 'slug' => Str::slug('Swap Circle'),
-                'contact_email' => 'api@swapcircle.local',
+                'contact_email' => 'integrations@swap.example',
+                'contact_phone' => '+2348000000000',
+                'company_name' => 'Swap',
+                'website_url' => 'https://swap.example',
                 'status' => 'active',
             ]
         );
 
-        $requiredProductCodes = ['NIGERIA_BENEFICIARY_COMMUNITY', 'GHANA_BENEFICIARY_COMMUNITY'];
         Product::withTrashed()
-            ->whereNotIn('product_code', $requiredProductCodes)
+            ->where('product_code', '!=', 'INSURETECH_SWAP_PROTECT')
             ->get()
             ->each(function (Product $product): void {
                 $product->forceDelete();
             });
 
-        $nigeriaProduct = Product::withTrashed()->updateOrCreate(
-            ['product_code' => 'NIGERIA_BENEFICIARY_COMMUNITY'],
+        $product = Product::withTrashed()->updateOrCreate(
+            ['product_code' => 'INSURETECH_SWAP_PROTECT'],
             [
-                'name' => 'Nigerian Beneficiary Community Product',
-                'product_name' => 'Nigerian Beneficiary Community Product',
-                'slug' => Str::slug('Nigerian Beneficiary Community Product'),
-                'country' => 'NG',
+                'name' => 'InsureTech Swap Protect',
+                'product_name' => 'InsureTech Swap Protect',
+                'slug' => Str::slug('InsureTech Swap Protect'),
+                'description' => 'Single partner-integrated product for Swap acquisition and policy submission.',
                 'cover_duration_mode' => 'custom',
                 'cover_duration_type' => 'custom',
                 'default_cover_duration_days' => 30,
-                'cover_duration_options' => [30, 365],
+                'cover_duration_options' => [30, 90, 365],
                 'status' => 'active',
                 'guide_price' => 100.00,
             ]
         );
-        if ($nigeriaProduct->trashed()) {
-            $nigeriaProduct->restore();
+        if ($product->trashed()) {
+            $product->restore();
         }
 
-        $ghanaProduct = Product::withTrashed()->updateOrCreate(
-            ['product_code' => 'GHANA_BENEFICIARY_COMMUNITY'],
-            [
-                'name' => 'Ghana Beneficiary Community Product',
-                'product_name' => 'Ghana Beneficiary Community Product',
-                'slug' => Str::slug('Ghana Beneficiary Community Product'),
-                'country' => 'GH',
-                'cover_duration_mode' => 'custom',
-                'cover_duration_type' => 'custom',
-                'default_cover_duration_days' => 30,
-                'cover_duration_options' => [30, 365],
-                'status' => 'active',
-                'guide_price' => 25.00,
-            ]
-        );
-        if ($ghanaProduct->trashed()) {
-            $ghanaProduct->restore();
-        }
-
-        foreach ([$nigeriaProduct, $ghanaProduct] as $product) {
-            $product->fields()->delete();
-            $product->fields()->createMany([
-                ['field_key' => 'beneficiary_first_name', 'label' => 'Beneficiary First Name', 'field_type' => 'text', 'is_required' => true, 'sort_order' => 1],
-                ['field_key' => 'beneficiary_surname', 'label' => 'Beneficiary Surname', 'field_type' => 'text', 'is_required' => true, 'sort_order' => 2],
-                ['field_key' => 'beneficiary_date_of_birth', 'label' => 'Beneficiary Date of Birth', 'field_type' => 'date', 'is_required' => true, 'sort_order' => 3],
-                ['field_key' => 'beneficiary_age', 'label' => 'Beneficiary Age (Auto)', 'field_type' => 'number', 'is_required' => false, 'sort_order' => 4],
-                ['field_key' => 'beneficiary_gender', 'label' => 'Beneficiary Gender', 'field_type' => 'dropdown', 'is_required' => true, 'options' => ['male', 'female', 'other'], 'sort_order' => 5],
-                ['field_key' => 'beneficiary_address', 'label' => 'Beneficiary Address', 'field_type' => 'text', 'is_required' => true, 'sort_order' => 6],
-                ['field_key' => 'cover_start_date', 'label' => 'Cover Start Date', 'field_type' => 'date', 'is_required' => true, 'sort_order' => 7],
-                ['field_key' => 'cover_duration', 'label' => 'Cover Duration', 'field_type' => 'dropdown', 'is_required' => true, 'options' => ['monthly', 'annual'], 'sort_order' => 8],
-            ]);
-        }
+        $product->fields()->delete();
+        $product->fields()->createMany([
+            ['field_key' => 'customer_name', 'label' => 'Customer Name', 'field_type' => 'text', 'is_required' => true, 'sort_order' => 1],
+            ['field_key' => 'customer_email', 'label' => 'Customer Email', 'field_type' => 'email', 'is_required' => true, 'sort_order' => 2],
+            ['field_key' => 'phone', 'label' => 'Phone Number', 'field_type' => 'phone', 'is_required' => false, 'sort_order' => 3],
+            ['field_key' => 'cover_duration', 'label' => 'Cover Duration', 'field_type' => 'dropdown', 'is_required' => true, 'options' => ['30_days', '90_days', '365_days'], 'sort_order' => 4],
+            ['field_key' => 'id_type', 'label' => 'KYC ID Type', 'field_type' => 'dropdown', 'is_required' => false, 'options' => ['national_id', 'passport', 'drivers_license'], 'sort_order' => 5],
+            ['field_key' => 'id_number', 'label' => 'KYC ID Number', 'field_type' => 'text', 'is_required' => false, 'sort_order' => 6],
+        ]);
 
         $partner->products()->sync([
-            $nigeriaProduct->id => ['is_enabled' => true, 'partner_price' => 100.00, 'partner_currency' => 'NGN', 'cover_duration_days_override' => 30],
-            $ghanaProduct->id => ['is_enabled' => true, 'partner_price' => 25.00, 'partner_currency' => 'GHS', 'cover_duration_days_override' => 30],
+            $product->id => ['is_enabled' => true, 'partner_price' => 100.00, 'partner_currency' => 'USD', 'cover_duration_days_override' => 30],
         ]);
     }
 

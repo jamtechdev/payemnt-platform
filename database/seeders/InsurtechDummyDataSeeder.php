@@ -29,7 +29,7 @@ class InsurtechDummyDataSeeder extends Seeder
             });
 
         Product::query()
-            ->whereNotIn('product_code', ['NIGERIA_BENEFICIARY_COMMUNITY'])
+            ->whereNotIn('product_code', ['INSURETECH_SWAP_PROTECT'])
             ->get()
             ->each(function (Product $product): void {
                 $product->partners()->detach();
@@ -37,27 +37,27 @@ class InsurtechDummyDataSeeder extends Seeder
             });
 
         $partner = Partner::query()->updateOrCreate(
-            ['partner_code' => 'SWAP_DUMMY'],
+            ['partner_code' => 'SWAP_CIRCLE'],
             [
                 'uuid' => (string) Str::uuid(),
-                'name' => 'Swap Dummy Partner',
-                'partner_name' => 'Swap Dummy Partner',
-                'slug' => Str::slug('Swap Dummy Partner'),
-                'contact_email' => 'swap.dummy@example.com',
-                'email' => 'swap.dummy@example.com',
-                'contact_phone' => '+2348001000001',
-                'phone' => '+2348001000001',
+                'name' => 'Swap',
+                'partner_name' => 'Swap',
+                'slug' => Str::slug('Swap'),
+                'contact_email' => 'integrations@swap.example',
+                'email' => 'integrations@swap.example',
+                'contact_phone' => '+2348000000000',
+                'phone' => '+2348000000000',
                 'status' => 'active',
             ]
         );
 
         $product = Product::query()->updateOrCreate(
-            ['product_code' => 'NIGERIA_BENEFICIARY_COMMUNITY'],
+            ['product_code' => 'INSURETECH_SWAP_PROTECT'],
             [
                 'uuid' => (string) Str::uuid(),
-                'name' => 'Nigerian Beneficiary Community Product',
-                'product_name' => 'Nigerian Beneficiary Community Product',
-                'slug' => Str::slug('Nigerian Beneficiary Community Product'),
+                'name' => 'InsureTech Swap Protect',
+                'product_name' => 'InsureTech Swap Protect',
+                'slug' => Str::slug('InsureTech Swap Protect'),
                 'description' => 'Single dummy product for partner integration testing.',
                 'status' => 'active',
                 'guide_price' => 100.00,
