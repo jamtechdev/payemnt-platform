@@ -13,9 +13,16 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+/** Normalize pathname so trailing slashes (or proxies) do not bypass public-route checks. */
+function normalizedPathname(): string {
+    const p = window.location.pathname.replace(/\/+$/, '');
+
+    return p === '' ? '/' : p;
+}
+
 /** Paths where guests are expected — skip /ping (auth-only) so 401 does not force redirect to login. */
 function shouldSkipSessionPing(): boolean {
-    const path = window.location.pathname;
+    const path = normalizedPathname();
     if (path === '/docs/partner-api') return true;
     if (path === '/login' || path === '/forgot-password') return true;
     if (path.startsWith('/reset-password')) return true;
