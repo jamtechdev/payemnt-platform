@@ -25,7 +25,7 @@ class ProductController extends Controller
 
         return Inertia::render('Admin/SuperAdmin/ProductList', [
             'products' => Product::query()
-                ->with(['partners:id,name', 'partnerDirect:id,name'])
+                ->with(['partners:id,name'])
                 ->latest()
                 ->paginate(15)
                 ->through(function (Product $product) use ($viewer): array {
@@ -61,7 +61,7 @@ class ProductController extends Controller
         $product = Product::create([
             'name' => $validated['name'],
             'product_name' => $validated['name'],
-            'partner_id' => $validated['partner_id'] ?? null,
+            'partner_id' => isset($validated['partner_ids'][0]) ? (int) $validated['partner_ids'][0] : null,
             'product_code' => strtoupper(Str::slug($validated['name'].'-'.Str::random(4), '_')),
             'slug' => Str::slug($validated['name'].'-'.Str::random(4)),
             'description' => $validated['description'] ?? null,
@@ -80,10 +80,12 @@ class ProductController extends Controller
             'image' => $request->hasFile('image') ? $request->file('image')?->store('products', 'public') : null,
         ]);
 
-        if (! empty($validated['partner_id'])) {
-            $product->partners()->sync([
-                (int) $validated['partner_id'] => ['is_enabled' => true],
-            ]);
+        if (! empty($validated['partner_ids'])) {
+            $product->partners()->sync(
+                collect($validated['partner_ids'])
+                    ->mapWithKeys(fn ($id) => [(int) $id => ['is_enabled' => true]])
+                    ->all()
+            );
         }
 
         foreach ((array) ($validated['fields'] ?? []) as $index => $field) {
@@ -109,11 +111,6 @@ class ProductController extends Controller
     {
         return Inertia::render('Admin/SuperAdmin/ProductForm', [
             'product' => $product->load('fields'),
-            'partners' => Partner::query()
-                ->select(['id', 'name'])
-                ->where('status', 'active')
-                ->orderBy('name')
-                ->get(),
         ]);
     }
 
@@ -125,7 +122,8 @@ class ProductController extends Controller
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:120'],
             'status'      => ['sometimes', 'in:active,inactive'],
-            'partner_id'  => ['nullable', 'integer', 'exists:partners,id'],
+            'partner_ids'  => ['nullable', 'array'],
+            'partner_ids.*'=> ['integer', 'exists:partners,id'],
             'base_price'  => ['nullable', 'numeric', 'min:0'],
             'price'       => ['nullable', 'numeric', 'min:0'],
             'guide_price' => ['nullable', 'numeric', 'min:0'],
@@ -141,16 +139,18 @@ class ProductController extends Controller
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $updateData = collect($validated)->except(['fields'])->all();
+        $updateData = collect($validated)->except(['fields', 'image', 'partner_ids'])->all();
         if ($request->hasFile('image')) {
             $updateData['image'] = $request->file('image')->store('products', 'public');
         }
         $product->update($updateData);
 
-        if ($request->filled('partner_id')) {
-            $product->partners()->sync([
-                (int) $request->integer('partner_id') => ['is_enabled' => true],
-            ]);
+        if (! empty($validated['partner_ids'])) {
+            $product->partners()->sync(
+                collect($validated['partner_ids'])
+                    ->mapWithKeys(fn ($id) => [(int) $id => ['is_enabled' => true]])
+                    ->all()
+            );
         }
 
         if ($request->filled('price')) {
@@ -180,6 +180,32 @@ class ProductController extends Controller
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');
+    }
+
+    public function assignPartners(Product $product): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/ProductAssignPartners', [
+            'product'          => $product->only(['id', 'name']),
+            'allPartners'      => Partner::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
+            'assignedPartners' => $product->partners()->select('partners.id', 'partners.name')->get(),
+        ]);
+    }
+
+    public function syncPartners(Request $request, Product $product): RedirectResponse
+    {
+        $request->validate([
+            'partner_ids'   => ['nullable', 'array'],
+            'partner_ids.*' => ['integer', 'exists:partners,id'],
+        ]);
+
+        $product->partners()->sync(
+            collect($request->input('partner_ids', []))
+                ->mapWithKeys(fn ($id) => [(int) $id => ['is_enabled' => true]])
+                ->all()
+        );
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Partners updated successfully.');
     }
 
     public function toggleStatus(Product $product): RedirectResponse

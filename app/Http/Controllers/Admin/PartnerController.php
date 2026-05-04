@@ -7,7 +7,6 @@ use App\Http\Requests\Admin\StorePartnerRequest;
 use App\Http\Requests\Admin\UpdatePartnerRequest;
 use App\Models\AuditLog;
 use App\Models\Partner;
-use App\Models\Product;
 use App\Support\SortSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -138,12 +137,7 @@ class PartnerController extends Controller
 
     public function show(Partner $partner): Response
     {
-        $viewer = request()->user();
-        $canViewPartnerPricing = (bool) $viewer?->hasAnyRole(['super_admin', 'reconciliation_admin', 'partner']);
         $partner->load([
-            'products' => function ($query) {
-                $query->withPivot(['is_enabled', 'partner_price', 'partner_currency', 'cover_duration_days_override', 'rule_overrides']);
-            },
             'customers' => function ($query) {
                 $query->with('product:id,name')->latest()->limit(5);
             },
@@ -151,18 +145,8 @@ class PartnerController extends Controller
                 $query->latest()->limit(5);
             }
         ]);
-        if (! $canViewPartnerPricing) {
-            $partner->products->each(function ($product): void {
-                if ($product->pivot) {
-                    $product->pivot->partner_price = null;
-                    $product->pivot->partner_currency = null;
-                }
-            });
-        }
 
-        // Get API key status
         $apiKeyStatus = $partner->hasActiveApiKey() ? 'active' : 'inactive';
-        
         $apiUsage = AuditLog::query()
             ->where('action', 'api_usage')
             ->where('partner_id', $partner->id);
@@ -189,8 +173,7 @@ class PartnerController extends Controller
 
         return Inertia::render('Admin/SuperAdmin/PartnerDetail', [
             'partner' => $partner,
-            'canViewPartnerPricing' => $canViewPartnerPricing,
-            'stats' => $stats
+            'stats'   => $stats,
         ]);
     }
 
@@ -198,7 +181,6 @@ class PartnerController extends Controller
     {
         return Inertia::render('Admin/SuperAdmin/PartnerEdit', [
             'partner' => $partner,
-            'products' => Product::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
 
@@ -224,17 +206,6 @@ class PartnerController extends Controller
             'notes' => $request->input('notes', $partner->notes),
             'status'        => $request->status ?? $partner->status,
         ]);
-
-        if ($request->has('product_ids')) {
-            $partner->products()->sync(
-                collect((array) $request->input('product_ids', []))
-                    ->map(fn ($id) => (int) $id)
-                    ->filter()
-                    ->unique()
-                    ->mapWithKeys(fn ($id) => [$id => ['is_enabled' => true]])
-                    ->all()
-            );
-        }
 
         return redirect()
             ->route('admin.partners.index')
@@ -308,12 +279,11 @@ class PartnerController extends Controller
     {
         abort_unless(request()->user()?->hasAnyRole(['admin', 'super_admin']), 403);
 
-        $productId = $request->input('product_id');
+        $productId = (int) $request->input('product_id');
         $isEnabled = $request->boolean('is_enabled');
 
-        $partner->products()->updateExistingPivot($productId, [
-            'is_enabled' => $isEnabled,
-            'updated_at' => now(),
+        $partner->products()->syncWithoutDetaching([
+            $productId => ['is_enabled' => $isEnabled],
         ]);
 
         return back()->with('success', 'Product access updated successfully.');

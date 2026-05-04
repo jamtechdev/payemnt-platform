@@ -15,7 +15,8 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name'                     => ['required', 'string', 'max:255'],
-            'partner_id'               => ['required', 'integer', 'exists:partners,id'],
+            'partner_ids'              => ['nullable', 'array'],
+            'partner_ids.*'            => ['integer', 'exists:partners,id'],
             'description'              => ['nullable', 'string'],
             'category'                 => ['nullable', 'string', 'max:120'],
             'base_price'               => ['nullable', 'numeric', 'min:0'],

@@ -6,7 +6,7 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
-import { Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Pencil, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import ActionBtn from '@/components/shared/ActionBtn';
@@ -23,7 +23,8 @@ function asArray(input: unknown): LooseRecord[] {
 
 export default function ProductList({ products }: { products: unknown }) {
     const rows = asArray(products);
-    const { auth } = usePage<PageProps>().props;
+    const { auth, flash } = usePage<PageProps>().props;
+    const flashAny = flash as any;
     const isSuperAdmin = auth.role === 'super_admin';
     const columnHelper = createColumnHelper<LooseRecord>();
     const columns: ColumnDef<LooseRecord, any>[] = [
@@ -40,16 +41,33 @@ export default function ProductList({ products }: { products: unknown }) {
         }),
         columnHelper.display({
             id: 'partner',
-            header: 'Partner',
+            header: 'Partners',
             cell: (info) => {
-                const row = info.row.original;
-                // Direct partner_id se (API created products)
-                const direct = row.partner_direct as LooseRecord | null;
-                if (direct?.name) return <span className="text-xs">{String(direct.name)}</span>;
-                // Pivot relation se (admin created products)
-                const pivotPartners = Array.isArray(row.partners) ? (row.partners as LooseRecord[]) : [];
-                if (pivotPartners.length > 0) return <span className="text-xs">{pivotPartners.map((p) => String(p.name ?? '-')).join(', ')}</span>;
-                return <span className="text-xs text-muted-foreground">-</span>;
+                const pivotPartners = Array.isArray(info.row.original.partners) ? (info.row.original.partners as LooseRecord[]) : [];
+                if (pivotPartners.length === 0) return <span className="text-xs text-slate-400">—</span>;
+                const visible = pivotPartners.slice(0, 2);
+                const rest = pivotPartners.slice(2);
+                return (
+                    <div className="flex flex-wrap items-center gap-1">
+                        {visible.map((p) => (
+                            <span
+                                key={String(p.id)}
+                                className="inline-block max-w-[120px] truncate rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200"
+                                title={String(p.name ?? '')}
+                            >
+                                {String(p.name ?? '-')}
+                            </span>
+                        ))}
+                        {rest.length > 0 && (
+                            <span
+                                className="inline-block cursor-default rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200"
+                                title={rest.map((p) => String(p.name)).join(', ')}
+                            >
+                                +{rest.length} more
+                            </span>
+                        )}
+                    </div>
+                );
             },
         }),
         columnHelper.accessor((row) => {
@@ -75,6 +93,9 @@ export default function ProductList({ products }: { products: unknown }) {
                         <ActionBtn tone="primary" href={route('admin.products.edit', id)} title="Edit">
                             <Pencil className="h-3.5 w-3.5" /> Edit
                         </ActionBtn>
+                        <ActionBtn tone="muted" href={route('admin.products.assign-partners', id)} title="Assign Partners">
+                            <Users className="h-3.5 w-3.5" /> Partners
+                        </ActionBtn>
                         <ActionBtn
                             tone={row.status === 'active' ? 'success' : 'muted'}
                             title={row.status === 'active' ? 'Deactivate' : 'Activate'}
@@ -98,6 +119,11 @@ export default function ProductList({ products }: { products: unknown }) {
 
     return (
         <AdminLayout title="Products">
+            {flashAny?.success && (
+                <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                    ✅ {flashAny.success}
+                </div>
+            )}
             {isSuperAdmin && (
                 <div className="mb-4 flex justify-end">
                     <Link href={route('admin.products.create')}>

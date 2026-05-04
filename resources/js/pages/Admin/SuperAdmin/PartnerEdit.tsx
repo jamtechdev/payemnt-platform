@@ -3,12 +3,7 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
 
-interface ProductOption {
-    id: number;
-    name: string;
-}
-
-export default function PartnerEdit({ partner, products = [] }: { partner: any; products?: ProductOption[] }) {
+export default function PartnerEdit({ partner }: { partner: any }) {
     const { data, setData, patch, processing, errors } = useForm({
         name: partner.name || '',
         contact_email: partner.contact_email || partner.email || '',
@@ -17,7 +12,6 @@ export default function PartnerEdit({ partner, products = [] }: { partner: any; 
         website_url: partner.website_url || '',
         notes: partner.notes || '',
         status: partner.status || 'active',
-        product_ids: Array.isArray(partner.products) ? partner.products.map((p: any) => Number(p.id)) : [],
     });
 
     const submit = (e: React.FormEvent) => {
@@ -115,25 +109,6 @@ export default function PartnerEdit({ partner, products = [] }: { partner: any; 
                             <option value="suspended">Suspended</option>
                         </select>
                         {errors.status && <p className="mt-1 text-sm text-red-500">{errors.status}</p>}
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Products partner can sell</label>
-                        <select
-                            multiple
-                            value={data.product_ids.map(String)}
-                            onChange={(e) => {
-                                const values = Array.from(e.target.selectedOptions).map((option) => Number(option.value));
-                                setData('product_ids', values as any);
-                            }}
-                            className="min-h-32 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </select>
                     </div>
 
                     <div className="flex justify-end gap-3">

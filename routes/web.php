@@ -71,6 +71,8 @@ Route::prefix('admin')
             Route::match(['PATCH', 'POST'], '/products/{product}', [ProductController::class, 'update'])->name('products.update');
             Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
             Route::post('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
+            Route::get('/products/{product}/assign-partners', [ProductController::class, 'assignPartners'])->name('products.assign-partners');
+            Route::post('/products/{product}/sync-partners', [ProductController::class, 'syncPartners'])->name('products.sync-partners');
 
             Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
             Route::get('/partners/create', [PartnerController::class, 'create'])->name('partners.create');

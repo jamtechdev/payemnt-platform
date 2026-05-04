@@ -23,19 +23,6 @@ function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
 
-function formatPartnerPrice(amount: unknown, currency: unknown): string {
-    const value = Number(amount);
-    if (!Number.isFinite(value)) return '—';
-    const code = typeof currency === 'string' && currency.trim() !== '' ? currency.toUpperCase() : 'USD';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(value);
-}
-
-function formatAmount(amount: unknown): string {
-    const value = Number(amount);
-    if (!Number.isFinite(value)) return '—';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-}
-
 function labelize(key: string): string {
     return key.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -90,11 +77,9 @@ function ApiKeyBox({ apiKey, onDismiss }: { apiKey: string; onDismiss: () => voi
 export default function PartnerDetail({
     partner,
     stats,
-    canViewPartnerPricing = false,
 }: {
     partner: unknown;
     stats: unknown;
-    canViewPartnerPricing?: boolean;
 }) {
     const model      = asRecord(partner);
     const statistics = asRecord(stats);
@@ -102,7 +87,6 @@ export default function PartnerDetail({
     const flashAny   = flash as any;
     const canEdit    = auth.role === 'super_admin' || auth.permissions.includes('partners.edit');
 
-    const products  = Array.isArray(model.products)  ? (model.products  as LooseRecord[]) : [];
     const customers = Array.isArray(model.customers) ? (model.customers as LooseRecord[]) : [];
     const dateFields = ['created_at', 'updated_at', 'connected_at', 'last_seen_at'];
     const usefulFields = [
@@ -153,12 +137,7 @@ export default function PartnerDetail({
         }
     };
 
-    const toggleProductAccess = (productId: number, currentEnabled: boolean) => {
-        router.post(route('admin.partners.toggle-product-access', model.id), {
-            product_id: productId,
-            is_enabled: !currentEnabled,
-        });
-    };
+
 
     return (
         <AdminLayout title="Partner Detail">
@@ -310,56 +289,6 @@ export default function PartnerDetail({
                         ))}
                     </div>
                 </div>
-
-                {/* Product Access */}
-                {products.length > 0 && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 className="mb-3 font-medium text-slate-800 dark:text-white">Product Access & Pricing</h3>
-                        <div className="space-y-2">
-                            {products.map((product) => {
-                                const pivot = asRecord(product.pivot);
-                                const isActive = Boolean(pivot.is_enabled);
-                                const image = typeof product.image === 'string' && product.image !== ''
-                                    ? (product.image.startsWith('http') ? product.image : `/storage/${product.image}`)
-                                    : null;
-                                return (
-                                    <div key={String(product.id ?? Math.random())} className="flex flex-col gap-3 rounded-lg border border-slate-200 p-3 md:flex-row md:items-center md:justify-between dark:border-slate-700">
-                                        <div className="flex items-start gap-3">
-                                            {image ? (
-                                                <img src={image} alt={String(product.name ?? 'product')} className="h-14 w-14 rounded-md border border-slate-200 object-cover" />
-                                            ) : (
-                                                <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
-                                                    No image
-                                                </div>
-                                            )}
-                                            <div>
-                                                <span className="font-medium text-slate-800 dark:text-white">{String(product.name ?? '—')}</span>
-                                                <span className={`ml-2 rounded px-2 py-0.5 text-xs ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                                                    {isActive ? 'ACTIVE' : 'INACTIVE'}
-                                                </span>
-                                                <p className="mt-1 text-xs text-slate-500">
-                                                    Base price: {formatAmount(product.base_price)}
-                                                </p>
-                                                <p className="text-xs text-slate-500">
-                                                    Guide price: {formatAmount(product.price)}
-                                                </p>
-
-                                            </div>
-                                        </div>
-                                        {/* Activate/Deactivate button commented out — use Product List page to manage product status globally
-                                        {canEdit && (
-                                            <Button size="sm" variant={isActive ? 'destructive' : 'default'}
-                                                onClick={() => toggleProductAccess(Number(product.id), isActive)}>
-                                                {isActive ? 'Deactivate' : 'Activate'}
-                                            </Button>
-                                        )}
-                                        */}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
 
                 {/* Recent Customers */}
                 {customers.length > 0 && (
