@@ -130,7 +130,7 @@ export default function ApiDocumentation() {
                                     <strong>More partners:</strong> open <strong>Partners</strong> → choose the partner → assign products and turn <strong>enabled</strong> on for each product you want them to sell.
                                 </li>
                                 <li>
-                                    <code className="rounded bg-slate-100 px-1 text-xs">GET /api/v1/partner/products</code> returns <strong>active</strong> products that either belong to that partner (<code className="rounded bg-slate-100 px-1 text-xs">partner_id</code>) or are assigned on the pivot with <strong>enabled</strong> access — same rule as submit/KYC resolution.
+                                    <code className="rounded bg-slate-100 px-1 text-xs">GET /api/v1/partner/products</code> returns <strong>active</strong> products only when that partner has an explicit pivot assignment with <strong>enabled</strong> access (<code className="rounded bg-slate-100 px-1 text-xs">partner_product.is_enabled = true</code>).
                                 </li>
                             </ul>
                         </div>
@@ -157,7 +157,7 @@ export default function ApiDocumentation() {
                                 Go to <strong>Partners</strong> → <strong>Create</strong> (or edit) a partner. Set status to <strong>active</strong>. Save and copy <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code> for optional verify calls.
                             </li>
                             <li>
-                                On that partner, <strong>assign products</strong> and toggle them <strong>enabled</strong> for this partner.
+                                On that partner, <strong>assign products</strong> and toggle them <strong>enabled</strong> for this partner (new partners do not get catalog visibility unless this is done).
                             </li>
                             <li>
                                 Click <strong>Generate API Key</strong>. Copy the token immediately — this is the only time the raw Bearer token is shown. Store it in your partner app secrets (env, vault, or encrypted settings).

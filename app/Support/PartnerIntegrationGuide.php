@@ -40,14 +40,14 @@ final class PartnerIntegrationGuide
                 'sharing_to_partner_api' => [
                     'Primary: selecting a partner on product create links that partner with access enabled.',
                     'Additional partners: Partners → open partner → assign products and toggle enabled for each.',
-                    'GET /api/v1/partner/products lists active products the partner may sell: owned (products.partner_id) OR assigned with partner_product.is_enabled true (same rule as submit/KYC product resolution).',
+                    'GET /api/v1/partner/products lists active products only when partner_product contains that partner with is_enabled=true (same rule as submit/KYC product resolution).',
                 ],
                 'admin_rest_note' => 'Full product CRUD for automation is under /api/v1/admin/products with Sanctum user auth (super_admin), not the partner API key.',
             ],
             'admin_setup' => [
                 'Create products that partners may distribute (see products_creation_and_sharing in this JSON).',
                 'Super Admin: Partners → create or edit a partner; set status active; record partner_code.',
-                'Assign products to the partner and enable each assignment.',
+                'Assign products to the partner and enable each assignment. New partners do not see catalog items until this assignment exists.',
                 'Generate API Key on the partner; copy the shown token once into the partner app secret store.',
             ],
             'partner_environment' => [
