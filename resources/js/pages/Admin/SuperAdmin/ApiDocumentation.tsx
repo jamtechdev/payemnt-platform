@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AdminLayout from '@/layouts/AdminLayout';
+import PublicApiDocLayout from '@/layouts/PublicApiDocLayout';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, ArrowRight } from 'lucide-react';
 
@@ -39,15 +39,14 @@ export default function ApiDocumentation() {
     const verifyUrl = `${baseUrl}/api/v1/verify`;
 
     return (
-        <AdminLayout title="API Guide">
+        <PublicApiDocLayout title="Partner API guide">
             <div className="space-y-6">
                 <Card className="border-primary/20 bg-primary/5">
                     <CardContent className="pt-5">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-800">Partner API integration</h2>
                                 <p className="text-sm text-slate-600">
-                                    This page walks through <strong>creating the connection</strong>, <strong>implementing a service</strong> in your app, and calling Insurtech APIs. Reference:{' '}
+                                    This guide covers <strong>creating the connection</strong>, <strong>implementing a service</strong> in your app, and calling Insurtech APIs. Reference:{' '}
                                     <code className="rounded bg-white/80 px-1 text-xs">swap-circle/app/services/InsuretechSyncService.php</code>.
                                 </p>
                             </div>
@@ -518,6 +517,6 @@ Authorization: Bearer {INSURETECH_PARTNER_TOKEN}`}
                     </CardContent>
                 </Card>
             </div>
-        </AdminLayout>
+        </PublicApiDocLayout>
     );
 }
