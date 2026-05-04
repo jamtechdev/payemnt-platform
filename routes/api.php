@@ -50,9 +50,6 @@ Route::prefix('v1')
         Route::post('/products/{product_code}/transactions/{transaction_number}/kyc', [ProductDistributionController::class, 'submitKyc'])->name('partner.distribution.kyc');
         Route::put('/products/{product_code}/transactions/{transaction_number}', [ProductDistributionController::class, 'updatePolicy'])->name('partner.distribution.update');
         Route::post('/products/{product_code}/transactions/{transaction_number}/cancel', [ProductDistributionController::class, 'cancelPolicy'])->name('partner.distribution.cancel');
-        Route::post('/products/{product_code}/transactions/{transaction_number}/callback', [ProductDistributionController::class, 'webhookCallback'])
-            ->middleware('verify.webhook.signature')
-            ->name('partner.distribution.callback');
         Route::get('/verify-token', [ProductDistributionController::class, 'verifyToken'])->name('partner.distribution.verify-token');
     });
 

@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "InsurTech Partner & Distribution API",
-        "description": "Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC), transactions, customers, webhooks. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, POST /api/v1/verify.",
+        "description": "Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC), transactions, customers. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, POST /api/v1/verify.",
         "version": "3.1.0"
     },
     "servers": [

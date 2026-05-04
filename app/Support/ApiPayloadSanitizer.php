@@ -13,7 +13,6 @@ class ApiPayloadSanitizer
         'password',
         'token',
         'api_key',
-        'webhook_secret',
         'authorization',
         'secret',
     ];

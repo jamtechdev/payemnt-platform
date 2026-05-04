@@ -68,9 +68,7 @@ class PartnerController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/SuperAdmin/PartnerCreate', [
-            'products' => Product::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
-        ]);
+        return Inertia::render('Admin/SuperAdmin/PartnerCreate');
     }
 
     // public function store(StorePartnerRequest $request): RedirectResponse
@@ -117,21 +115,10 @@ class PartnerController extends Controller
             'contact_phone' => $request->contact_phone,
             'company_name' => $request->input('company_name'),
             'website_url' => $request->input('website_url'),
-            'webhook_url' => $request->input('webhook_url'),
             'notes' => $request->input('notes'),
             'created_by' => $request->user()?->id,
-            'webhook_secret' => Str::random(48),
             'status'        => 'active',
         ]);
-
-        $partner->products()->sync(
-            collect((array) $request->input('product_ids', []))
-                ->map(fn ($id) => (int) $id)
-                ->filter()
-                ->unique()
-                ->mapWithKeys(fn ($id) => [$id => ['is_enabled' => true]])
-                ->all()
-        );
 
         // Create partner profile if relation exists
         if (method_exists($partner, 'profile')) {
@@ -234,7 +221,6 @@ class PartnerController extends Controller
             'contact_phone' => $request->contact_phone ?? $partner->contact_phone,
             'company_name' => $request->input('company_name', $partner->company_name),
             'website_url' => $request->input('website_url', $partner->website_url),
-            'webhook_url' => $request->input('webhook_url', $partner->webhook_url),
             'notes' => $request->input('notes', $partner->notes),
             'status'        => $request->status ?? $partner->status,
         ]);

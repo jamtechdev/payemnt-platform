@@ -17,12 +17,6 @@ return new class extends Migration
             if (! Schema::hasColumn('partners', 'website_url')) {
                 $table->string('website_url')->nullable()->after('company_name');
             }
-            if (! Schema::hasColumn('partners', 'webhook_url')) {
-                $table->string('webhook_url')->nullable()->after('website_url');
-            }
-            if (! Schema::hasColumn('partners', 'webhook_secret')) {
-                $table->string('webhook_secret', 120)->nullable()->after('webhook_url');
-            }
             if (! Schema::hasColumn('partners', 'notes')) {
                 $table->text('notes')->nullable()->after('settings');
             }
@@ -113,26 +107,6 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasTable('webhook_logs')) {
-            Schema::create('webhook_logs', function (Blueprint $table): void {
-                $table->id();
-                $table->uuid('uuid')->unique();
-                $table->foreignId('partner_id')->constrained('partners')->cascadeOnDelete();
-                $table->foreignId('payment_id')->nullable()->constrained('payments')->nullOnDelete();
-                $table->string('event', 60);
-                $table->string('target_url');
-                $table->json('payload');
-                $table->unsignedSmallInteger('status_code')->nullable()->index();
-                $table->unsignedTinyInteger('attempt')->default(1);
-                $table->enum('status', ['pending', 'sent', 'failed'])->default('pending')->index();
-                $table->text('response_body')->nullable();
-                $table->text('error_message')->nullable();
-                $table->timestamp('next_retry_at')->nullable()->index();
-                $table->timestamp('sent_at')->nullable()->index();
-                $table->timestamps();
-            });
-        }
-
         if (! Schema::hasTable('analytics_daily_rollups')) {
             Schema::create('analytics_daily_rollups', function (Blueprint $table): void {
                 $table->id();
@@ -152,7 +126,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('analytics_daily_rollups');
-        Schema::dropIfExists('webhook_logs');
         Schema::dropIfExists('api_logs');
         Schema::dropIfExists('transaction_logs');
 
@@ -165,7 +138,7 @@ return new class extends Migration
         });
 
         Schema::table('partners', function (Blueprint $table): void {
-            foreach (['created_by', 'notes', 'webhook_secret', 'webhook_url', 'website_url', 'company_name'] as $column) {
+            foreach (['created_by', 'notes', 'website_url', 'company_name'] as $column) {
                 if (Schema::hasColumn('partners', $column)) {
                     $table->dropColumn($column);
                 }

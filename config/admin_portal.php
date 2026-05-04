@@ -52,7 +52,6 @@ return [
         'users.assign_roles',
         'audit_logs.view',
         'api_logs.view',
-        'webhooks.manage',
         'settings.system',
         'settings.email',
     ],

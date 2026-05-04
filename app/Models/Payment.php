@@ -99,11 +99,6 @@ class Payment extends Model
         return $this->hasMany(TransactionLog::class, 'payment_id');
     }
 
-    public function webhookLogs(): HasMany
-    {
-        return $this->hasMany(WebhookLog::class, 'payment_id');
-    }
-
     public function scopeSuccessful(Builder $query): Builder
     {
         return $query->where('status', 'success');

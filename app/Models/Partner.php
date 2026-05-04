@@ -38,8 +38,6 @@ class Partner extends Model
         'contact_phone',
         'phone',
          'website_url',
-         'webhook_url',
-         'webhook_secret',
         'status',
         'settings',
          'notes',
@@ -100,11 +98,6 @@ class Partner extends Model
     public function apiLogs(): HasMany
     {
         return $this->hasMany(ApiLog::class);
-    }
-
-    public function webhookLogs(): HasMany
-    {
-        return $this->hasMany(WebhookLog::class);
     }
 
     public function payments(): HasMany

@@ -3,12 +3,7 @@ import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
 
-interface ProductOption {
-    id: number;
-    name: string;
-}
-
-export default function PartnerCreate({ products = [] }: { products?: ProductOption[] }) {
+export default function PartnerCreate() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         contact_email: '',
@@ -16,9 +11,7 @@ export default function PartnerCreate({ products = [] }: { products?: ProductOpt
         partner_code: '',
         company_name: '',
         website_url: '',
-        webhook_url: '',
         notes: '',
-        product_ids: [] as number[],
     });
 
     const submit = (e: React.FormEvent) => {
@@ -105,37 +98,12 @@ export default function PartnerCreate({ products = [] }: { products?: ProductOpt
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Webhook URL</label>
-                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.webhook_url} onChange={(e) => setData('webhook_url', e.target.value)} placeholder="https://partner.com/hooks/insurtech" />
-                    </div>
-
-                    <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                         <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.notes} onChange={(e) => setData('notes', e.target.value)} rows={3} />
                     </div>
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Products partner can sell</label>
-                        <select
-                            multiple
-                            value={data.product_ids.map(String)}
-                            onChange={(e) => {
-                                const values = Array.from(e.target.selectedOptions).map((option) => Number(option.value));
-                                setData('product_ids', values);
-                            }}
-                            className="min-h-32 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                        >
-                            {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="mt-1 text-xs text-gray-400">Hold Ctrl/Cmd to select multiple products.</p>
-                    </div>
-
                     <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-                        💡 After creating the partner, go to their detail page to generate an API key for authentication.
+                        💡 After creating the partner, go to partner detail to assign products and generate API key.
                     </div>
 
                     <div className="flex justify-end gap-3">

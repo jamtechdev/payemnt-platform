@@ -8,7 +8,6 @@ use App\Models\Partner;
 use App\Models\Payment;
 use App\Models\PartnerRequestIdempotency;
 use App\Models\Product;
-use App\Models\WebhookLog;
 use App\Services\PartnerTransactionIngestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -305,41 +304,6 @@ class ProductDistributionController extends BaseApiController
         ]);
     }
 
-    /** Inbound callback (not listed in Swagger; see route list in codebase). */
-    public function webhookCallback(Request $request, string $productCode, string $transactionNumber): JsonResponse
-    {
-        $partner = $request->attributes->get('partner');
-        $product = $this->resolvePartnerProduct($partner, $productCode);
-        if (! $product) {
-            return $this->error('NOT_FOUND', 'Product not found or not assigned to partner.', [], 404);
-        }
-
-        $payment = Payment::query()
-            ->where('partner_id', $partner->id)
-            ->where('product_id', $product->id)
-            ->where('transaction_number', $transactionNumber)
-            ->first();
-
-        if (! $payment) {
-            return $this->error('NOT_FOUND', 'Transaction not found.', [], 404);
-        }
-
-        WebhookLog::query()->create([
-            'partner_id' => $partner->id,
-            'payment_id' => $payment->id,
-            'event' => 'partner_callback_received',
-            'target_url' => $partner->webhook_url ?? 'callback://partner',
-            'payload' => $request->all(),
-            'status' => 'sent',
-            'status_code' => 200,
-            'attempt' => 1,
-            'sent_at' => now(),
-            'response_body' => 'accepted',
-        ]);
-
-        return $this->success(['received' => true]);
-    }
-
     private function resolvePartnerProduct(?Partner $partner, string $productCode): ?Product
     {
         if (! $partner) {
@@ -348,12 +312,10 @@ class ProductDistributionController extends BaseApiController
 
         return Product::query()
             ->where('product_code', $productCode)
-            ->where(function ($query) use ($partner): void {
-                $query->where('partner_id', $partner->id)
-                    ->orWhereHas('partners', fn ($partnerQuery) => $partnerQuery
-                        ->where('partners.id', $partner->id)
-                        ->where('partner_product.is_enabled', true));
-            })
+            ->where('status', Product::STATUS_ACTIVE)
+            ->whereHas('partners', fn ($partnerQuery) => $partnerQuery
+                ->where('partners.id', $partner->id)
+                ->where('partner_product.is_enabled', true))
             ->first();
     }
 }
