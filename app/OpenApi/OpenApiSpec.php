@@ -7,21 +7,25 @@ namespace App\OpenApi;
 use OpenApi\Attributes as OA;
 
 #[OA\Info(
-    version: '3.0.0',
-    title: 'InsurTech Partner Distribution API',
-    description: 'Partner product distribution, customer/kyc submission, transaction and webhook APIs.'
+    version: '3.1.0',
+    title: 'InsurTech Partner & Distribution API',
+    description: 'Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC), transactions, customers, webhooks. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, POST /api/v1/verify.'
 )]
-#[OA\Server(url: '/', description: 'Application server (paths already include /api/v1 prefix)')]
+#[OA\Server(url: '/', description: 'Same host as the admin portal; paths are absolute from web root (e.g. /api/v1/...).')]
 #[OA\SecurityScheme(
     securityScheme: 'sanctum',
     type: 'http',
     scheme: 'bearer',
-    bearerFormat: 'Sanctum token',
-    description: 'Send header: Authorization: Bearer {token}'
+    bearerFormat: 'Sanctum personal access token (Partner)',
+    description: 'Header: `Authorization: Bearer {token}` — token from Partners → Generate API Key.'
 )]
-#[OA\Tag(name: 'Connect',      description: 'Partner connection & verification APIs')]
-#[OA\Tag(name: 'Products',     description: 'Product sync APIs')]
-#[OA\Tag(name: 'Transactions', description: 'Transaction sync APIs')]
+#[OA\Tag(name: 'Guide',          description: 'Public machine-readable integration guide (no Bearer token).')]
+#[OA\Tag(name: 'Connect',        description: 'Partner handshake / verification (mostly unauthenticated).')]
+#[OA\Tag(name: 'Products',       description: 'Partner product catalog (Bearer required).')]
+#[OA\Tag(name: 'Distribution',   description: 'Submit policy, KYC, update, cancel (Bearer required).')]
+#[OA\Tag(name: 'Transactions', description: 'Bulk transaction ingest and partner transaction utilities (Bearer required).')]
+#[OA\Tag(name: 'Customer',       description: 'Partner-scoped customer register / update / purge (Bearer required).')]
+#[OA\Tag(name: 'Webhooks',       description: 'Signed inbound callbacks for a transaction (Bearer required).')]
 final class OpenApiSpec
 {
 }

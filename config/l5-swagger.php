@@ -5,7 +5,7 @@ return [
     'documentations' => [
         'default' => [
             'api' => [
-                'title' => 'L5 Swagger UI',
+                'title' => 'InsurTech Partner API',
             ],
 
             'routes' => [
@@ -45,9 +45,12 @@ return [
                  */
                 'annotations' => [
                     base_path('app/OpenApi'),
+                    base_path('app/Http/Controllers/Api/V1/PartnerApiGuideController.php'),
                     base_path('app/Http/Controllers/Api/V1/VerifyController.php'),
                     base_path('app/Http/Controllers/Api/V1/PartnerProductController.php'),
+                    base_path('app/Http/Controllers/Api/V1/ProductDistributionController.php'),
                     base_path('app/Http/Controllers/Api/V1/TransactionController.php'),
+                    base_path('app/Http/Controllers/Api/V1/CustomerController.php'),
                 ],
             ],
         ],

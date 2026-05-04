@@ -21,7 +21,7 @@ class PartnerProductController extends BaseApiController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Products list',
+                description: 'Products list (guide_price is never included)',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'string', example: 'success'),
@@ -35,14 +35,14 @@ class PartnerProductController extends BaseApiController
                                     new OA\Property(property: 'description',  type: 'string',  example: 'A community protection plan'),
                                     new OA\Property(property: 'price',        type: 'number',  example: 739.00),
                                     new OA\Property(property: 'status',       type: 'string',  example: 'active'),
-                                    new OA\Property(property: 'image_url',    type: 'string',  example: 'https://example.com/image.png'),
+                                    new OA\Property(property: 'image_url',    type: 'string',  nullable: true, example: 'https://example.com/image.png'),
                                 ]
                             )
                         ),
                     ]
                 )
             ),
-            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 401, description: 'Missing or invalid Bearer token'),
         ]
     )]
     public function index(Request $request): JsonResponse

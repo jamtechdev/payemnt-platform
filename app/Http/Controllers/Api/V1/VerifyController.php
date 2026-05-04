@@ -11,7 +11,30 @@ use OpenApi\Attributes as OA;
 
 class VerifyController extends BaseApiController
 {
-    // Verify — hidden from Swagger
+    #[OA\Post(
+        path: '/api/v1/verify',
+        operationId: 'partnerVerifyConnectedBaseUrl',
+        summary: 'Verify partner api_key and record partner base URL',
+        description: 'Public. Validates partner_code + api_key (plaintext compared to stored hash). Updates `connected_base_url` and timestamps. Does not issue Bearer token.',
+        tags: ['Connect'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['partner_code', 'api_key', 'base_url'],
+                properties: [
+                    new OA\Property(property: 'partner_code', type: 'string', example: 'SWAP_CIRCLE'),
+                    new OA\Property(property: 'api_key', type: 'string', example: 'shown-once-when-admin-generated-key'),
+                    new OA\Property(property: 'base_url', type: 'string', format: 'uri', example: 'https://swap.example.com'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Partner verified; connected_base_url saved'),
+            new OA\Response(response: 401, description: 'Invalid api_key or inactive partner'),
+            new OA\Response(response: 404, description: 'Partner not found'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([

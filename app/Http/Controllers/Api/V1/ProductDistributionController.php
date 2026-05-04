@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
-#[OA\Tag(name: 'Distribution', description: 'Product distribution APIs for partners')]
 class ProductDistributionController extends BaseApiController
 {
     public function __construct(
@@ -53,8 +52,10 @@ class ProductDistributionController extends BaseApiController
         ),
         responses: [
             new OA\Response(response: 201, description: 'Submitted'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 404, description: 'Product not assigned to partner'),
             new OA\Response(response: 409, description: 'Idempotency conflict'),
-            new OA\Response(response: 422, description: 'Validation error'),
+            new OA\Response(response: 422, description: 'Validation error or missing Idempotency-Key'),
         ]
     )]
     public function submit(Request $request, string $productCode): JsonResponse
@@ -143,10 +144,28 @@ class ProductDistributionController extends BaseApiController
             required: true,
             content: new OA\JsonContent(
                 required: ['kyc'],
-                properties: [new OA\Property(property: 'kyc', type: 'object')]
+                properties: [
+                    new OA\Property(
+                        property: 'kyc',
+                        type: 'object',
+                        properties: [
+                            new OA\Property(property: 'id_type', type: 'string', example: 'phone'),
+                            new OA\Property(property: 'id_number', type: 'string', example: '+2348000000000'),
+                            new OA\Property(property: 'first_name', type: 'string', example: 'Jane'),
+                            new OA\Property(property: 'last_name', type: 'string', example: 'Doe'),
+                            new OA\Property(property: 'dob', type: 'string', nullable: true),
+                            new OA\Property(property: 'address', type: 'string', nullable: true),
+                        ]
+                    ),
+                ]
             )
         ),
-        responses: [new OA\Response(response: 200, description: 'KYC saved')]
+        responses: [
+            new OA\Response(response: 200, description: 'KYC saved'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 404, description: 'Product or transaction not found'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
     )]
     public function submitKyc(Request $request, string $productCode, string $transactionNumber): JsonResponse
     {

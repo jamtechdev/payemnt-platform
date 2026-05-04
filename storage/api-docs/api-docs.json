@@ -1,17 +1,259 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "InsurTech Partner Distribution API",
-        "description": "Partner product distribution, customer/kyc submission, transaction and webhook APIs.",
-        "version": "3.0.0"
+        "title": "InsurTech Partner & Distribution API",
+        "description": "Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC), transactions, customers, webhooks. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, POST /api/v1/verify.",
+        "version": "3.1.0"
     },
     "servers": [
         {
             "url": "/",
-            "description": "Application server (paths already include /api/v1 prefix)"
+            "description": "Same host as the admin portal; paths are absolute from web root (e.g. /api/v1/...)."
         }
     ],
     "paths": {
+        "/api/v1/customers/register": {
+            "post": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Create or update customer by email (partner_id auto-set from API key)",
+                "operationId": "partnerCustomerStore",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "email",
+                                    "password",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "company_name": {
+                                        "type": "string",
+                                        "example": "Acme Corp"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+923001234567"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Karachi"
+                                    },
+                                    "valid_document": {
+                                        "type": "string",
+                                        "example": "CNIC-12345"
+                                    },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_front.jpg"
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "example": "https://example.com/id_back.jpg"
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "example": "https://example.com/profile.jpg"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Active",
+                                            "Inactive",
+                                            "Deleted"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer created or updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/customers/{customer_code}": {
+            "put": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Update a partner customer by customer_code",
+                "operationId": "partnerCustomerUpdate",
+                "parameters": [
+                    {
+                        "name": "customer_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "company_name": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "valid_document": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "id_front_image": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "id_back_image": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "profile_pic": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Active",
+                                            "Inactive",
+                                            "Deleted"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer updated"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Customer not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/customers": {
+            "delete": {
+                "tags": [
+                    "Customer"
+                ],
+                "summary": "Permanently delete all customers of authenticated partner",
+                "operationId": "partnerCustomerDestroy",
+                "responses": {
+                    "200": {
+                        "description": "Customers permanently deleted"
+                    },
+                    "404": {
+                        "description": "No customers found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/partner/guide": {
+            "get": {
+                "tags": [
+                    "Guide"
+                ],
+                "summary": "Public JSON integration guide",
+                "description": "No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes.",
+                "operationId": "partnerApiGuide",
+                "responses": {
+                    "200": {
+                        "description": "Success envelope",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "data": {
+                                            "description": "Guide payload",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/partner/products": {
             "get": {
                 "tags": [
@@ -21,7 +263,7 @@
                 "operationId": "partnerProductsList",
                 "responses": {
                     "200": {
-                        "description": "Products list",
+                        "description": "Products list (guide_price is never included)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -56,7 +298,8 @@
                                                     },
                                                     "image_url": {
                                                         "type": "string",
-                                                        "example": "https://example.com/image.png"
+                                                        "example": "https://example.com/image.png",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
@@ -69,7 +312,400 @@
                         }
                     },
                     "401": {
+                        "description": "Missing or invalid Bearer token"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/submit": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Submit customer policy for a product",
+                "operationId": "distributionSubmitPolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "transaction_number",
+                                    "customer_name",
+                                    "customer_email",
+                                    "cover_duration"
+                                ],
+                                "properties": {
+                                    "transaction_number": {
+                                        "type": "string",
+                                        "example": "SWAP-TXN-1001"
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+23480000000",
+                                        "nullable": true
+                                    },
+                                    "policy_number": {
+                                        "type": "string",
+                                        "example": "POL-1001",
+                                        "nullable": true
+                                    },
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "example": "12_months"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "pending",
+                                            "cancelled",
+                                            "failed"
+                                        ]
+                                    },
+                                    "kyc": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "nullable": true
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submitted"
+                    },
+                    "401": {
                         "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Product not assigned to partner"
+                    },
+                    "409": {
+                        "description": "Idempotency conflict"
+                    },
+                    "422": {
+                        "description": "Validation error or missing Idempotency-Key"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/kyc": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Submit KYC for an existing transaction",
+                "operationId": "distributionSubmitKyc",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "kyc"
+                                ],
+                                "properties": {
+                                    "kyc": {
+                                        "properties": {
+                                            "id_type": {
+                                                "type": "string",
+                                                "example": "phone"
+                                            },
+                                            "id_number": {
+                                                "type": "string",
+                                                "example": "+2348000000000"
+                                            },
+                                            "first_name": {
+                                                "type": "string",
+                                                "example": "Jane"
+                                            },
+                                            "last_name": {
+                                                "type": "string",
+                                                "example": "Doe"
+                                            },
+                                            "dob": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "address": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "KYC saved"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Product or transaction not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}": {
+            "put": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Update existing policy/transaction",
+                "operationId": "distributionUpdatePolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "cover_duration": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "pending",
+                                            "cancelled",
+                                            "failed"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "policy_number": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Policy updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/cancel": {
+            "post": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Cancel policy",
+                "operationId": "distributionCancelPolicy",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Policy cancelled"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/verify-token": {
+            "get": {
+                "tags": [
+                    "Distribution"
+                ],
+                "summary": "Verify partner bearer token",
+                "operationId": "distributionVerifyToken",
+                "responses": {
+                    "200": {
+                        "description": "Token valid"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product_code}/transactions/{transaction_number}/callback": {
+            "post": {
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Receive webhook callback payload",
+                "operationId": "distributionWebhookCallback",
+                "parameters": [
+                    {
+                        "name": "product_code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "transaction_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Webhook-Signature",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook accepted"
                     }
                 },
                 "security": [
@@ -84,8 +720,20 @@
                 "tags": [
                     "Transactions"
                 ],
-                "summary": "Create or update a transaction (partner auto-set from API key)",
+                "summary": "Create or update a transaction (alternative to POST .../submit + /kyc)",
+                "description": "Partner is inferred from Bearer token. Optional header Idempotency-Key: when present, must equal transaction_number.",
                 "operationId": "transactionStore",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "If set, must match body.transaction_number",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -93,15 +741,19 @@
                             "schema": {
                                 "required": [
                                     "transaction_number",
+                                    "customer_name",
                                     "customer_email",
                                     "product_code",
-                                    "payment_status",
-                                    "date_added"
+                                    "cover_duration"
                                 ],
                                 "properties": {
                                     "transaction_number": {
                                         "type": "string",
-                                        "example": "TXN123"
+                                        "example": "TXN-2026-0001"
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
                                     },
                                     "customer_email": {
                                         "type": "string",
@@ -110,57 +762,55 @@
                                     },
                                     "product_code": {
                                         "type": "string",
-                                        "example": "PROD_001"
-                                    },
-                                    "product_type": {
-                                        "type": "string",
-                                        "example": "A"
+                                        "example": "NIGERIA_BENEFICIARY_COMMUNITY"
                                     },
                                     "cover_duration": {
                                         "type": "string",
-                                        "example": "Monthly"
+                                        "example": "30_days"
                                     },
-                                    "cover_start_date": {
+                                    "phone": {
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-01-01"
+                                        "example": "+2348000000000",
+                                        "nullable": true
                                     },
-                                    "cover_end_date": {
+                                    "policy_number": {
                                         "type": "string",
-                                        "format": "date",
-                                        "example": "2024-12-31"
+                                        "nullable": true
                                     },
-                                    "payment_status": {
+                                    "status": {
                                         "type": "string",
-                                        "example": "Successful"
+                                        "nullable": true,
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "pending",
+                                            "cancelled",
+                                            "failed"
+                                        ]
                                     },
-                                    "payment_message": {
-                                        "type": "string",
-                                        "example": "Payment done"
+                                    "kyc": {
+                                        "type": "object",
+                                        "nullable": true
                                     },
-                                    "stripe_payment_intent": {
+                                    "notes": {
                                         "type": "string",
-                                        "example": "pi_xxx"
+                                        "nullable": true
                                     },
-                                    "stripe_payment_status": {
+                                    "date_added": {
                                         "type": "string",
-                                        "example": "succeeded"
+                                        "format": "date-time",
+                                        "nullable": true
                                     },
                                     "amount": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 20000,
+                                        "example": 739,
                                         "nullable": true
                                     },
                                     "currency": {
                                         "type": "string",
                                         "example": "NGN",
                                         "nullable": true
-                                    },
-                                    "date_added": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "example": "2024-01-01 10:00:00"
                                     }
                                 },
                                 "type": "object"
@@ -171,6 +821,9 @@
                 "responses": {
                     "200": {
                         "description": "Transaction created or updated"
+                    },
+                    "401": {
+                        "description": "Missing or invalid Bearer token"
                     },
                     "422": {
                         "description": "Validation error"
@@ -189,11 +842,15 @@
                 "tags": [
                     "Transactions"
                 ],
-                "summary": "Permanently delete all transactions of authenticated partner",
+                "summary": "Delete ALL transactions for the authenticated partner (destructive)",
+                "description": "Use only in non-production or controlled migrations. Requires Bearer token.",
                 "operationId": "transactionDestroy",
                 "responses": {
                     "200": {
                         "description": "Transactions deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "404": {
                         "description": "No transactions found"
@@ -204,6 +861,60 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/verify": {
+            "post": {
+                "tags": [
+                    "Connect"
+                ],
+                "summary": "Verify partner api_key and record partner base URL",
+                "description": "Public. Validates partner_code + api_key (plaintext compared to stored hash). Updates `connected_base_url` and timestamps. Does not issue Bearer token.",
+                "operationId": "partnerVerifyConnectedBaseUrl",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "partner_code",
+                                    "api_key",
+                                    "base_url"
+                                ],
+                                "properties": {
+                                    "partner_code": {
+                                        "type": "string",
+                                        "example": "SWAP_CIRCLE"
+                                    },
+                                    "api_key": {
+                                        "type": "string",
+                                        "example": "shown-once-when-admin-generated-key"
+                                    },
+                                    "base_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "example": "https://swap.example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Partner verified; connected_base_url saved"
+                    },
+                    "401": {
+                        "description": "Invalid api_key or inactive partner"
+                    },
+                    "404": {
+                        "description": "Partner not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
             }
         }
     },
@@ -317,20 +1028,40 @@
         "securitySchemes": {
             "sanctum": {
                 "type": "http",
-                "description": "Send header: Authorization: Bearer {token}",
-                "bearerFormat": "Sanctum token",
+                "description": "Header: `Authorization: Bearer {token}` — token from Partners → Generate API Key.",
+                "bearerFormat": "Sanctum personal access token (Partner)",
                 "scheme": "bearer"
             }
         }
     },
     "tags": [
         {
+            "name": "Guide",
+            "description": "Public machine-readable integration guide (no Bearer token)."
+        },
+        {
+            "name": "Connect",
+            "description": "Partner handshake / verification (mostly unauthenticated)."
+        },
+        {
             "name": "Products",
-            "description": "Product sync APIs"
+            "description": "Partner product catalog (Bearer required)."
+        },
+        {
+            "name": "Distribution",
+            "description": "Submit policy, KYC, update, cancel (Bearer required)."
         },
         {
             "name": "Transactions",
-            "description": "Transaction sync APIs"
+            "description": "Bulk transaction ingest and partner transaction utilities (Bearer required)."
+        },
+        {
+            "name": "Customer",
+            "description": "Partner-scoped customer register / update / purge (Bearer required)."
+        },
+        {
+            "name": "Webhooks",
+            "description": "Signed inbound callbacks for a transaction (Bearer required)."
         }
     ]
 }
