@@ -13,14 +13,25 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-// When tab becomes visible again, ping to keep session alive
+/** Paths where guests are expected — skip /ping (auth-only) so 401 does not force redirect to login. */
+function shouldSkipSessionPing(): boolean {
+    const path = window.location.pathname;
+    if (path === '/docs/partner-api') return true;
+    if (path === '/login' || path === '/forgot-password') return true;
+    if (path.startsWith('/reset-password')) return true;
+
+    return false;
+}
+
+// When tab becomes visible again, ping to keep session alive (signed-in admin only)
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        axios.get('/ping').catch(() => {
-            // Session expired — redirect to login
-            window.location.href = '/login';
-        });
+    if (document.visibilityState !== 'visible' || shouldSkipSessionPing()) {
+        return;
     }
+
+    axios.get('/ping').catch(() => {
+        window.location.href = '/login';
+    });
 });
 
 // Auto-refresh CSRF token and retry on 419
