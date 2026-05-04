@@ -305,23 +305,7 @@ class ProductDistributionController extends BaseApiController
         ]);
     }
 
-    #[OA\Post(
-        path: '/api/v1/products/{product_code}/transactions/{transaction_number}/callback',
-        operationId: 'distributionWebhookCallback',
-        summary: 'Receive webhook callback payload',
-        security: [['sanctum' => []]],
-        tags: ['Webhooks'],
-        parameters: [
-            new OA\Parameter(name: 'product_code', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'transaction_number', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'X-Webhook-Signature', in: 'header', required: true, schema: new OA\Schema(type: 'string')),
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(type: 'object')
-        ),
-        responses: [new OA\Response(response: 200, description: 'Webhook accepted')]
-    )]
+    /** Inbound callback (not listed in Swagger; see route list in codebase). */
     public function webhookCallback(Request $request, string $productCode, string $transactionNumber): JsonResponse
     {
         $partner = $request->attributes->get('partner');

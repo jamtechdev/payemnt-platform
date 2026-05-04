@@ -228,7 +228,7 @@
                     "Guide"
                 ],
                 "summary": "Public JSON integration guide",
-                "description": "No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes.",
+                "description": "No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes. For a full HTML doc use GET /admin/super-admin/api-documentation.",
                 "operationId": "partnerApiGuide",
                 "responses": {
                     "200": {
@@ -660,61 +660,6 @@
                 ]
             }
         },
-        "/api/v1/products/{product_code}/transactions/{transaction_number}/callback": {
-            "post": {
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Receive webhook callback payload",
-                "operationId": "distributionWebhookCallback",
-                "parameters": [
-                    {
-                        "name": "product_code",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "transaction_number",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "X-Webhook-Signature",
-                        "in": "header",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Webhook accepted"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/api/v1/transactions": {
             "post": {
                 "tags": [
@@ -1058,10 +1003,6 @@
         {
             "name": "Customer",
             "description": "Partner-scoped customer register / update / purge (Bearer required)."
-        },
-        {
-            "name": "Webhooks",
-            "description": "Signed inbound callbacks for a transaction (Bearer required)."
         }
     ]
 }

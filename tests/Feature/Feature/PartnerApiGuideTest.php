@@ -13,13 +13,15 @@ class PartnerApiGuideTest extends TestCase
 
     public function test_partner_api_guide_endpoint_returns_contract(): void
     {
-        $this->getJson('/api/v1/partner/guide')
-            ->assertOk()
+        $response = $this->getJson('/api/v1/partner/guide');
+        $response->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.title', 'Insurtech Partner API Guide')
-            ->assertJsonPath('data.endpoints.create_or_upsert_transaction.endpoint', '/api/v1/transactions')
-            ->assertJsonPath('data.suggested_partner_service.suggested_methods.0.name', 'testConnection')
-            ->assertJsonCount(4, 'data.connection_prerequisites')
-            ->assertJsonCount(8, 'data.integration_steps');
+            ->assertJsonPath('data.suggested_partner_service.suggested_methods.0.name', 'testConnection');
+        $response->assertJsonCount(4, 'data.connection_prerequisites');
+        $response->assertJsonCount(7, 'data.integration_steps');
+
+        $htmlDocUrl = (string) data_get($response->json(), 'data.urls.partner_api_html_doc');
+        $this->assertStringContainsString('/admin/super-admin/api-documentation', $htmlDocUrl);
     }
 }

@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 #[OA\Info(
     version: '3.1.0',
     title: 'InsurTech Partner & Distribution API',
-    description: 'Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC), transactions, customers, webhooks. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, POST /api/v1/verify.'
+    description: 'Partner APIs: catalog (GET /api/v1/partner/products), distribution (POST submit + KYC, update, cancel), transactions, customers. Bearer token = Sanctum key from Partners → Generate API Key. Public: GET /api/v1/partner/guide, GET /admin/super-admin/api-documentation, POST /api/v1/verify.'
 )]
 #[OA\Server(url: '/', description: 'Same host as the admin portal; paths are absolute from web root (e.g. /api/v1/...).')]
 #[OA\SecurityScheme(
@@ -25,7 +25,6 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(name: 'Distribution',   description: 'Submit policy, KYC, update, cancel (Bearer required).')]
 #[OA\Tag(name: 'Transactions', description: 'Bulk transaction ingest and partner transaction utilities (Bearer required).')]
 #[OA\Tag(name: 'Customer',       description: 'Partner-scoped customer register / update / purge (Bearer required).')]
-#[OA\Tag(name: 'Webhooks',       description: 'Signed inbound callbacks for a transaction (Bearer required).')]
 final class OpenApiSpec
 {
 }

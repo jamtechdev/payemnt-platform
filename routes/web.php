@@ -21,6 +21,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+/** Public partner API documentation (no login). Same Inertia page as in-app guide. */
+Route::get('/admin/super-admin/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))
+    ->name('admin.api-docs.index');
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -79,6 +83,5 @@ Route::prefix('admin')
             Route::delete('/partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])->name('partners.revoke-api-key');
             Route::post('/partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])->name('partners.toggle-product-access');
             Route::post('/partners/{id}/restore', [PartnerController::class, 'restore'])->name('partners.restore');
-            Route::get('/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))->name('api-docs.index');
         });
     });
