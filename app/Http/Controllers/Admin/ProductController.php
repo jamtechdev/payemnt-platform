@@ -99,7 +99,7 @@ class ProductController extends Controller
         $product->update([
             'api_schema'        => $this->productSchemaService->generate($product),
             'api_endpoint'      => "/api/v1/products/{$product->product_code}",
-            'api_documentation' => route('admin.api-docs.index'),
+            'api_documentation' => route('partner.api-documentation'),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
@@ -176,7 +176,7 @@ class ProductController extends Controller
         $product->update([
             'api_schema'        => $this->productSchemaService->generate($product),
             'api_endpoint'      => "/api/v1/products/{$product->product_code}",
-            'api_documentation' => route('admin.api-docs.index'),
+            'api_documentation' => route('partner.api-documentation'),
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated.');

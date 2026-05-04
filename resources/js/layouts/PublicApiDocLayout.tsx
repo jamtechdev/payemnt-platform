@@ -7,7 +7,7 @@ interface PublicApiDocLayoutProps {
 
 /**
  * Full-width public documentation shell — no admin sidebar, no auth required.
- * Used for /admin/super-admin/api-documentation.
+ * Used for GET /docs/partner-api (public).
  */
 export default function PublicApiDocLayout({ title, children }: PublicApiDocLayoutProps) {
     return (

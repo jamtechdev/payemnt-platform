@@ -22,6 +22,6 @@ class PartnerApiGuideTest extends TestCase
         $response->assertJsonCount(7, 'data.integration_steps');
 
         $htmlDocUrl = (string) data_get($response->json(), 'data.urls.partner_api_html_doc');
-        $this->assertStringContainsString('/admin/super-admin/api-documentation', $htmlDocUrl);
+        $this->assertStringContainsString('/docs/partner-api', $htmlDocUrl);
     }
 }

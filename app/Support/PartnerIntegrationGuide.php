@@ -19,7 +19,7 @@ final class PartnerIntegrationGuide
             'base_path' => '/api/v1',
             'public_base_url' => $publicBase,
             'urls' => [
-                'partner_api_html_doc' => $publicBase !== '' ? "{$publicBase}/admin/super-admin/api-documentation" : '/admin/super-admin/api-documentation',
+                'partner_api_html_doc' => $publicBase !== '' ? "{$publicBase}/docs/partner-api" : '/docs/partner-api',
                 'this_guide' => $publicBase !== '' ? "{$publicBase}/api/v1/partner/guide" : '/api/v1/partner/guide',
                 'swagger_ui' => $publicBase !== '' ? "{$publicBase}/api/documentation" : '/api/documentation',
                 'verify_partner' => $publicBase !== '' ? "{$publicBase}/api/v1/verify" : '/api/v1/verify',
@@ -211,7 +211,7 @@ final class PartnerIntegrationGuide
                 ],
                 'partner_api_html_doc' => [
                     'method' => 'GET',
-                    'endpoint' => '/admin/super-admin/api-documentation',
+                    'endpoint' => '/docs/partner-api',
                     'auth' => 'none',
                 ],
                 'products_list' => [

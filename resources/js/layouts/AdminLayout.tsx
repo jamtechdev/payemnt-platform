@@ -47,7 +47,7 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
     }
 
     if (role === 'super_admin') {
-        items.push({ href: route('admin.api-docs.index'), label: 'API Guide' });
+        items.push({ href: route('partner.api-documentation'), label: 'API Guide' });
     }
 
     return items;

@@ -21,9 +21,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-/** Public partner API documentation (no login). Same Inertia page as in-app guide. */
-Route::get('/admin/super-admin/api-documentation', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))
-    ->name('admin.api-docs.index');
+/** Public partner API documentation (no login). */
+Route::get('/docs/partner-api', fn () => inertia('Admin/SuperAdmin/ApiDocumentation'))
+    ->name('partner.api-documentation');
+
+Route::permanentRedirect('/admin/super-admin/api-documentation', '/docs/partner-api');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');

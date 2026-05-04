@@ -228,7 +228,7 @@
                     "Guide"
                 ],
                 "summary": "Public JSON integration guide",
-                "description": "No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes. For a full HTML doc use GET /admin/super-admin/api-documentation.",
+                "description": "No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes. For a full HTML doc use GET /docs/partner-api.",
                 "operationId": "partnerApiGuide",
                 "responses": {
                     "200": {
