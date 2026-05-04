@@ -24,7 +24,7 @@ class VerifyController extends BaseApiController
                 properties: [
                     new OA\Property(property: 'partner_code', type: 'string', example: 'SWAP_CIRCLE'),
                     new OA\Property(property: 'api_key', type: 'string', example: 'shown-once-when-admin-generated-key'),
-                    new OA\Property(property: 'base_url', type: 'string', format: 'uri', example: 'https://swap.example.com'),
+                    new OA\Property(property: 'base_url', type: 'string', format: 'uri', example: 'https://partner.example.com'),
                 ]
             )
         ),

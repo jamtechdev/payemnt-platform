@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PublicApiDocLayout from '@/layouts/PublicApiDocLayout';
 import { Button } from '@/components/ui/button';
-import { Copy, ExternalLink, ArrowRight } from 'lucide-react';
+import { Copy, ExternalLink } from 'lucide-react';
 
 const copyText = (text: string) => navigator.clipboard.writeText(text);
 
@@ -46,8 +46,7 @@ export default function ApiDocumentation() {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <p className="text-sm text-slate-600">
-                                    This guide covers <strong>creating the connection</strong>, <strong>implementing a service</strong> in your app, and calling Insurtech APIs. Reference:{' '}
-                                    <code className="rounded bg-white/80 px-1 text-xs">swap-circle/app/services/InsuretechSyncService.php</code>.
+                                    This guide covers <strong>creating the connection</strong>, <strong>implementing a small HTTP client or service</strong> in your app, and calling Insurtech partner APIs (catalog, submit, KYC).
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -180,7 +179,7 @@ export default function ApiDocumentation() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-slate-700">
-                            Swap reads <strong>database system_settings</strong> first, then falls back to <strong>.env</strong> (see <code className="rounded bg-slate-100 px-1 text-xs">getRuntimeSetting</code> in the reference service). Your app can use only env vars or only DB — the pattern is the same: one canonical base URL and one token string.
+                            Store <strong>base URL</strong> and <strong>token</strong> in environment variables, a secrets manager, or your own database settings table — whichever fits your stack. Use one canonical base URL (no trailing slash) and one Bearer token string.
                         </p>
                         <div className="overflow-auto rounded-lg border border-border">
                             <table className="w-full text-sm">
@@ -210,9 +209,9 @@ export default function ApiDocumentation() {
                                 </tbody>
                             </table>
                         </div>
-                        <p className="text-xs font-medium text-slate-700">Optional Laravel config file (defaults only; Swap uses this plus runtime overrides):</p>
+                        <p className="text-xs font-medium text-slate-700">Optional Laravel config file (read values from env):</p>
                         <CodeBlock
-                            code={`// config/insuretech.php — example (partner app; same as swap-circle)
+                            code={`// config/insuretech.php — example (partner app)
 return [
     'admin_base_url' => env('INSURETECH_ADMIN_BASE_URL', '${baseUrl}'),
     'partner_token' => env('INSURETECH_PARTNER_TOKEN', ''),
@@ -236,12 +235,12 @@ return [
                             <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed">
                                 <li>Load <strong>base URL</strong>, <strong>token</strong>, and <strong>timeout</strong> from config or secure storage.</li>
                                 <li>Build a single HTTP client: <code className="rounded bg-slate-100 px-1 text-xs">Accept: application/json</code>, <code className="rounded bg-slate-100 px-1 text-xs">Authorization: Bearer …</code>.</li>
-                                <li>Throw or return a clear error if base URL or token is missing (Swap throws <code className="rounded bg-slate-100 px-1 text-xs">RuntimeException</code>).</li>
+                                <li>Throw or return a clear error if base URL or token is missing (for example a <code className="rounded bg-slate-100 px-1 text-xs">RuntimeException</code> in PHP).</li>
                                 <li>Implement <strong>testConnection</strong>, <strong>pullCatalog</strong>, <strong>submitPolicy</strong>, and <strong>submitKyc</strong> as thin wrappers over REST paths.</li>
-                                <li>Map your internal product ID to <code className="rounded bg-slate-100 px-1 text-xs">product_code</code> before submit (Swap uses <code className="rounded bg-slate-100 px-1 text-xs">it_product_mappings</code>).</li>
+                                <li>Map your internal product ID to <code className="rounded bg-slate-100 px-1 text-xs">product_code</code> before submit (persist catalog rows or a dedicated mapping table).</li>
                             </ul>
                         </div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Laravel-style skeleton (pseudocode — mirror Swap structure)</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Laravel-style skeleton (pseudocode)</p>
                         <CodeBlock
                             code={`<?php
 // app/Services/InsurtechPartnerClient.php (name as you prefer)
@@ -317,7 +316,7 @@ class InsurtechPartnerClient
                         <SectionTitle
                             n="5"
                             title="Method → HTTP mapping (what your service should call)"
-                            sub="Same paths Swap uses in production."
+                            sub="Paths your integration should call on this portal."
                         />
                     </CardHeader>
                     <CardContent>
@@ -416,17 +415,13 @@ Content-Type: application/json
                         <SectionTitle
                             n="8"
                             title="Catalog sync (GET products)"
-                            sub="Swap: POST /api/insuretech/pull-products → same Insurtech GET below."
+                            sub="Call Insurtech directly from your backend or scheduled job."
                         />
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-                            <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">Partner app</span>
-                            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-                            <span className="rounded bg-emerald-50 px-2 py-1 font-mono text-xs text-emerald-800">POST /api/insuretech/pull-products</span>
-                            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-                            <span className="rounded bg-blue-50 px-2 py-1 font-mono text-xs text-blue-800">Insurtech</span>
-                        </div>
+                        <p className="text-sm text-slate-700">
+                            From your server, call Insurtech <strong>GET /api/v1/partner/products</strong> with the Bearer token. You may wrap this in your own internal route, queue worker, or cron — the contract is always this GET on the portal host.
+                        </p>
                         <CodeBlock code={`GET ${baseUrl}/api/v1/partner/products\nAuthorization: Bearer {INSURETECH_PARTNER_TOKEN}\nAccept: application/json`} />
                         <CodeBlock
                             code={`{
@@ -450,7 +445,7 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="9"
-                            title="Record a sale (recommended — Swap production)"
+                            title="Record a sale (recommended flow)"
                             sub="Submit policy, then KYC."
                         />
                     </CardHeader>
@@ -500,53 +495,16 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="10"
-                            title="Health check from Swap (reference)"
-                            sub="Internal route forwards to the same GET products call."
+                            title="Health check (GET products)"
+                            sub="Same endpoint as catalog pull; use for monitoring."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <CodeBlock
-                            code={`GET /api/insuretech/test-connection   (Swap Circle)
-
-GET ${baseUrl}/api/v1/partner/products
-Authorization: Bearer {INSURETECH_PARTNER_TOKEN}`}
+                            code={`GET ${baseUrl}/api/v1/partner/products
+Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
+Accept: application/json`}
                         />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Swap Circle vs Insurtech (quick map)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-auto rounded-lg border border-border">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-2 font-medium">Action</th>
-                                        <th className="px-4 py-2 font-medium">Swap Circle</th>
-                                        <th className="px-4 py-2 font-medium">Insurtech</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/60 text-xs text-slate-700">
-                                    <tr>
-                                        <td className="px-4 py-2 font-medium">Pull catalog</td>
-                                        <td className="px-4 py-2 font-mono text-slate-600">POST /api/insuretech/pull-products</td>
-                                        <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-4 py-2 font-medium">Push sale</td>
-                                        <td className="px-4 py-2 text-slate-600">InsuretechSyncService</td>
-                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/submit + POST …/kyc</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-4 py-2 font-medium">Health</td>
-                                        <td className="px-4 py-2 font-mono text-slate-600">GET /api/insuretech/test-connection</td>
-                                        <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -562,7 +520,7 @@ Authorization: Bearer {INSURETECH_PARTNER_TOKEN}`}
                         <CodeBlock code={`cd admin-portal\nphp artisan l5-swagger:generate`} />
                         <p className="text-xs text-slate-500">Output: <code className="rounded bg-slate-100 px-1">storage/api-docs/api-docs.json</code></p>
                         <p className="text-xs text-slate-600">
-                            Use <strong>Open Swagger</strong> above for the full generated catalog. This integration guide only documents the Swap-style flow (catalog, submit, KYC).
+                            Use <strong>Open Swagger</strong> above for the full generated catalog. This page focuses on the main distribution flow (catalog, submit, KYC).
                         </p>
                     </CardContent>
                 </Card>

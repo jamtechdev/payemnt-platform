@@ -15,7 +15,7 @@ class PartnerProductController extends BaseApiController
     #[OA\Get(
         path: '/api/v1/partner/products',
         operationId: 'partnerProductsList',
-        summary: 'Get all products of authenticated partner (used by Swap Circle to pull products)',
+        summary: 'Get all products available to the authenticated partner (catalog)',
         security: [['sanctum' => []]],
         tags: ['Products'],
         responses: [

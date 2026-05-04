@@ -29,8 +29,8 @@ class FaqController extends BaseApiController
                             required: ['faq_code', 'question', 'answer', 'status'],
                             properties: [
                                 new OA\Property(property: 'faq_code',  type: 'string', example: 'FAQ_001'),
-                                new OA\Property(property: 'question',  type: 'string', example: 'What is SwapCircle?'),
-                                new OA\Property(property: 'answer',    type: 'string', example: 'SwapCircle is a platform...'),
+                                new OA\Property(property: 'question',  type: 'string', example: 'How do I file a claim?'),
+                                new OA\Property(property: 'answer',    type: 'string', example: 'Open the Claims section in the app and follow the steps.'),
                                 new OA\Property(property: 'status',    type: 'string', example: 'active'),
                             ]
                         )

@@ -69,10 +69,10 @@ final class PartnerIntegrationGuide
             ],
             'config_file_note' => [
                 'laravel_example' => 'config/insuretech.php with admin_base_url, partner_token, request_timeout_seconds from env().',
-                'swap_circle_note' => 'swap-circle reads system_settings rows insuretech_admin_base_url and insuretech_partner_token when present, else falls back to env keys above (see InsuretechSyncService::getRuntimeSetting).',
+                'runtime_settings_note' => 'You may also load base URL and token from your own database-backed settings if you prefer that over env vars.',
             ],
             'suggested_partner_service' => [
-                'summary' => 'Encapsulate all Insurtech HTTP calls in one service class or module (same idea as swap-circle/app/services/InsuretechSyncService.php).',
+                'summary' => 'Encapsulate all Insurtech HTTP calls in one service class or module in your partner application.',
                 'responsibilities' => [
                     'Load base URL, token, and timeout from secure configuration.',
                     'Build one HTTP client: Accept application/json, Authorization Bearer {token}.',
@@ -194,7 +194,7 @@ final class PartnerIntegrationGuide
                 ],
                 [
                     'step' => 7,
-                    'title' => 'Record a sale (recommended — Swap Circle)',
+                    'title' => 'Record a sale (recommended flow)',
                     'actions' => [
                         'POST /api/v1/products/{product_code}/submit with Idempotency-Key header (required).',
                         'POST /api/v1/products/{product_code}/transactions/{transaction_number}/kyc with JSON body containing kyc object.',
@@ -202,8 +202,8 @@ final class PartnerIntegrationGuide
                 ],
             ],
             'reference_implementation' => [
-                'name' => 'Swap Circle (swap-circle)',
-                'summary' => 'Laravel app uses InsuretechSyncService: runtime settings insuretech_admin_base_url + insuretech_partner_token (or INSURETECH_ADMIN_BASE_URL / INSURETECH_PARTNER_TOKEN in .env).',
+                'name' => 'Typical partner backend',
+                'summary' => 'Any stack can integrate: keep INSURETECH_ADMIN_BASE_URL (or equivalent) and INSURETECH_PARTNER_TOKEN in secure configuration, then call the REST paths below.',
                 'calls' => [
                     'test_connection_and_pull' => 'GET {ADMIN_BASE_URL}/api/v1/partner/products',
                     'submit_policy' => 'POST {ADMIN_BASE_URL}/api/v1/products/{product_code}/submit',

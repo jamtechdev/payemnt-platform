@@ -26,8 +26,8 @@ class PartnerApiTest extends TestCase
         $partner = Partner::query()->create([
             'uuid' => (string) Str::uuid(),
             'partner_code' => 'PARTNER_001',
-            'name' => 'Swap Circle',
-            'slug' => 'swap-circle',
+            'name' => 'Integration Partner',
+            'slug' => 'integration-partner',
             'status' => 'active',
         ]);
 

@@ -14,7 +14,7 @@ class PartnerApiGuideController extends BaseApiController
         path: '/api/v1/partner/guide',
         operationId: 'partnerApiGuide',
         summary: 'Public JSON integration guide',
-        description: 'No authentication. Returns `data` with steps, endpoint paths, `public_base_url` (from APP_URL), and Swap Circle reference notes. For a full HTML doc use GET /docs/partner-api.',
+        description: 'No authentication. Returns `data` with steps, endpoint paths, and `public_base_url` (from APP_URL). For a full HTML doc use GET /docs/partner-api.',
         tags: ['Guide'],
         responses: [
             new OA\Response(
