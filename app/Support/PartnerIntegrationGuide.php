@@ -30,8 +30,22 @@ final class PartnerIntegrationGuide
                 'At least one product is assigned to the partner with access enabled.',
                 'Partner application maps its internal product identifiers to Insurtech product_code values returned by GET /api/v1/partner/products before calling submit.',
             ],
+            'products_creation_and_sharing' => [
+                'creation' => [
+                    'Super Admin UI: Products → Create (/admin/super-admin/products/create).',
+                    'Required on form: name, partner (primary partner), status (active/inactive). Insurtech auto-generates product_code (uppercase slug + suffix) used in all partner URLs.',
+                    'Add dynamic fields for KYC/policy questions as needed; saving regenerates api_schema.',
+                    'Partners cannot create products with the partner Bearer token: POST /api/v1/partner/products returns 403.',
+                ],
+                'sharing_to_partner_api' => [
+                    'Primary: selecting a partner on product create links that partner with access enabled.',
+                    'Additional partners: Partners → open partner → assign products and toggle enabled for each.',
+                    'GET /api/v1/partner/products lists active products the partner may sell: owned (products.partner_id) OR assigned with partner_product.is_enabled true (same rule as submit/KYC product resolution).',
+                ],
+                'admin_rest_note' => 'Full product CRUD for automation is under /api/v1/admin/products with Sanctum user auth (super_admin), not the partner API key.',
+            ],
             'admin_setup' => [
-                'Create products that partners may distribute.',
+                'Create products that partners may distribute (see products_creation_and_sharing in this JSON).',
                 'Super Admin: Partners → create or edit a partner; set status active; record partner_code.',
                 'Assign products to the partner and enable each assignment.',
                 'Generate API Key on the partner; copy the shown token once into the partner app secret store.',

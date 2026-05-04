@@ -49,13 +49,19 @@ class PartnerProductController extends BaseApiController
     {
         $partner = $request->attributes->get('partner');
 
+        // Same visibility as distribution (submit/KYC): owning partner OR pivot assignment with access enabled.
         $products = Product::query()
-            ->where('partner_id', $partner->id)
-            ->whereHas('partners', fn ($q) => $q->where('partner_product.partner_id', $partner->id)->where('partner_product.is_enabled', true))
+            ->where('status', Product::STATUS_ACTIVE)
+            ->where(function ($query) use ($partner): void {
+                $query->where('partner_id', $partner->id)
+                    ->orWhereHas('partners', fn ($partnerQuery) => $partnerQuery
+                        ->where('partners.id', $partner->id)
+                        ->where('partner_product.is_enabled', true));
+            })
             ->get()
             ->map(fn (Product $p) => [
                 'product_code' => $p->product_code,
-                'name'         => $p->name,
+                'name'         => $p->product_name ?: $p->name,
                 'description'  => $p->description,
                 'price'        => $p->price,
                 'status'       => $p->status,

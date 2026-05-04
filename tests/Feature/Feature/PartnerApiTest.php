@@ -74,4 +74,35 @@ class PartnerApiTest extends TestCase
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.customer.partner_id', 'PARTNER_001');
     }
+
+    public function test_partner_products_catalog_includes_pivot_assigned_products(): void
+    {
+        $partner = Partner::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'partner_code' => 'PARTNER_CAT',
+            'name' => 'Catalog Partner',
+            'slug' => 'catalog-partner',
+            'status' => 'active',
+        ]);
+
+        $product = Product::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'product_code' => 'PIVOT_ONLY_PROD',
+            'name' => 'Shared Product',
+            'slug' => 'shared-product',
+            'cover_duration_mode' => 'custom',
+            'default_cover_duration_days' => 365,
+            'status' => 'active',
+        ]);
+
+        $partner->products()->sync([$product->id => ['is_enabled' => true]]);
+
+        $token = $partner->createToken('partner-api')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/partner/products')
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonFragment(['product_code' => 'PIVOT_ONLY_PROD']);
+    }
 }

@@ -95,6 +95,56 @@ export default function ApiDocumentation() {
 
                 <Card>
                     <CardHeader>
+                        <CardTitle className="text-base">Products: create in admin and share to the partner API</CardTitle>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Partners never create products with the partner Bearer token — creation is Insurtech admin only. Sharing is assignment + access flags; the catalog is read from{' '}
+                            <code className="rounded bg-slate-100 px-1 text-xs">GET /api/v1/partner/products</code>.
+                        </p>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-700">
+                        <div>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Create (Super Admin UI)</p>
+                            <ol className="list-decimal space-y-2 pl-5 leading-relaxed">
+                                <li>
+                                    In the admin portal go to <strong>Products</strong> → <strong>Create</strong> (route{' '}
+                                    <code className="rounded bg-slate-100 px-1 text-xs">/admin/super-admin/products/create</code>).
+                                </li>
+                                <li>
+                                    Pick a <strong>partner</strong> on the form (required). On save, Insurtech generates a stable <code className="rounded bg-slate-100 px-1 text-xs">product_code</code> from the name (uppercase slug + suffix) — that code is what your partner app must use in{' '}
+                                    <code className="rounded bg-slate-100 px-1 text-xs">POST /api/v1/products/&#123;product_code&#125;/submit</code> and related paths.
+                                </li>
+                                <li>
+                                    Set <strong>status</strong> to <strong>active</strong> for anything you want listed and sellable. Add <strong>dynamic fields</strong> (KYC / policy questions) as needed; Insurtech rebuilds the internal <code className="rounded bg-slate-100 px-1 text-xs">api_schema</code> when you save.
+                                </li>
+                                <li>
+                                    Configure <strong>cover duration options</strong>, pricing, image, validation rules, and terms as required by your product.
+                                </li>
+                            </ol>
+                        </div>
+                        <div>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Share (who sees it in the API)</p>
+                            <ul className="list-disc space-y-2 pl-5 leading-relaxed">
+                                <li>
+                                    <strong>Primary link on create:</strong> the partner you select on the product form is linked with access <strong>enabled</strong> automatically.
+                                </li>
+                                <li>
+                                    <strong>More partners:</strong> open <strong>Partners</strong> → choose the partner → assign products and turn <strong>enabled</strong> on for each product you want them to sell.
+                                </li>
+                                <li>
+                                    <code className="rounded bg-slate-100 px-1 text-xs">GET /api/v1/partner/products</code> returns <strong>active</strong> products that either belong to that partner (<code className="rounded bg-slate-100 px-1 text-xs">partner_id</code>) or are assigned on the pivot with <strong>enabled</strong> access — same rule as submit/KYC resolution.
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="rounded-md border border-amber-200/80 bg-amber-50/80 px-3 py-2 text-xs text-amber-950">
+                            <strong>Partner token and product writes:</strong> <code className="rounded bg-white/80 px-1">POST /api/v1/partner/products</code> is blocked (403) — products are not created via the partner API. Optional{' '}
+                            <code className="rounded bg-white/80 px-1">PUT /api/v1/partner/products/&#123;product_code&#125;</code> exists for limited metadata updates on partner-owned rows; automation for full CRUD uses separate{' '}
+                            <code className="rounded bg-white/80 px-1">/api/v1/admin/products</code> with a <strong>Sanctum user</strong> session (super_admin), not the partner API key — see Swagger under admin routes if enabled.
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <SectionTitle
                             n="2"
                             title="Create the connection (Insurtech admin)"
@@ -103,7 +153,7 @@ export default function ApiDocumentation() {
                     </CardHeader>
                     <CardContent>
                         <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
-                            <li>Create the products you want partners to distribute.</li>
+                            <li>Create products (see <strong>Products: create in admin and share</strong> above) before or while onboarding partners.</li>
                             <li>
                                 Go to <strong>Partners</strong> → <strong>Create</strong> (or edit) a partner. Set status to <strong>active</strong>. Save and copy <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code> for optional verify calls.
                             </li>
