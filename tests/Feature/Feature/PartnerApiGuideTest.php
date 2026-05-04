@@ -17,6 +17,9 @@ class PartnerApiGuideTest extends TestCase
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.title', 'Insurtech Partner API Guide')
-            ->assertJsonPath('data.endpoints.create_or_upsert_transaction.endpoint', '/api/v1/transactions');
+            ->assertJsonPath('data.endpoints.create_or_upsert_transaction.endpoint', '/api/v1/transactions')
+            ->assertJsonPath('data.suggested_partner_service.suggested_methods.0.name', 'testConnection')
+            ->assertJsonCount(4, 'data.connection_prerequisites')
+            ->assertJsonCount(8, 'data.integration_steps');
     }
 }

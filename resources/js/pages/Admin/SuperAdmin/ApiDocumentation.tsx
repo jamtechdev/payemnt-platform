@@ -48,9 +48,8 @@ export default function ApiDocumentation() {
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-800">Partner API integration</h2>
                                 <p className="text-sm text-slate-600">
-                                    External apps call this portal at <strong>{baseUrl}</strong> over HTTPS. Swap Circle is the reference
-                                    implementation: <code className="rounded bg-white/80 px-1 text-xs">swap-circle/app/services/InsuretechSyncService.php</code>{' '}
-                                    (HTTP client: base URL + <code className="rounded bg-white/80 px-1 text-xs">Authorization: Bearer</code> token).
+                                    This page walks through <strong>creating the connection</strong>, <strong>implementing a service</strong> in your app, and calling Insurtech APIs. Reference:{' '}
+                                    <code className="rounded bg-white/80 px-1 text-xs">swap-circle/app/services/InsuretechSyncService.php</code>.
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -85,20 +84,23 @@ export default function ApiDocumentation() {
                     <CardHeader>
                         <SectionTitle
                             n="1"
-                            title="Prepare the partner on this admin portal"
-                            sub="Super Admin actions before any partner traffic."
+                            title="What “connection” means"
+                            sub="Before you write code, all of these must be true."
                         />
                     </CardHeader>
-                    <CardContent>
-                        <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
-                            <li>Create products that partners may sell.</li>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                        <ol className="list-decimal space-y-2 pl-5 leading-relaxed">
                             <li>
-                                Open <strong>Partners</strong>, create an <strong>active</strong> partner, and note <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code>.
+                                <strong>Network:</strong> Your partner server can reach this portal at <code className="rounded bg-slate-100 px-1 text-xs">{baseUrl}</code> over HTTPS (or HTTP in local dev).
                             </li>
-                            <li>Assign products to that partner and enable access.</li>
                             <li>
-                                On the partner detail screen, use <strong>Generate API Key</strong>. Copy the token once — that string is the Bearer token
-                                (Sanctum personal access token for the partner).
+                                <strong>Credentials:</strong> You have a <strong>Bearer token</strong> issued for an <strong>active</strong> partner (Generate API Key in admin).
+                            </li>
+                            <li>
+                                <strong>Catalog rights:</strong> At least one product is <strong>assigned and enabled</strong> for that partner, otherwise product list and submit paths return empty or 404.
+                            </li>
+                            <li>
+                                <strong>Product mapping:</strong> Your app maps your local SKU to Insurtech <code className="rounded bg-slate-100 px-1 text-xs">product_code</code> from the catalog response before calling submit.
                             </li>
                         </ol>
                     </CardContent>
@@ -108,35 +110,214 @@ export default function ApiDocumentation() {
                     <CardHeader>
                         <SectionTitle
                             n="2"
-                            title="Configure the partner application"
-                            sub="Same pattern as Swap Circle: system settings and/or environment variables."
+                            title="Create the connection (Insurtech admin)"
+                            sub="Super Admin — do this first; nothing works until the partner and token exist."
                         />
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent>
+                        <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
+                            <li>Create the products you want partners to distribute.</li>
+                            <li>
+                                Go to <strong>Partners</strong> → <strong>Create</strong> (or edit) a partner. Set status to <strong>active</strong>. Save and copy <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code> for optional verify calls.
+                            </li>
+                            <li>
+                                On that partner, <strong>assign products</strong> and toggle them <strong>enabled</strong> for this partner.
+                            </li>
+                            <li>
+                                Click <strong>Generate API Key</strong>. Copy the token immediately — this is the only time the raw Bearer token is shown. Store it in your partner app secrets (env, vault, or encrypted settings).
+                            </li>
+                            <li className="text-slate-600">
+                                Optional: call <code className="rounded bg-slate-100 px-1 text-xs">POST /api/v1/verify</code> with <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code>, plaintext <code className="rounded bg-slate-100 px-1 text-xs">api_key</code> from key creation, and your partner <code className="rounded bg-slate-100 px-1 text-xs">base_url</code> so Insurtech records where you connect from (does not return a new token).
+                            </li>
+                        </ol>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <SectionTitle
+                            n="3"
+                            title="Configure the partner application"
+                            sub="Expose base URL, token, and timeout to your service layer."
+                        />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-slate-700">
+                            Swap reads <strong>database system_settings</strong> first, then falls back to <strong>.env</strong> (see <code className="rounded bg-slate-100 px-1 text-xs">getRuntimeSetting</code> in the reference service). Your app can use only env vars or only DB — the pattern is the same: one canonical base URL and one token string.
+                        </p>
                         <div className="overflow-auto rounded-lg border border-border">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                                         <th className="px-4 py-2 font-medium">Variable</th>
                                         <th className="px-4 py-2 font-medium">Example</th>
-                                        <th className="px-4 py-2 font-medium">Description</th>
+                                        <th className="px-4 py-2 font-medium">Role</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/60 text-xs text-slate-600">
                                     <tr>
                                         <td className="px-4 py-2 font-mono text-primary">INSURETECH_ADMIN_BASE_URL</td>
                                         <td className="px-4 py-2">{baseUrl}</td>
-                                        <td className="px-4 py-2 text-slate-500">Public origin of this portal; no trailing slash.</td>
+                                        <td className="px-4 py-2 text-slate-500">Scheme + host; no trailing slash.</td>
                                     </tr>
                                     <tr>
                                         <td className="px-4 py-2 font-mono text-primary">INSURETECH_PARTNER_TOKEN</td>
                                         <td className="px-4 py-2">(secret)</td>
-                                        <td className="px-4 py-2 text-slate-500">Bearer token from Generate API Key.</td>
+                                        <td className="px-4 py-2 text-slate-500">Bearer token from step 2.</td>
                                     </tr>
                                     <tr>
                                         <td className="px-4 py-2 font-mono text-primary">INSURETECH_REQUEST_TIMEOUT</td>
                                         <td className="px-4 py-2">20–30</td>
-                                        <td className="px-4 py-2 text-slate-500">HTTP timeout in seconds.</td>
+                                        <td className="px-4 py-2 text-slate-500">HTTP client timeout (seconds).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p className="text-xs font-medium text-slate-700">Optional Laravel config file (defaults only; Swap uses this plus runtime overrides):</p>
+                        <CodeBlock
+                            code={`// config/insuretech.php — example defaults
+return [
+    'admin_base_url' => env('INSURETECH_ADMIN_BASE_URL', '${baseUrl}'),
+    'partner_token' => env('INSURETECH_PARTNER_TOKEN', ''),
+    'request_timeout_seconds' => (int) env('INSURETECH_REQUEST_TIMEOUT', 20),
+];`}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <SectionTitle
+                            n="4"
+                            title="Create the integration service (application code)"
+                            sub="Encapsulate every Insurtech call behind one class or module."
+                        />
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-slate-700">
+                        <div>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Responsibilities</p>
+                            <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed">
+                                <li>Load <strong>base URL</strong>, <strong>token</strong>, and <strong>timeout</strong> from config or secure storage.</li>
+                                <li>Build a single HTTP client: <code className="rounded bg-slate-100 px-1 text-xs">Accept: application/json</code>, <code className="rounded bg-slate-100 px-1 text-xs">Authorization: Bearer …</code>.</li>
+                                <li>Throw or return a clear error if base URL or token is missing (Swap throws <code className="rounded bg-slate-100 px-1 text-xs">RuntimeException</code>).</li>
+                                <li>Implement <strong>testConnection</strong>, <strong>pullCatalog</strong>, <strong>submitPolicy</strong>, <strong>submitKyc</strong> (and optional batch sync) as thin wrappers over REST paths.</li>
+                                <li>Map your internal product ID to <code className="rounded bg-slate-100 px-1 text-xs">product_code</code> before submit (Swap uses <code className="rounded bg-slate-100 px-1 text-xs">it_product_mappings</code>).</li>
+                            </ul>
+                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Laravel-style skeleton (pseudocode — mirror Swap structure)</p>
+                        <CodeBlock
+                            code={`<?php
+// app/Services/InsurtechPartnerClient.php (name as you prefer)
+
+namespace App\\Services;
+
+use Illuminate\\Support\\Facades\\Http;
+
+class InsurtechPartnerClient
+{
+    private function settings(): array
+    {
+        $base = rtrim(config('insurtech.admin_base_url'), '/');
+        $token = (string) config('insurtech.partner_token');
+        $timeout = (int) config('insuretech.request_timeout_seconds', 20);
+        if ($base === '' || $token === '') {
+            throw new \\RuntimeException('Insurtech base URL or partner token missing.');
+        }
+        return compact('base', 'token', 'timeout');
+    }
+
+    private function client(): \\Illuminate\\Http\\Client\\PendingRequest
+    {
+        $s = $this->settings();
+        return Http::baseUrl($s['base'])
+            ->timeout($s['timeout'])
+            ->acceptJson()
+            ->withToken($s['token']);
+    }
+
+    public function testConnection(): array
+    {
+        $response = $this->client()->get('/api/v1/partner/products');
+        if (! $response->successful()) {
+            return ['ok' => false, 'status' => $response->status(), 'body' => $response->json()];
+        }
+        return ['ok' => true, 'status' => $response->status()];
+    }
+
+    public function pullCatalog(): array
+    {
+        $response = $this->client()->get('/api/v1/partner/products');
+        // Parse response->json('data'), upsert local catalog + code mapping table
+        return ['ok' => $response->successful(), 'payload' => $response->json()];
+    }
+
+    public function submitSale(string $productCode, array $body, string $idempotencyKey): array
+    {
+        $response = $this->client()
+            ->withHeaders(['Idempotency-Key' => $idempotencyKey])
+            ->post("/api/v1/products/{$productCode}/submit", $body);
+        return ['ok' => $response->successful(), 'payload' => $response->json()];
+    }
+
+    public function submitKyc(string $productCode, string $transactionNumber, array $kyc): array
+    {
+        $response = $this->client()->post(
+            "/api/v1/products/{$productCode}/transactions/{$transactionNumber}/kyc",
+            ['kyc' => $kyc]
+        );
+        return ['ok' => $response->successful(), 'payload' => $response->json()];
+    }
+}`}
+                        />
+                        <p className="text-xs text-slate-600">
+                            <strong>Wiring:</strong> Register the class in the container if needed, inject it into controllers or jobs, and call <code className="rounded bg-slate-100 px-1 text-xs">testConnection()</code> from an admin “Test Insurtech” button before enabling sync. On purchase webhooks or queue workers, call <code className="rounded bg-slate-100 px-1 text-xs">submitSale</code> then <code className="rounded bg-slate-100 px-1 text-xs">submitKyc</code> with the same <code className="rounded bg-slate-100 px-1 text-xs">transaction_number</code> returned or sent in the submit body.
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <SectionTitle
+                            n="5"
+                            title="Method → HTTP mapping (what your service should call)"
+                            sub="Same paths Swap uses in production."
+                        />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-auto rounded-lg border border-border">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
+                                        <th className="px-4 py-2 font-medium">Service method (suggested)</th>
+                                        <th className="px-4 py-2 font-medium">HTTP</th>
+                                        <th className="px-4 py-2 font-medium">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/60 text-xs text-slate-700">
+                                    <tr>
+                                        <td className="px-4 py-2 font-mono text-slate-800">testConnection()</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
+                                        <td className="px-4 py-2 text-slate-600">Lightweight health check.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-mono text-slate-800">pullCatalog()</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
+                                        <td className="px-4 py-2 text-slate-600">Then persist <code className="rounded bg-slate-100 px-1">product_code</code> locally.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-mono text-slate-800">submitSale()</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">POST /api/v1/products/&#123;code&#125;/submit</td>
+                                        <td className="px-4 py-2 text-slate-600">Header <code className="rounded bg-slate-100 px-1">Idempotency-Key</code> required.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-mono text-slate-800">submitKyc()</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/transactions/&#123;txn&#125;/kyc</td>
+                                        <td className="px-4 py-2 text-slate-600">JSON body with a <code className="rounded bg-slate-100 px-1">kyc</code> object.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-mono text-slate-800">ingestTransaction() (optional)</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">POST /api/v1/transactions</td>
+                                        <td className="px-4 py-2 text-slate-600">Single-shot alternative to submit+kyc.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -147,25 +328,54 @@ export default function ApiDocumentation() {
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="3"
-                            title="Fetch the machine-readable guide (no authentication)"
-                            sub="Useful for onboarding scripts; APP_URL must match the public deployment."
+                            n="6"
+                            title="Validate the connection after implementation"
+                            sub="Run these checks in order."
                         />
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <CodeBlock code={`GET ${partnerGuideUrl}`} />
-                        <p className="text-xs text-slate-600">
-                            Response includes <code className="rounded bg-slate-100 px-1">data</code> with steps, endpoint paths, and <code className="rounded bg-slate-100 px-1">public_base_url</code>.
-                        </p>
+                    <CardContent className="space-y-4 text-sm text-slate-700">
+                        <ol className="list-decimal space-y-2 pl-5 leading-relaxed">
+                            <li>
+                                From the partner server, run <code className="rounded bg-slate-100 px-1 text-xs">testConnection()</code> (GET products). Expect <strong>200</strong> and a JSON body with <code className="rounded bg-slate-100 px-1 text-xs">status: success</code>.
+                            </li>
+                            <li>
+                                If you get <strong>401</strong>, the token is wrong, expired, or the partner is inactive — regenerate the key or re-copy the secret.
+                            </li>
+                            <li>
+                                If <strong>200</strong> but <code className="rounded bg-slate-100 px-1 text-xs">data</code> is empty, fix product assignment on Insurtech for this partner.
+                            </li>
+                            <li>
+                                Optional: <code className="rounded bg-slate-100 px-1 text-xs">GET {baseUrl}/api/v1/verify-token</code> with Bearer confirms the token is accepted and returns partner metadata.
+                            </li>
+                        </ol>
+                        <p className="text-xs font-medium text-slate-600">Example (replace TOKEN):</p>
+                        <CodeBlock
+                            code={`curl -sS -H "Authorization: Bearer TOKEN" \\
+  -H "Accept: application/json" \\
+  "${baseUrl}/api/v1/partner/products"`}
+                        />
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="4"
-                            title="Optional: register the partner base URL"
-                            sub="Does not return a Bearer token; updates stored connection metadata."
+                            n="7"
+                            title="Public machine-readable contract"
+                            sub="No Bearer token — for CI and partner onboarding automation."
+                        />
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <CodeBlock code={`GET ${partnerGuideUrl}`} />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <SectionTitle
+                            n="8"
+                            title="Optional: POST /api/v1/verify"
+                            sub="Registers partner base URL; does not issue Bearer token."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -175,7 +385,7 @@ Content-Type: application/json
 
 {
   "partner_code": "YOUR_PARTNER_CODE",
-  "api_key": "plaintext key from the moment it was generated in admin",
+  "api_key": "plaintext key from generation time",
   "base_url": "https://partner.example.com"
 }`}
                         />
@@ -185,25 +395,20 @@ Content-Type: application/json
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="5"
-                            title="Sync the product catalog"
-                            sub="Swap calls Insurtech from pull-products; your app can call Insurtech directly the same way."
+                            n="9"
+                            title="Catalog sync (GET products)"
+                            sub="Swap: POST /api/insuretech/pull-products → same Insurtech GET below."
                         />
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-                            <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">Swap Circle</span>
+                            <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">Partner app</span>
                             <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                             <span className="rounded bg-emerald-50 px-2 py-1 font-mono text-xs text-emerald-800">POST /api/insuretech/pull-products</span>
                             <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                             <span className="rounded bg-blue-50 px-2 py-1 font-mono text-xs text-blue-800">Insurtech</span>
                         </div>
-                        <p className="text-xs font-medium text-slate-700">Insurtech endpoint:</p>
                         <CodeBlock code={`GET ${baseUrl}/api/v1/partner/products\nAuthorization: Bearer {INSURETECH_PARTNER_TOKEN}\nAccept: application/json`} />
-                        <p className="text-xs text-slate-600">
-                            Swap persists rows to <code className="rounded bg-slate-100 px-1">products</code> and <code className="rounded bg-slate-100 px-1">it_product_mappings</code>. <code className="rounded bg-slate-100 px-1">guide_price</code> is never returned on partner APIs.
-                        </p>
-                        <p className="text-xs text-slate-500">Example success shape:</p>
                         <CodeBlock
                             code={`{
   "status": "success",
@@ -225,14 +430,14 @@ Content-Type: application/json
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="6"
-                            title="Record a sale (Swap production flow)"
-                            sub="Submit policy, then KYC. Use admin product_code from the catalog response."
+                            n="10"
+                            title="Record a sale (recommended — Swap production)"
+                            sub="Submit policy, then KYC."
                         />
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
-                            <p className="mb-1 text-xs font-medium text-slate-700">6a — Submit policy (Idempotency-Key header is required)</p>
+                            <p className="mb-1 text-xs font-medium text-slate-700">10a — Submit</p>
                             <CodeBlock
                                 code={`POST ${baseUrl}/api/v1/products/{product_code}/submit
 Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
@@ -240,20 +445,20 @@ Idempotency-Key: {unique_per_attempt}
 Content-Type: application/json
 
 {
-  "transaction_number": "SWAP-12345-abc123",
+  "transaction_number": "PARTNER-TXN-001",
   "customer_name": "Jane Doe",
   "customer_email": "jane@example.com",
   "phone": "+2348000000000",
   "cover_duration": "30_days",
   "status": "active",
-  "notes": "Synced from swap-circle",
+  "notes": "Synced from partner",
   "amount": 739,
   "currency": "NGN"
 }`}
                             />
                         </div>
                         <div>
-                            <p className="mb-1 text-xs font-medium text-slate-700">6b — Submit KYC for that transaction</p>
+                            <p className="mb-1 text-xs font-medium text-slate-700">10b — KYC</p>
                             <CodeBlock
                                 code={`POST ${baseUrl}/api/v1/products/{product_code}/transactions/{transaction_number}/kyc
 Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
@@ -264,9 +469,7 @@ Content-Type: application/json
     "id_type": "phone",
     "id_number": "+2348000000000",
     "first_name": "Jane",
-    "last_name": "Doe",
-    "dob": "",
-    "address": ""
+    "last_name": "Doe"
   }
 }`}
                             />
@@ -277,20 +480,17 @@ Content-Type: application/json
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="7"
-                            title="Verify connectivity"
-                            sub="Swap exposes GET /api/insuretech/test-connection; it uses the same Insurtech call as catalog sync."
+                            n="11"
+                            title="Health check from Swap (reference)"
+                            sub="Internal route forwards to the same GET products call."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <CodeBlock
-                            code={`GET /api/insuretech/test-connection
-  (Swap Circle internal route)
+                            code={`GET /api/insuretech/test-connection   (Swap Circle)
 
 GET ${baseUrl}/api/v1/partner/products
-Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
-
-Expect HTTP 200 with JSON. 401 means invalid or inactive token. Empty product list means assignments are missing.`}
+Authorization: Bearer {INSURETECH_PARTNER_TOKEN}`}
                         />
                     </CardContent>
                 </Card>
@@ -298,9 +498,9 @@ Expect HTTP 200 with JSON. 401 means invalid or inactive token. Empty product li
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="8"
-                            title="Alternative: single-shot transaction ingest"
-                            sub="Optional path for simpler integrations. Swap uses step 6 instead."
+                            n="12"
+                            title="Alternative: POST /api/v1/transactions"
+                            sub="Single request; see Swagger for all fields."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -319,19 +519,12 @@ Content-Type: application/json
   "date_added": "2026-05-04 10:00:00"
 }`}
                         />
-                        <p className="text-xs text-slate-600">
-                            If you send <code className="rounded bg-slate-100 px-1">Idempotency-Key</code>, it must equal <code className="rounded bg-slate-100 px-1">transaction_number</code>. See Swagger for full field list.
-                        </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <SectionTitle
-                            n="9"
-                            title="Other authenticated partner endpoints"
-                            sub="Bearer token required unless noted. Full request bodies are in Swagger UI."
-                        />
+                        <CardTitle className="text-base">Other partner endpoints (Bearer)</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="overflow-auto rounded-lg border border-border">
@@ -344,7 +537,7 @@ Content-Type: application/json
                                 </thead>
                                 <tbody className="divide-y divide-border/60 text-xs text-slate-700">
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Validate Bearer token</td>
+                                        <td className="px-4 py-2 font-medium">Validate token</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET {baseUrl}/api/v1/verify-token</td>
                                     </tr>
                                     <tr>
@@ -364,15 +557,15 @@ Content-Type: application/json
                                         <td className="px-4 py-2 font-mono text-blue-800">POST {baseUrl}/api/v1/products/&lt;code&gt;/transactions/&lt;txn&gt;/cancel</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Inbound callback (signed)</td>
+                                        <td className="px-4 py-2 font-medium">Callback (signed)</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">POST {baseUrl}/api/v1/products/&lt;code&gt;/transactions/&lt;txn&gt;/callback</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all customers (destructive)</td>
+                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all customers</td>
                                         <td className="px-4 py-2 font-mono text-amber-800">DELETE {baseUrl}/api/v1/customers</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all transactions (destructive)</td>
+                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all transactions</td>
                                         <td className="px-4 py-2 font-mono text-amber-800">DELETE {baseUrl}/api/v1/transactions</td>
                                     </tr>
                                 </tbody>
@@ -403,16 +596,16 @@ Content-Type: application/json
                                     </tr>
                                     <tr>
                                         <td className="px-4 py-2 font-medium">Push sale</td>
-                                        <td className="px-4 py-2 text-slate-600">Purchase / sync jobs</td>
-                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/submit then POST …/kyc</td>
+                                        <td className="px-4 py-2 text-slate-600">InsuretechSyncService</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/submit + POST …/kyc</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Health check</td>
+                                        <td className="px-4 py-2 font-medium">Health</td>
                                         <td className="px-4 py-2 font-mono text-slate-600">GET /api/insuretech/test-connection</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Public guide JSON</td>
+                                        <td className="px-4 py-2 font-medium">JSON guide</td>
                                         <td className="px-4 py-2 text-slate-500">—</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/guide</td>
                                     </tr>
@@ -429,10 +622,10 @@ Content-Type: application/json
                     <CardContent className="space-y-2 text-sm text-slate-600">
                         <p className="text-xs">
                             After changing OpenAPI attributes under <code className="rounded bg-slate-100 px-1">app/Http/Controllers/Api/V1/</code> or{' '}
-                            <code className="rounded bg-slate-100 px-1">app/OpenApi/</code>, run:
+                            <code className="rounded bg-slate-100 px-1">app/OpenApi/</code>:
                         </p>
                         <CodeBlock code={`cd admin-portal\nphp artisan l5-swagger:generate`} />
-                        <p className="text-xs text-slate-500">Writes <code className="rounded bg-slate-100 px-1">storage/api-docs/api-docs.json</code> consumed by Swagger UI below.</p>
+                        <p className="text-xs text-slate-500">Output: <code className="rounded bg-slate-100 px-1">storage/api-docs/api-docs.json</code></p>
                     </CardContent>
                 </Card>
 
