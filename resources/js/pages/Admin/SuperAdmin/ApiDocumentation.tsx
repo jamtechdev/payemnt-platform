@@ -46,11 +46,11 @@ export default function ApiDocumentation() {
                     <CardContent className="pt-5">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-800">Swap Circle ↔ Insurtech — Partner API guide</h2>
-                                <p className="text-sm text-slate-500">
-                                    Urdu: Swap Circle jaisa koi bhi partner isi <strong>public base URL</strong> ({baseUrl}) par HTTPS APIs call karta hai.
-                                    English: Same steps apply for any new partner; Swap is the reference implementation in{' '}
-                                    <code className="rounded bg-white/80 px-1 text-xs">InsuretechSyncService.php</code>.
+                                <h2 className="text-lg font-semibold text-slate-800">Partner API integration</h2>
+                                <p className="text-sm text-slate-600">
+                                    External apps call this portal at <strong>{baseUrl}</strong> over HTTPS. Swap Circle is the reference
+                                    implementation: <code className="rounded bg-white/80 px-1 text-xs">swap-circle/app/services/InsuretechSyncService.php</code>{' '}
+                                    (HTTP client: base URL + <code className="rounded bg-white/80 px-1 text-xs">Authorization: Bearer</code> token).
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -84,55 +84,21 @@ export default function ApiDocumentation() {
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="0"
-                            title="Swagger (OpenAPI) — regenerate after PHP changes"
-                            sub="Repo mein annotations update hone par docs dubara generate karein."
-                        />
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-xs text-slate-600">
-                        <p>
-                            Controllers under <code className="rounded bg-slate-100 px-1">app/Http/Controllers/Api/V1/</code> aur{' '}
-                            <code className="rounded bg-slate-100 px-1">app/OpenApi/OpenApiSpec.php</code> se L5-Swagger JSON build hota hai.
-                        </p>
-                        <CodeBlock code={`cd admin-portal\nphp artisan l5-swagger:generate`} />
-                        <p className="text-slate-500">Output: <code className="rounded bg-slate-100 px-1">storage/api-docs/api-docs.json</code> — Swagger UI isi file ko padhta hai.</p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <SectionTitle
                             n="1"
-                            title="Public JSON contract (no Bearer token)"
-                            sub="GET /api/v1/partner/guide — production par APP_URL sahi hona zaroori hai."
+                            title="Prepare the partner on this admin portal"
+                            sub="Super Admin actions before any partner traffic."
                         />
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <CodeBlock code={`GET ${partnerGuideUrl}`} />
-                        <p className="text-xs text-slate-500">
-                            Response <code className="rounded bg-slate-100 px-1">data</code> ke andar steps, endpoints, <code className="rounded bg-slate-100 px-1">public_base_url</code> milta hai — CI / partner onboarding scripts ke liye.
-                        </p>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <SectionTitle
-                            n="2"
-                            title="Insurtech admin side — Super Admin onboarding"
-                            sub="Pehle yahan setup, phir partner app mein token lagao."
-                        />
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-slate-600">
-                        <ol className="list-decimal space-y-1.5 pl-5 text-xs leading-relaxed">
-                            <li>Products banao / choose karo jo partners ko bechni hain.</li>
+                    <CardContent>
+                        <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700">
+                            <li>Create products that partners may sell.</li>
                             <li>
-                                <strong>Partners</strong>: naya partner (active) — <code className="rounded bg-slate-100 px-1">partner_code</code> note karo.
+                                Open <strong>Partners</strong>, create an <strong>active</strong> partner, and note <code className="rounded bg-slate-100 px-1 text-xs">partner_code</code>.
                             </li>
-                            <li>Us partner ko products assign karo (enabled).</li>
+                            <li>Assign products to that partner and enable access.</li>
                             <li>
-                                Partner detail → <strong>Generate API Key</strong>: jo token ek dafa dikhe, wohi{' '}
-                                <code className="rounded bg-slate-100 px-1">Authorization: Bearer</code> value hai (Sanctum personal access token).
+                                On the partner detail screen, use <strong>Generate API Key</strong>. Copy the token once — that string is the Bearer token
+                                (Sanctum personal access token for the partner).
                             </li>
                         </ol>
                     </CardContent>
@@ -141,9 +107,9 @@ export default function ApiDocumentation() {
                 <Card>
                     <CardHeader>
                         <SectionTitle
-                            n="3"
-                            title="Swap Circle (ya koi partner app) — configuration"
-                            sub="System Settings ya .env — base URL hamesha is Insurtech portal ka public origin."
+                            n="2"
+                            title="Configure the partner application"
+                            sub="Same pattern as Swap Circle: system settings and/or environment variables."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -151,26 +117,26 @@ export default function ApiDocumentation() {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-2 font-medium">Setting / ENV</th>
+                                        <th className="px-4 py-2 font-medium">Variable</th>
                                         <th className="px-4 py-2 font-medium">Example</th>
-                                        <th className="px-4 py-2 font-medium">Note</th>
+                                        <th className="px-4 py-2 font-medium">Description</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/60">
+                                <tbody className="divide-y divide-border/60 text-xs text-slate-600">
                                     <tr>
-                                        <td className="px-4 py-2 font-mono text-xs text-primary">INSURETECH_ADMIN_BASE_URL</td>
-                                        <td className="px-4 py-2 text-xs text-slate-600">{baseUrl}</td>
-                                        <td className="px-4 py-2 text-xs text-slate-500">Trailing slash avoid karein.</td>
+                                        <td className="px-4 py-2 font-mono text-primary">INSURETECH_ADMIN_BASE_URL</td>
+                                        <td className="px-4 py-2">{baseUrl}</td>
+                                        <td className="px-4 py-2 text-slate-500">Public origin of this portal; no trailing slash.</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-mono text-xs text-primary">INSURETECH_PARTNER_TOKEN</td>
-                                        <td className="px-4 py-2 text-xs text-slate-600">(secret)</td>
-                                        <td className="px-4 py-2 text-xs text-slate-500">Generate API Key se copy.</td>
+                                        <td className="px-4 py-2 font-mono text-primary">INSURETECH_PARTNER_TOKEN</td>
+                                        <td className="px-4 py-2">(secret)</td>
+                                        <td className="px-4 py-2 text-slate-500">Bearer token from Generate API Key.</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-mono text-xs text-primary">INSURETECH_REQUEST_TIMEOUT</td>
-                                        <td className="px-4 py-2 text-xs text-slate-600">20–30</td>
-                                        <td className="px-4 py-2 text-xs text-slate-500">Seconds.</td>
+                                        <td className="px-4 py-2 font-mono text-primary">INSURETECH_REQUEST_TIMEOUT</td>
+                                        <td className="px-4 py-2">20–30</td>
+                                        <td className="px-4 py-2 text-slate-500">HTTP timeout in seconds.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -181,9 +147,25 @@ export default function ApiDocumentation() {
                 <Card>
                     <CardHeader>
                         <SectionTitle
+                            n="3"
+                            title="Fetch the machine-readable guide (no authentication)"
+                            sub="Useful for onboarding scripts; APP_URL must match the public deployment."
+                        />
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <CodeBlock code={`GET ${partnerGuideUrl}`} />
+                        <p className="text-xs text-slate-600">
+                            Response includes <code className="rounded bg-slate-100 px-1">data</code> with steps, endpoint paths, and <code className="rounded bg-slate-100 px-1">public_base_url</code>.
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <SectionTitle
                             n="4"
-                            title="Optional — POST /api/v1/verify (partner base URL register)"
-                            sub="Bearer token nahi milta; sirf connected_base_url update hota hai."
+                            title="Optional: register the partner base URL"
+                            sub="Does not return a Bearer token; updates stored connection metadata."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -193,7 +175,7 @@ Content-Type: application/json
 
 {
   "partner_code": "YOUR_PARTNER_CODE",
-  "api_key": "plaintext key (admin ne jis waqt generate kiya)",
+  "api_key": "plaintext key from the moment it was generated in admin",
   "base_url": "https://partner.example.com"
 }`}
                         />
@@ -204,23 +186,24 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="5"
-                            title="Pull products — Insurtech → partner"
-                            sub='Swap: admin "Pull Admin Products" → internally yeh Insurtech call.'
+                            title="Sync the product catalog"
+                            sub="Swap calls Insurtech from pull-products; your app can call Insurtech directly the same way."
                         />
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
                             <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">Swap Circle</span>
                             <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                             <span className="rounded bg-emerald-50 px-2 py-1 font-mono text-xs text-emerald-800">POST /api/insuretech/pull-products</span>
                             <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                             <span className="rounded bg-blue-50 px-2 py-1 font-mono text-xs text-blue-800">Insurtech</span>
                         </div>
-                        <p className="text-xs font-medium text-slate-600">Insurtech (Bearer required):</p>
+                        <p className="text-xs font-medium text-slate-700">Insurtech endpoint:</p>
                         <CodeBlock code={`GET ${baseUrl}/api/v1/partner/products\nAuthorization: Bearer {INSURETECH_PARTNER_TOKEN}\nAccept: application/json`} />
-                        <p className="text-xs text-slate-500">
-                            Sample body shape (guide_price kabhi nahi aata):
+                        <p className="text-xs text-slate-600">
+                            Swap persists rows to <code className="rounded bg-slate-100 px-1">products</code> and <code className="rounded bg-slate-100 px-1">it_product_mappings</code>. <code className="rounded bg-slate-100 px-1">guide_price</code> is never returned on partner APIs.
                         </p>
+                        <p className="text-xs text-slate-500">Example success shape:</p>
                         <CodeBlock
                             code={`{
   "status": "success",
@@ -236,9 +219,6 @@ Content-Type: application/json
   ]
 }`}
                         />
-                        <p className="text-xs text-slate-500">
-                            Swap mapping: <code className="rounded bg-slate-100 px-1">products</code> + <code className="rounded bg-slate-100 px-1">it_product_mappings</code>.
-                        </p>
                     </CardContent>
                 </Card>
 
@@ -246,18 +226,13 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="6"
-                            title="Sale / policy — recommended (Swap production code)"
-                            sub="POST .../submit (Idempotency-Key zaroori) phir POST .../kyc — NOT old POST /transactions only."
+                            title="Record a sale (Swap production flow)"
+                            sub="Submit policy, then KYC. Use admin product_code from the catalog response."
                         />
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">Swap Circle</span>
-                            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-                            <span className="rounded bg-blue-50 px-2 py-1 font-mono text-xs text-blue-800">submit + kyc</span>
-                        </div>
                         <div>
-                            <p className="mb-1 text-xs font-medium text-slate-600">6a — Submit policy</p>
+                            <p className="mb-1 text-xs font-medium text-slate-700">6a — Submit policy (Idempotency-Key header is required)</p>
                             <CodeBlock
                                 code={`POST ${baseUrl}/api/v1/products/{product_code}/submit
 Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
@@ -278,7 +253,7 @@ Content-Type: application/json
                             />
                         </div>
                         <div>
-                            <p className="mb-1 text-xs font-medium text-slate-600">6b — KYC</p>
+                            <p className="mb-1 text-xs font-medium text-slate-700">6b — Submit KYC for that transaction</p>
                             <CodeBlock
                                 code={`POST ${baseUrl}/api/v1/products/{product_code}/transactions/{transaction_number}/kyc
 Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
@@ -303,18 +278,19 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="7"
-                            title="Connection test"
-                            sub="Swap: GET /api/insuretech/test-connection → neeche wali Insurtech GET."
+                            title="Verify connectivity"
+                            sub="Swap exposes GET /api/insuretech/test-connection; it uses the same Insurtech call as catalog sync."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <CodeBlock
-                            code={`GET /api/insuretech/test-connection   ← Swap internal
+                            code={`GET /api/insuretech/test-connection
+  (Swap Circle internal route)
 
 GET ${baseUrl}/api/v1/partner/products
 Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
 
-# 200 + JSON → OK | 401 → token / partner | empty data → product assign check`}
+Expect HTTP 200 with JSON. 401 means invalid or inactive token. Empty product list means assignments are missing.`}
                         />
                     </CardContent>
                 </Card>
@@ -323,8 +299,8 @@ Authorization: Bearer {INSURETECH_PARTNER_TOKEN}
                     <CardHeader>
                         <SectionTitle
                             n="8"
-                            title="Alternate — POST /api/v1/transactions (simple integrations)"
-                            sub="Validation: customer_name + email + product_code + cover_duration required; optional Idempotency-Key = transaction_number."
+                            title="Alternative: single-shot transaction ingest"
+                            sub="Optional path for simpler integrations. Swap uses step 6 instead."
                         />
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -343,6 +319,9 @@ Content-Type: application/json
   "date_added": "2026-05-04 10:00:00"
 }`}
                         />
+                        <p className="text-xs text-slate-600">
+                            If you send <code className="rounded bg-slate-100 px-1">Idempotency-Key</code>, it must equal <code className="rounded bg-slate-100 px-1">transaction_number</code>. See Swagger for full field list.
+                        </p>
                     </CardContent>
                 </Card>
 
@@ -350,22 +329,22 @@ Content-Type: application/json
                     <CardHeader>
                         <SectionTitle
                             n="9"
-                            title="Other partner APIs (Swagger mein tags)"
-                            sub="Bearer ke saath — customers, verify-token, policy update/cancel, webhook callback."
+                            title="Other authenticated partner endpoints"
+                            sub="Bearer token required unless noted. Full request bodies are in Swagger UI."
                         />
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent>
                         <div className="overflow-auto rounded-lg border border-border">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                                         <th className="px-4 py-2 font-medium">Purpose</th>
-                                        <th className="px-4 py-2 font-medium">Method & path (Insurtech)</th>
+                                        <th className="px-4 py-2 font-medium">Method and URL</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/60 text-xs">
+                                <tbody className="divide-y divide-border/60 text-xs text-slate-700">
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Bearer sanity check</td>
+                                        <td className="px-4 py-2 font-medium">Validate Bearer token</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET {baseUrl}/api/v1/verify-token</td>
                                     </tr>
                                     <tr>
@@ -375,10 +354,6 @@ Content-Type: application/json
                                     <tr>
                                         <td className="px-4 py-2 font-medium">Update customer</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">PUT {baseUrl}/api/v1/customers/&lt;customer_code&gt;</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-4 py-2 font-medium">Delete all partner customers (destructive)</td>
-                                        <td className="px-4 py-2 font-mono text-amber-800">DELETE {baseUrl}/api/v1/customers</td>
                                     </tr>
                                     <tr>
                                         <td className="px-4 py-2 font-medium">Update policy</td>
@@ -393,7 +368,11 @@ Content-Type: application/json
                                         <td className="px-4 py-2 font-mono text-blue-800">POST {baseUrl}/api/v1/products/&lt;code&gt;/transactions/&lt;txn&gt;/callback</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Delete all partner transactions (destructive)</td>
+                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all customers (destructive)</td>
+                                        <td className="px-4 py-2 font-mono text-amber-800">DELETE {baseUrl}/api/v1/customers</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-medium text-amber-900">Delete all transactions (destructive)</td>
                                         <td className="px-4 py-2 font-mono text-amber-800">DELETE {baseUrl}/api/v1/transactions</td>
                                     </tr>
                                 </tbody>
@@ -404,7 +383,7 @@ Content-Type: application/json
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Summary — Swap vs Insurtech</CardTitle>
+                        <CardTitle className="text-base">Swap Circle vs Insurtech (quick map)</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="overflow-auto rounded-lg border border-border">
@@ -414,50 +393,52 @@ Content-Type: application/json
                                         <th className="px-4 py-2 font-medium">Action</th>
                                         <th className="px-4 py-2 font-medium">Swap Circle</th>
                                         <th className="px-4 py-2 font-medium">Insurtech</th>
-                                        <th className="px-4 py-2 font-medium">Direction</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border/60 text-xs">
+                                <tbody className="divide-y divide-border/60 text-xs text-slate-700">
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Pull products</td>
+                                        <td className="px-4 py-2 font-medium">Pull catalog</td>
                                         <td className="px-4 py-2 font-mono text-slate-600">POST /api/insuretech/pull-products</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
-                                        <td className="px-4 py-2 text-emerald-700">Swap → Insurtech</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Push sale (as deployed)</td>
-                                        <td className="px-4 py-2 font-mono text-slate-600">Auto / sync</td>
-                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/submit + POST …/kyc</td>
-                                        <td className="px-4 py-2 text-blue-700">Swap → Insurtech</td>
+                                        <td className="px-4 py-2 font-medium">Push sale</td>
+                                        <td className="px-4 py-2 text-slate-600">Purchase / sync jobs</td>
+                                        <td className="px-4 py-2 font-mono text-blue-800">POST …/submit then POST …/kyc</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">Test connection</td>
+                                        <td className="px-4 py-2 font-medium">Health check</td>
                                         <td className="px-4 py-2 font-mono text-slate-600">GET /api/insuretech/test-connection</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/products</td>
-                                        <td className="px-4 py-2 text-emerald-700">Swap → Insurtech</td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 font-medium">JSON guide</td>
+                                        <td className="px-4 py-2 font-medium">Public guide JSON</td>
                                         <td className="px-4 py-2 text-slate-500">—</td>
                                         <td className="px-4 py-2 font-mono text-blue-800">GET /api/v1/partner/guide</td>
-                                        <td className="px-4 py-2 text-slate-600">Public</td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                            <p className="font-medium">Pehle galat doc: sirf POST /transactions.</p>
-                            <p className="mt-1 text-amber-800">
-                                Asli Swap flow: <code className="rounded bg-amber-100 px-1">submit</code> + <code className="rounded bg-amber-100 px-1">kyc</code> zaroori hai jab tak aap consciously{' '}
-                                <code className="rounded bg-amber-100 px-1">/transactions</code> use na karein.
-                            </p>
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Live Swagger UI</CardTitle>
+                        <CardTitle className="text-base">Regenerate Swagger</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-sm text-slate-600">
+                        <p className="text-xs">
+                            After changing OpenAPI attributes under <code className="rounded bg-slate-100 px-1">app/Http/Controllers/Api/V1/</code> or{' '}
+                            <code className="rounded bg-slate-100 px-1">app/OpenApi/</code>, run:
+                        </p>
+                        <CodeBlock code={`cd admin-portal\nphp artisan l5-swagger:generate`} />
+                        <p className="text-xs text-slate-500">Writes <code className="rounded bg-slate-100 px-1">storage/api-docs/api-docs.json</code> consumed by Swagger UI below.</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Swagger UI</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <iframe src={swaggerUrl} className="h-[min(90vh,900px)] w-full rounded border border-slate-200" title="Swagger UI" />
