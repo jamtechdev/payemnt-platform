@@ -185,8 +185,13 @@ class PartnerController extends Controller
             'active_customers' => $partner->customers()->whereHas('payments', function ($query) {
                 $query->where('created_at', '>=', now()->subDays(30));
             })->count(),
-            'total_revenue' => $partner->payments()->sum('amount'),
-            'monthly_revenue' => $partner->payments()->where('created_at', '>=', now()->startOfMonth())->sum('amount'),
+            'total_revenue' => $partner->payments()
+                ->join('products', 'payments.product_id', '=', 'products.id')
+                ->sum('products.price'),
+            'monthly_revenue' => $partner->payments()
+                ->join('products', 'payments.product_id', '=', 'products.id')
+                ->where('payments.created_at', '>=', now()->startOfMonth())
+                ->sum('products.price'),
             'api_key_status' => $apiKeyStatus,
             'last_api_activity' => optional($apiUsage->latest('occurred_at')->first()?->occurred_at)?->format('M j, Y g:i A') ?? 'Never',
             'api_success_count' => (clone $apiUsage)->where('changes->outcome', 'success')->count(),
@@ -288,8 +293,6 @@ class PartnerController extends Controller
 
         $apiKey = $partner->generateApiKey();
         AuditLog::record('partner_api_key_generated', $partner, [], ['partner_id' => $partner->id], request()->user());
-
-        $partner->forceFill(['connected_at' => now()])->save();
 
         // Store new token in partner settings so external platforms can re-sync
         $partner->forceFill([

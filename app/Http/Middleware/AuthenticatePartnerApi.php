@@ -37,6 +37,12 @@ class AuthenticatePartnerApi
         }
 
         $token->forceFill(['last_used_at' => now()])->save();
+
+        $partner->forceFill([
+            'last_seen_at' => now(),
+            'connected_at' => $partner->connected_at ?? now(),
+        ])->save();
+
         $request->attributes->set('partner', $partner);
 
         return $next($request);

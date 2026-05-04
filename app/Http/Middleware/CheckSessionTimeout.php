@@ -18,10 +18,15 @@ class CheckSessionTimeout
     {
         $lastActivity = (int) $request->session()->get('last_activity', time());
         $maxIdleSeconds = max(60, (int) config('session.lifetime', 30) * 60);
+
         if (time() - $lastActivity > $maxIdleSeconds) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+
+            if ($request->header('X-Inertia') || $request->expectsJson()) {
+                return response()->json(['message' => 'Session expired.'], 419);
+            }
 
             return redirect()->route('login')->with('error', 'Session expired due to inactivity.');
         }

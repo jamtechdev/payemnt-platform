@@ -33,6 +33,8 @@ Route::middleware('guest')->group(function (): void {
 
 Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('auth')->name('logout');
 
+Route::get('/ping', fn () => response()->json(['ok' => true]))->middleware(['auth', 'session.timeout'])->name('ping');
+
 
 Route::prefix('admin')
     ->name('admin.')

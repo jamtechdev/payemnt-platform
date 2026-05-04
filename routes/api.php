@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminTransactionController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\PartnerApiGuideController;
+use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\ProductDistributionController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\VerifyController;

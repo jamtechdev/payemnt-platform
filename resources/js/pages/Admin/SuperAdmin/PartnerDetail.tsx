@@ -100,8 +100,6 @@ export default function PartnerDetail({
     const statistics = asRecord(stats);
     const { flash, auth } = usePage<PageProps>().props;
     const flashAny   = flash as any;
-    const partnerId  = String(model.id ?? '');
-    const storageKey = `partner_api_key_${partnerId}`;
     const canEdit    = auth.role === 'super_admin' || auth.permissions.includes('partners.edit');
 
     const products  = Array.isArray(model.products)  ? (model.products  as LooseRecord[]) : [];
@@ -116,38 +114,40 @@ export default function PartnerDetail({
         'status',
     ];
 
-    const isConnected = Boolean(model.connected_at);
+    const hasActiveApiKey = statistics.api_key_status === 'active';
+    const isConnected = hasActiveApiKey && statistics.token_last_used_at !== 'Never';
 
-    // Persist API key in localStorage until dismissed
-    const [storedApiKey, setStoredApiKey] = useState<string | null>(null);
+    const [storedApiKey, setStoredApiKey] = useState<string | null>(() => {
+        if (flashAny?.api_key && flashAny?.show_api_key_modal) {
+            const key = String(flashAny.api_key);
+            sessionStorage.setItem(`partner_api_key_${String(model.id ?? '')}`, key);
+            return key;
+        }
+        return sessionStorage.getItem(`partner_api_key_${String(model.id ?? '')}`);
+    });
 
     useEffect(() => {
         if (flashAny?.api_key && flashAny?.show_api_key_modal) {
             const key = String(flashAny.api_key);
-            localStorage.setItem(storageKey, key);
+            sessionStorage.setItem(`partner_api_key_${String(model.id ?? '')}`, key);
             setStoredApiKey(key);
-        } else {
-            const saved = localStorage.getItem(storageKey);
-            if (saved) setStoredApiKey(saved);
         }
     }, [flashAny?.api_key]);
 
     const handleDismiss = () => {
-        localStorage.removeItem(storageKey);
+        sessionStorage.removeItem(`partner_api_key_${String(model.id ?? '')}`);
         setStoredApiKey(null);
     };
 
     const handleGenerateApiKey = () => {
         if (confirm('This will revoke the existing API key. Continue?')) {
-            localStorage.removeItem(storageKey);
-            setStoredApiKey(null);
             router.post(route('admin.partners.generate-api-key', model.id));
         }
     };
 
     const handleRevokeApiKey = () => {
         if (confirm('Revoking the API key will disconnect this partner from all platforms. Continue?')) {
-            localStorage.removeItem(storageKey);
+            sessionStorage.removeItem(`partner_api_key_${String(model.id ?? '')}`);
             setStoredApiKey(null);
             router.delete(route('admin.partners.revoke-api-key', model.id));
         }
@@ -343,11 +343,7 @@ export default function PartnerDetail({
                                                 <p className="text-xs text-slate-500">
                                                     Guide price: {formatAmount(product.price)}
                                                 </p>
-                                            {canViewPartnerPricing && (
-                                                <p className="mt-1 text-xs text-slate-500">
-                                                    Price: {formatPartnerPrice(pivot.partner_price, pivot.partner_currency)}
-                                                </p>
-                                            )}
+
                                             </div>
                                         </div>
                                         {/* Activate/Deactivate button commented out — use Product List page to manage product status globally

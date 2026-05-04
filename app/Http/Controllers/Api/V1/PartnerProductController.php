@@ -51,14 +51,13 @@ class PartnerProductController extends BaseApiController
 
         $products = Product::query()
             ->where('partner_id', $partner->id)
-            ->where('status', 'active')
             ->whereHas('partners', fn ($q) => $q->where('partner_product.partner_id', $partner->id)->where('partner_product.is_enabled', true))
             ->get()
             ->map(fn (Product $p) => [
                 'product_code' => $p->product_code,
                 'name'         => $p->name,
                 'description'  => $p->description,
-                'price'        => $p->base_price,
+                'price'        => $p->price,
                 'status'       => $p->status,
                 'image_url'    => $p->image
                     ? (str_starts_with($p->image, 'http') ? $p->image : rtrim(config('app.url'), '/').'/storage/'.$p->image)

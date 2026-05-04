@@ -150,7 +150,6 @@ class Partner extends Model
 
         $this->forceFill([
             'api_key' => hash('sha256', $plainTextToken),
-            'last_seen_at' => now(),
         ])->save();
 
         return $plainTextToken;
