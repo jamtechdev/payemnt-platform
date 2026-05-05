@@ -16,9 +16,10 @@ class UpdatePartnerProductAccessRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_enabled' => ['required', 'boolean'],
-            'partner_price' => ['nullable', 'numeric', 'min:0'],
-            'partner_currency' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'is_enabled'                   => ['required', 'boolean'],
+            'currency_id'                  => ['required', 'integer', 'exists:currencies,id'],
+            'base_price'                   => ['required', 'numeric', 'min:0'],
+            'guide_price'                  => ['nullable', 'numeric', 'min:0'],
             'cover_duration_days_override' => ['nullable', 'integer', 'min:1'],
         ];
     }

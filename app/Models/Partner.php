@@ -113,7 +113,8 @@ class Partner extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'partner_product')
-            ->withPivot(['is_enabled', 'partner_price', 'partner_currency', 'cover_duration_days_override', 'rule_overrides'])
+            ->using(PartnerProduct::class)
+            ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price', 'cover_duration_days_override', 'rule_overrides'])
             ->withTimestamps();
     }
 

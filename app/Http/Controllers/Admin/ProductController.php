@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Models\Partner;
+use App\Models\Currency;
 use App\Models\Product;
 use App\Services\ProductSchemaService;
 use Illuminate\Http\RedirectResponse;
@@ -25,18 +26,27 @@ class ProductController extends Controller
 
         return Inertia::render('Admin/SuperAdmin/ProductList', [
             'products' => Product::query()
-                ->with(['partners:id,name'])
+                ->with([
+                    'partners' => fn ($q) => $q
+                        ->select('partners.id', 'partners.name')
+                        ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price']),
+                ])
                 ->latest()
                 ->paginate(15)
-                ->through(function (Product $product) use ($viewer): array {
-                    $payload = $product->toArray();
-                    $canViewGuidePrice = $viewer?->hasRole('super_admin') || (int) $product->guide_price_set_by === (int) $viewer?->id;
-                    $payload['can_view_guide_price'] = $canViewGuidePrice;
-                    if (! $canViewGuidePrice) {
-                        $payload['price'] = null;
-                    }
-
-                    return $payload;
+                ->through(function (Product $product): array {
+                    $arr = $product->toArray();
+                    // Attach currency code to each partner pivot
+                    $currencyIds = collect($product->partners)->pluck('pivot.currency_id')->filter()->unique()->values();
+                    $currencies = Currency::whereIn('id', $currencyIds)->get()->keyBy('id');
+                    $arr['partners'] = collect($product->partners)->map(function ($partner) use ($currencies): array {
+                        $p = $partner->toArray();
+                        $cid = $partner->pivot->currency_id;
+                        $p['pivot']['currency'] = $cid && isset($currencies[$cid])
+                            ? $currencies[$cid]->only(['id', 'code', 'symbol'])
+                            : null;
+                        return $p;
+                    })->values()->all();
+                    return $arr;
                 }),
         ]);
     }
@@ -105,6 +115,36 @@ class ProductController extends Controller
         ]);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
+    }
+
+    public function show(Product $product): Response
+    {
+        $partners = $product->partners()
+            ->select('partners.id', 'partners.name', 'partners.partner_code', 'partners.contact_email', 'partners.status')
+            ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price'])
+            ->get();
+
+        $currencyIds = $partners->pluck('pivot.currency_id')->filter()->unique();
+        $currencies  = Currency::whereIn('id', $currencyIds)->get()->keyBy('id');
+
+        $partnerPricing = $partners->map(fn ($p) => [
+            'id'           => $p->id,
+            'name'         => $p->name,
+            'partner_code' => $p->partner_code,
+            'email'        => $p->contact_email,
+            'status'       => $p->status,
+            'is_enabled'   => (bool) $p->pivot->is_enabled,
+            'currency'     => isset($currencies[$p->pivot->currency_id])
+                ? $currencies[$p->pivot->currency_id]->only(['code', 'symbol', 'name'])
+                : null,
+            'base_price'   => $p->pivot->base_price,
+            'guide_price'  => $p->pivot->guide_price,
+        ]);
+
+        return Inertia::render('Admin/SuperAdmin/ProductDetail', [
+            'product'        => $product->load('fields'),
+            'partnerPricing' => $partnerPricing,
+        ]);
     }
 
     public function edit(Product $product): Response
@@ -184,28 +224,71 @@ class ProductController extends Controller
 
     public function assignPartners(Product $product): Response
     {
+        // All partners with their pivot data (enabled or disabled)
+        $allAssigned = $product->partners()
+            ->select('partners.id', 'partners.name')
+            ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price'])
+            ->get()
+            ->keyBy('id');
+
         return Inertia::render('Admin/SuperAdmin/ProductAssignPartners', [
-            'product'          => $product->only(['id', 'name']),
-            'allPartners'      => Partner::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
-            'assignedPartners' => $product->partners()->select('partners.id', 'partners.name')->get(),
+            'product'     => $product->only(['id', 'name', 'description', 'image', 'status']),
+            'allPartners' => Partner::query()->select(['id', 'name'])->where('status', 'active')->orderBy('name')->get(),
+            // Only enabled ones shown as assigned
+            'assignedPartners' => $allAssigned->filter(fn ($p) => (bool) $p->pivot->is_enabled)->map(fn ($p) => [
+                'id'          => $p->id,
+                'name'        => $p->name,
+                'is_enabled'  => true,
+                'currency_id' => $p->pivot->currency_id,
+                'base_price'  => $p->pivot->base_price,
+                'guide_price' => $p->pivot->guide_price,
+            ])->values(),
+            // Disabled ones — pricing saved in DB, ready to restore
+            'disabledPartners' => $allAssigned->filter(fn ($p) => ! (bool) $p->pivot->is_enabled)->map(fn ($p) => [
+                'id'          => $p->id,
+                'name'        => $p->name,
+                'currency_id' => $p->pivot->currency_id,
+                'base_price'  => $p->pivot->base_price,
+                'guide_price' => $p->pivot->guide_price,
+            ])->values(),
+            'currencies' => Currency::where('is_active', true)->orderBy('code')->get(['id', 'code', 'name', 'symbol']),
         ]);
     }
 
     public function syncPartners(Request $request, Product $product): RedirectResponse
     {
         $request->validate([
-            'partner_ids'   => ['nullable', 'array'],
-            'partner_ids.*' => ['integer', 'exists:partners,id'],
+            'partners'               => ['nullable', 'array'],
+            'partners.*.id'          => ['required', 'integer', 'exists:partners,id'],
+            'partners.*.currency_id' => ['required', 'integer', 'exists:currencies,id'],
+            'partners.*.base_price'  => ['required', 'numeric', 'min:0'],
+            'partners.*.guide_price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $product->partners()->sync(
-            collect($request->input('partner_ids', []))
-                ->mapWithKeys(fn ($id) => [(int) $id => ['is_enabled' => true]])
-                ->all()
-        );
+        foreach ($request->input('partners', []) as $p) {
+            $product->partners()->syncWithoutDetaching([
+                (int) $p['id'] => [
+                    'is_enabled'  => true,
+                    'currency_id' => (int) $p['currency_id'],
+                    'base_price'  => $p['base_price'],
+                    'guide_price' => $p['guide_price'] ?? null,
+                ],
+            ]);
+        }
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Partners updated successfully.');
+        return back()->with('success', 'Partner assigned successfully.');
+    }
+
+    public function removePartner(Request $request, Product $product): RedirectResponse
+    {
+        $request->validate(['partner_id' => ['required', 'integer', 'exists:partners,id']]);
+
+        // Just disable — pricing stays in DB
+        $product->partners()->syncWithoutDetaching([
+            (int) $request->input('partner_id') => ['is_enabled' => false],
+        ]);
+
+        return back()->with('success', 'Partner removed.');
     }
 
     public function toggleStatus(Product $product): RedirectResponse

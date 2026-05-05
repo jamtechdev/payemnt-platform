@@ -26,6 +26,14 @@ class PartnerTransactionIngestionService
                 })
                 ->firstOrFail();
 
+            // Partner-specific pricing from pivot
+            $pivotPricing = $partner->products()
+                ->where('products.product_code', $payload['product_code'])
+                ->first()?->pivot;
+
+            $partnerCurrency = $pivotPricing?->currency_id
+                ? \App\Models\Currency::find($pivotPricing->currency_id)?->code
+                : null;
             $customer = Customer::query()->firstOrCreate(
                 [
                     'partner_id' => $partner->id,
@@ -53,21 +61,22 @@ class PartnerTransactionIngestionService
                     'transaction_number' => $payload['transaction_number'],
                 ],
                 [
-                    'customer_id' => $customer->id,
-                    'product_id' => $product->id,
-                    'customer_name' => $payload['customer_name'],
-                    'customer_email' => $payload['customer_email'],
-                    'phone' => $payload['phone'] ?? null,
-                    'policy_number' => $payload['policy_number'] ?? null,
-                    'cover_duration' => $payload['cover_duration'],
-                    'status' => $payload['status'] ?? Payment::STATUS_PENDING,
-                    'notes' => $payload['notes'] ?? null,
-                    'kyc_data' => $payload['kyc'] ?? null,
+                    'customer_id'       => $customer->id,
+                    'product_id'        => $product->id,
+                    'customer_name'     => $payload['customer_name'],
+                    'customer_email'    => $payload['customer_email'],
+                    'phone'             => $payload['phone'] ?? null,
+                    'policy_number'     => $payload['policy_number'] ?? null,
+                    'cover_duration'    => $payload['cover_duration'],
+                    'status'            => $payload['status'] ?? Payment::STATUS_PENDING,
+                    'notes'             => $payload['notes'] ?? null,
+                    'kyc_data'          => $payload['kyc'] ?? null,
                     'submitted_payload' => $payload,
-                    'api_response' => ['status' => 'accepted'],
-                    'amount' => $payload['amount'] ?? 0,
-                    'currency' => strtoupper((string) ($payload['currency'] ?? 'USD')),
-                    'paid_at' => $payload['date_added'] ?? now(),
+                    'api_response'      => ['status' => 'accepted'],
+                    // Use partner pivot pricing; fallback to payload if not set
+                    'amount'            => $pivotPricing?->guide_price ?? $payload['amount'] ?? 0,
+                    'currency'          => $partnerCurrency ?? strtoupper((string) ($payload['currency'] ?? 'USD')),
+                    'paid_at'           => $payload['date_added'] ?? now(),
                 ]
             );
 

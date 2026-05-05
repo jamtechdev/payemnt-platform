@@ -282,8 +282,15 @@ class PartnerController extends Controller
         $productId = (int) $request->input('product_id');
         $isEnabled = $request->boolean('is_enabled');
 
+        $existing = $partner->products()->where('products.id', $productId)->first();
+
         $partner->products()->syncWithoutDetaching([
-            $productId => ['is_enabled' => $isEnabled],
+            $productId => array_filter([
+                'is_enabled'  => $isEnabled,
+                'currency_id' => $existing?->pivot?->currency_id,
+                'base_price'  => $existing?->pivot?->base_price,
+                'guide_price' => $existing?->pivot?->guide_price,
+            ], fn ($v) => $v !== null),
         ]);
 
         return back()->with('success', 'Product access updated successfully.');

@@ -34,6 +34,10 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         items.push({ href: route('admin.partners.index'), label: 'Partners' });
     }
 
+    if (role === 'super_admin') {
+        items.push({ href: route('admin.currencies.index'), label: 'Currencies' });
+    }
+
     if (modules.includes('reports')) {
         if (permissions.includes('reports.customer_acquisition')) {
             items.push({ href: route('admin.reports.customer-acquisition'), label: 'Acquisition' });

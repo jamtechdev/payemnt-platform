@@ -6,7 +6,7 @@ import { usePage } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
-import { Pencil, Trash2, ToggleLeft, ToggleRight, Users } from 'lucide-react';
+import { Pencil, Trash2, ToggleLeft, ToggleRight, Users, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import ActionBtn from '@/components/shared/ActionBtn';
@@ -70,13 +70,6 @@ export default function ProductList({ products }: { products: unknown }) {
                 );
             },
         }),
-        columnHelper.accessor((row) => {
-            return String(row.base_price ?? '-');
-        }, { id: 'base_price', header: 'Base Price' }),
-        columnHelper.accessor((row) => {
-            if (!row.can_view_guide_price) return 'Hidden';
-            return String(row.price ?? '-');
-        }, { id: 'price', header: 'Guide Price' }),
         columnHelper.accessor((row) => String(row.status ?? 'inactive'), {
             id: 'status',
             header: 'Status',
@@ -90,6 +83,9 @@ export default function ProductList({ products }: { products: unknown }) {
                 const id = Number(row.id ?? 0);
                 return (
                     <div className="flex items-center gap-1.5">
+                        <ActionBtn tone="muted" href={route('admin.products.show', id)} title="View">
+                            <Eye className="h-3.5 w-3.5" /> View
+                        </ActionBtn>
                         <ActionBtn tone="primary" href={route('admin.products.edit', id)} title="Edit">
                             <Pencil className="h-3.5 w-3.5" /> Edit
                         </ActionBtn>

@@ -16,16 +16,6 @@ interface ProductPayload {
     description?: string;
     image?: string;
     status?: string;
-    base_price?: number | string | null;
-    price?: number | string | null;
-}
-
-interface ProductFieldInput {
-    name: string;
-    label: string;
-    type: string;
-    is_required: boolean;
-    options?: string[];
 }
 
 interface ProductFormData {
@@ -34,8 +24,6 @@ interface ProductFormData {
     description: string;
     image: File | null;
     status: string;
-    base_price: string;
-    price: string;
     fields: ProductFieldInput[];
 }
 
@@ -59,8 +47,6 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
         description: product?.description ?? '',
         image: null,
         status: product?.status ?? 'active',
-        base_price: product?.base_price ? String(product.base_price) : '',
-        price: product?.price ? String(product.price) : '',
         fields: Array.isArray((product as any)?.fields)
             ? (product as any).fields.map((field: any) => ({
                 name: field.field_key ?? '',
@@ -153,34 +139,6 @@ export default function ProductForm({ product }: { product?: ProductPayload }) {
                                     <SelectItem value="inactive">Inactive</SelectItem>
                                 </SelectContent>
                             </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="product-base-price">Base price</Label>
-                            <Input
-                                id="product-base-price"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={data.base_price}
-                                onChange={(e) => setData('base_price', e.target.value)}
-                                placeholder="0.00"
-                            />
-                            <p className="text-xs text-slate-500">Primary product price used for partner/user side.</p>
-                            {errors.base_price && <p className="text-sm text-red-600">{errors.base_price}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="product-price">Guide price</Label>
-                            <Input
-                                id="product-price"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={data.price}
-                                onChange={(e) => setData('price', e.target.value)}
-                                placeholder="0.00"
-                            />
-                            <p className="text-xs text-slate-500">Visible only to the admin that sets it and super admin.</p>
-                            {errors.price && <p className="text-sm text-red-600">{errors.price}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label>Slug preview</Label>

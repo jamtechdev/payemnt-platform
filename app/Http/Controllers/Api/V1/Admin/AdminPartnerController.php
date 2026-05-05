@@ -40,14 +40,14 @@ class AdminPartnerController extends BaseApiController
     public function update(Request $request, Partner $partner): JsonResponse
     {
         $partner->update($request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'partner_name' => ['sometimes', 'string', 'max:255'],
+            'name'          => ['sometimes', 'string', 'max:255'],
+            'partner_name'  => ['sometimes', 'string', 'max:255'],
             'contact_email' => ['nullable', 'email'],
-            'email' => ['nullable', 'email'],
+            'email'         => ['nullable', 'email'],
             'contact_phone' => ['nullable', 'string', 'max:20'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'status' => ['sometimes', 'in:active,inactive,suspended'],
-            'settings' => ['nullable', 'array'],
+            'phone'         => ['nullable', 'string', 'max:20'],
+            'status'        => ['sometimes', 'in:active,inactive,suspended'],
+            'settings'      => ['nullable', 'array'],
         ]));
 
         return $this->success($partner->fresh());
@@ -65,22 +65,21 @@ class AdminPartnerController extends BaseApiController
 
         $partner->products()->syncWithoutDetaching([
             $product->id => [
-                'is_enabled' => (bool) $validated['is_enabled'],
-                'partner_price' => $validated['partner_price'] ?? null,
-                'partner_currency' => $validated['partner_currency'] ?? null,
+                'is_enabled'                   => (bool) $validated['is_enabled'],
+                'currency_id'                  => (int) $validated['currency_id'],
+                'base_price'                   => $validated['base_price'],
+                'guide_price'                  => $validated['guide_price'] ?? null,
                 'cover_duration_days_override' => $validated['cover_duration_days_override'] ?? null,
             ],
         ]);
 
-        $partner->load(['products' => function ($query) use ($product): void {
-            $query->where('products.id', $product->id);
-        }]);
+        $partner->load(['products' => fn ($q) => $q->where('products.id', $product->id)]);
 
         return $this->success([
-            'message' => 'Partner product access updated successfully.',
+            'message'    => 'Partner product access updated successfully.',
             'partner_id' => $partner->partner_code,
             'product_id' => $product->product_code,
-            'access' => $partner->products->first()?->pivot,
+            'access'     => $partner->products->first()?->pivot,
         ]);
     }
 }

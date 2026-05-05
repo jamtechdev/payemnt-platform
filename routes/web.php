@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminPasswordController;
+use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PartnerController;
@@ -61,6 +62,7 @@ Route::prefix('admin')
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
             Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
             Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+            Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
             Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
             Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
             Route::patch('/transactions/{transaction}/customer', [TransactionController::class, 'updateCustomerDetails'])->name('transactions.customer.update');
@@ -73,6 +75,7 @@ Route::prefix('admin')
             Route::post('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
             Route::get('/products/{product}/assign-partners', [ProductController::class, 'assignPartners'])->name('products.assign-partners');
             Route::post('/products/{product}/sync-partners', [ProductController::class, 'syncPartners'])->name('products.sync-partners');
+            Route::post('/products/{product}/remove-partner', [ProductController::class, 'removePartner'])->name('products.remove-partner');
 
             Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
             Route::get('/partners/create', [PartnerController::class, 'create'])->name('partners.create');
@@ -87,5 +90,10 @@ Route::prefix('admin')
             Route::delete('/partners/{partner}/revoke-api-key', [PartnerController::class, 'revokeApiKey'])->name('partners.revoke-api-key');
             Route::post('/partners/{partner}/toggle-product-access', [PartnerController::class, 'toggleProductAccess'])->name('partners.toggle-product-access');
             Route::post('/partners/{id}/restore', [PartnerController::class, 'restore'])->name('partners.restore');
+
+            Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+            Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+            Route::patch('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+            Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
         });
     });
