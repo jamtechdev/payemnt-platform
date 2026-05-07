@@ -29,23 +29,17 @@ class ProductController extends Controller
                 ->with([
                     'partners' => fn ($q) => $q
                         ->select('partners.id', 'partners.name')
-                        ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price']),
+                        ->withPivot(['is_enabled', 'currency_id', 'base_price', 'guide_price'])
+                        ->wherePivot('is_enabled', true),
                 ])
                 ->latest()
                 ->paginate(15)
                 ->through(function (Product $product): array {
                     $arr = $product->toArray();
-                    // Attach currency code to each partner pivot
-                    $currencyIds = collect($product->partners)->pluck('pivot.currency_id')->filter()->unique()->values();
-                    $currencies = Currency::whereIn('id', $currencyIds)->get()->keyBy('id');
-                    $arr['partners'] = collect($product->partners)->map(function ($partner) use ($currencies): array {
-                        $p = $partner->toArray();
-                        $cid = $partner->pivot->currency_id;
-                        $p['pivot']['currency'] = $cid && isset($currencies[$cid])
-                            ? $currencies[$cid]->only(['id', 'code', 'symbol'])
-                            : null;
-                        return $p;
-                    })->values()->all();
+                    $arr['partners'] = collect($product->partners)->map(fn ($partner) => [
+                        'id'   => $partner->id,
+                        'name' => $partner->name,
+                    ])->values()->all();
                     return $arr;
                 }),
         ]);
