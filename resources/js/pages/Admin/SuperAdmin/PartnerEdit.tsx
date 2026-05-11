@@ -21,19 +21,19 @@ export default function PartnerEdit({ partner }: { partner: any }) {
 
     return (
         <AdminLayout title="Edit Partner">
-            <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-900">
-                <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-100">Edit Partner</h2>
-                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md">
+                <h2 className="mb-2 text-xl font-semibold text-gray-800">Edit Partner</h2>
+                <p className="mb-6 text-sm text-gray-500">
                     Update partner details. API key management is available on the partner detail page.
                 </p>
 
                 <form onSubmit={submit} className="space-y-5">
                     {/* Partner Code — read only */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Partner Code</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Partner Code</label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-gray-500"
                             value={partner.partner_code || '—'}
                             readOnly
                         />
@@ -42,12 +42,12 @@ export default function PartnerEdit({ partner }: { partner: any }) {
 
                     {/* Name */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Partner Name <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="e.g. Acme Insurance Ltd"
@@ -57,12 +57,12 @@ export default function PartnerEdit({ partner }: { partner: any }) {
 
                     {/* Email */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Contact Email <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="email"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.contact_email}
                             onChange={(e) => setData('contact_email', e.target.value)}
                             placeholder="e.g. admin@acme.com"
@@ -72,10 +72,10 @@ export default function PartnerEdit({ partner }: { partner: any }) {
 
                     {/* Phone */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Phone</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Contact Phone</label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.contact_phone}
                             onChange={(e) => setData('contact_phone', e.target.value)}
                             placeholder="e.g. +234 800 000 0000"
@@ -84,23 +84,23 @@ export default function PartnerEdit({ partner }: { partner: any }) {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
-                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.company_name} onChange={(e) => setData('company_name', e.target.value as any)} />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Company Name</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.company_name} onChange={(e) => setData('company_name', e.target.value as any)} />
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
-                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Website URL</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.notes} onChange={(e) => setData('notes', e.target.value as any)} rows={3} />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
+                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.notes} onChange={(e) => setData('notes', e.target.value as any)} rows={3} />
                     </div>
 
                     {/* Status */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                         <select
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.status}
                             onChange={(e) => setData('status', e.target.value)}
                         >

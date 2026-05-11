@@ -45,10 +45,10 @@ export default function Dashboard(props: CustomerServiceDashboardProps) {
 
                 {/* BRD open question 4: Expiring covers alert */}
                 {props.expiringSoonCount > 0 && (
-                    <Card className="border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10">
+                    <Card className="border-amber-200 bg-amber-50">
                         <CardHeader className="pb-2">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-base text-amber-800 dark:text-amber-400">
+                                <CardTitle className="flex items-center gap-2 text-base text-amber-800">
                                     <AlertTriangle className="h-4 w-4" />
                                     Covers expiring within 30 days ({props.expiringSoonCount})
                                 </CardTitle>

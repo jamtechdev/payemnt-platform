@@ -168,13 +168,13 @@ export default function CustomerList({ customers, filters }: { customers: Pagina
             </Card>
 
             <div className="mb-4 grid gap-4 md:grid-cols-3">
-                <Card className="border-blue-200/70 bg-blue-50/50 dark:border-blue-500/25 dark:bg-blue-500/10">
+                <Card className="border-blue-200/70 bg-blue-50/50">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">Visible records</CardTitle>
                     </CardHeader>
                     <CardContent className="text-2xl font-semibold">{rows.length}</CardContent>
                 </Card>
-                <Card className="border-emerald-200/70 bg-emerald-50/50 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                <Card className="border-emerald-200/70 bg-emerald-50/50">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">Active</CardTitle>
                     </CardHeader>
@@ -182,7 +182,7 @@ export default function CustomerList({ customers, filters }: { customers: Pagina
                         {rows.filter((r) => r.status?.toLowerCase() === 'active').length}
                     </CardContent>
                 </Card>
-                <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-500/10">
+                <Card className="border-amber-200/70 bg-amber-50/50">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">Other status</CardTitle>
                     </CardHeader>

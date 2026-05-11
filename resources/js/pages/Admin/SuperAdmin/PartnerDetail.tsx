@@ -38,28 +38,28 @@ function ApiKeyBox({ apiKey, onDismiss }: { apiKey: string; onDismiss: () => voi
     };
 
     return (
-        <div className="mb-6 rounded-xl border-2 border-green-400 bg-green-50 p-5 dark:border-green-600 dark:bg-green-900/20">
+        <div className="mb-6 rounded-xl border-2 border-green-400 bg-green-50 p-5">
             <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="text-lg">🔑</span>
-                    <h3 className="text-base font-bold text-green-800 dark:text-green-300">
+                    <h3 className="text-base font-bold text-green-800">
                         API Key Generated — Copy it now!
                     </h3>
                 </div>
                 <button
                     onClick={onDismiss}
-                    className="rounded px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200 dark:text-green-400"
+                    className="rounded px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200"
                 >
                     ✕ I've copied it, dismiss
                 </button>
             </div>
-            <p className="mb-4 text-sm text-green-700 dark:text-green-400">
+            <p className="mb-4 text-sm text-green-700">
                 This key will <strong>never be shown again</strong> once you dismiss this banner.
                 Copy it and use it in your partner platform connection.
             </p>
-            <div className="mb-4 rounded-lg border border-green-300 bg-white p-4 dark:border-green-700 dark:bg-slate-800">
+            <div className="mb-4 rounded-lg border border-green-300 bg-white p-4">
                 <p className="mb-2 text-xs font-medium text-gray-500">Your API Key:</p>
-                <p className="break-all select-all font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-100">
+                <p className="break-all select-all font-mono text-sm leading-relaxed text-slate-800">
                     {apiKey}
                 </p>
             </div>
@@ -160,11 +160,11 @@ export default function PartnerDetail({
             <div className="mx-auto w-full max-w-6xl space-y-6">
 
                 {/* Header */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <div>
                             <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Partner Profile</p>
-                            <h2 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-white">{String(model.name ?? 'Partner')}</h2>
+                            <h2 className="mt-1 text-2xl font-semibold text-slate-800">{String(model.name ?? 'Partner')}</h2>
                             <p className="text-sm text-slate-500">{String(model.contact_email ?? '—')}</p>
                             <p className="mt-1 font-mono text-xs text-slate-400">Code: {String(model.partner_code ?? '—')}</p>
                         </div>
@@ -192,11 +192,11 @@ export default function PartnerDetail({
 
                 {/* Connection Info */}
                 {isConnected && (
-                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
-                        <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                        <p className="text-sm font-medium text-blue-800">
                             🔗 Connected since {formatDate(model.connected_at)}
                         </p>
-                        <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                        <p className="mt-1 text-xs text-blue-600">
                             API integration is active. This status tracks partner data-connection only (not payment collection).
                         </p>
                     </div>
@@ -204,19 +204,19 @@ export default function PartnerDetail({
 
                 {/* Stats */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.total_customers || 0}</div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-2xl font-bold text-slate-800">{statistics.total_customers || 0}</div>
                         <div className="text-xs text-slate-500">Total Customers</div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div className="text-2xl font-bold text-slate-800 dark:text-white">{statistics.active_customers || 0}</div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-2xl font-bold text-slate-800">{statistics.active_customers || 0}</div>
                         <div className="text-xs text-slate-500">Active Customers</div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div className="text-2xl font-bold text-slate-800 dark:text-white">{formatCurrency(Number(statistics.total_revenue) || 0)}</div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-2xl font-bold text-slate-800">{formatCurrency(Number(statistics.total_revenue) || 0)}</div>
                         <div className="text-xs text-slate-500">Total Revenue</div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className={`text-2xl font-bold ${statistics.api_key_status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
                             {String(statistics.api_key_status ?? 'none').toUpperCase()}
                         </div>
@@ -224,24 +224,24 @@ export default function PartnerDetail({
                     </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className="text-2xl font-bold text-green-600">{Number(statistics.api_success_count) || 0}</div>
                         <div className="text-xs text-slate-500">API success calls</div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className="text-2xl font-bold text-red-500">{Number(statistics.api_failure_count) || 0}</div>
                         <div className="text-xs text-slate-500">API failed calls</div>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div className="text-2xl font-bold text-slate-800 dark:text-white">{Number(statistics.api_avg_latency_ms) || 0} ms</div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="text-2xl font-bold text-slate-800">{Number(statistics.api_avg_latency_ms) || 0} ms</div>
                         <div className="text-xs text-slate-500">Avg API latency</div>
                     </div>
                 </div>
 
                 {/* API Key Management */}
                 {canEdit && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 className="mb-1 font-medium text-slate-800 dark:text-white">API Key Management</h3>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <h3 className="mb-1 font-medium text-slate-800">API Key Management</h3>
                         <p className="mb-3 text-sm text-slate-500">
                             Generate an API key for this partner. Copy it immediately — it won't be shown again.
                             The connection stays active until you revoke the key.
@@ -260,8 +260,8 @@ export default function PartnerDetail({
                 )}
 
                 {/* Partner Fields */}
-                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Partner Information</h3>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold text-slate-700">Partner Information</h3>
                     <div className="space-y-2">
                     {Object.entries(model)
                         .filter(([key]) => usefulFields.includes(key))
@@ -270,9 +270,9 @@ export default function PartnerDetail({
                             return value !== null && value !== undefined && value !== '';
                         })
                         .map(([key, value]) => (
-                            <div key={key} className="flex items-start justify-between border-b border-slate-100 pb-2 last:border-none dark:border-slate-700">
+                            <div key={key} className="flex items-start justify-between border-b border-slate-100 pb-2 last:border-none">
                                 <span className="min-w-[160px] text-sm font-medium text-slate-500">{labelize(key)}</span>
-                                <span className="max-w-[60%] break-all text-right text-sm text-slate-800 dark:text-slate-100">
+                                <span className="max-w-[60%] break-all text-right text-sm text-slate-800">
                                     {dateFields.includes(key)
                                         ? formatDate(value)
                                         : typeof value === 'string'
@@ -292,13 +292,13 @@ export default function PartnerDetail({
 
                 {/* Recent Customers */}
                 {customers.length > 0 && (
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <h3 className="mb-3 font-medium text-slate-800 dark:text-white">Recent Customers</h3>
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <h3 className="mb-3 font-medium text-slate-800">Recent Customers</h3>
                         <div className="space-y-2">
                             {customers.slice(0, 5).map((customer) => (
-                                <div key={String(customer.id)} className="flex items-center justify-between border-b border-slate-100 p-2 last:border-none dark:border-slate-700">
+                                <div key={String(customer.id)} className="flex items-center justify-between border-b border-slate-100 p-2 last:border-none">
                                     <div>
-                                        <span className="font-medium text-slate-800 dark:text-white">
+                                        <span className="font-medium text-slate-800">
                                             {String(customer.first_name ?? '')} {String(customer.last_name ?? '')}
                                         </span>
                                         <span className="ml-2 text-sm text-slate-500">{String(customer.email ?? '—')}</span>

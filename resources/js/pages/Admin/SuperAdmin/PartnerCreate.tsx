@@ -21,21 +21,21 @@ export default function PartnerCreate() {
 
     return (
         <AdminLayout title="Create Partner">
-            <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-900">
-                <h2 className="mb-2 text-xl font-semibold text-gray-800 dark:text-gray-100">Create New Partner</h2>
-                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md">
+                <h2 className="mb-2 text-xl font-semibold text-gray-800">Create New Partner</h2>
+                <p className="mb-6 text-sm text-gray-500">
                     Partners authenticate via API key — no password needed. Generate an API key from the partner detail page after creation.
                 </p>
 
                 <form onSubmit={submit} className="space-y-5">
                     {/* Name */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Partner Name <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="e.g. Acme Insurance Ltd"
@@ -45,12 +45,12 @@ export default function PartnerCreate() {
 
                     {/* Partner Code */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Partner Code <span className="text-xs text-gray-400">(optional — auto-generated if blank)</span>
                         </label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-gray-900 uppercase outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-gray-900 uppercase outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.partner_code}
                             onChange={(e) => setData('partner_code', e.target.value.toUpperCase())}
                             placeholder="e.g. ACME_PARTNER"
@@ -61,12 +61,12 @@ export default function PartnerCreate() {
 
                     {/* Email */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Contact Email <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="email"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.contact_email}
                             onChange={(e) => setData('contact_email', e.target.value)}
                             placeholder="e.g. admin@acme.com"
@@ -76,10 +76,10 @@ export default function PartnerCreate() {
 
                     {/* Phone */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Phone</label>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Contact Phone</label>
                         <input
                             type="text"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
                             value={data.contact_phone}
                             onChange={(e) => setData('contact_phone', e.target.value)}
                             placeholder="e.g. +234 800 000 0000"
@@ -88,21 +88,21 @@ export default function PartnerCreate() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
-                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.company_name} onChange={(e) => setData('company_name', e.target.value)} />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Company Name</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.company_name} onChange={(e) => setData('company_name', e.target.value)} />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
-                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.website_url} onChange={(e) => setData('website_url', e.target.value)} placeholder="https://partner.com" />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Website URL</label>
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.website_url} onChange={(e) => setData('website_url', e.target.value)} placeholder="https://partner.com" />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.notes} onChange={(e) => setData('notes', e.target.value)} rows={3} />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
+                        <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.notes} onChange={(e) => setData('notes', e.target.value)} rows={3} />
                     </div>
 
-                    <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
                         💡 After creating the partner, go to partner detail to assign products and generate API key.
                     </div>
 

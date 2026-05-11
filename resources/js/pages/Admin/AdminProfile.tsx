@@ -57,9 +57,9 @@ export default function AdminProfile({ profile, apiTokens }: Props) {
         <AdminLayout title="My profile">
             <Head title="My profile" />
             {flash.new_api_token && tokenVisible && (
-                <div className="mb-6 rounded-xl border border-amber-300/60 bg-amber-50 p-4 text-amber-950 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                <div className="mb-6 rounded-xl border border-amber-300/60 bg-amber-50 p-4 text-amber-950 shadow-sm">
                     <p className="mb-2 text-sm font-medium">New API token (copy and store securely)</p>
-                    <code className="block break-all rounded-md border border-amber-200/80 bg-white/90 p-2 text-xs dark:border-amber-300/20 dark:bg-black/20">
+                    <code className="block break-all rounded-md border border-amber-200/80 bg-white/90 p-2 text-xs">
                         {flash.new_api_token}
                     </code>
                     <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setTokenVisible(false)}>

@@ -8,10 +8,10 @@ interface MetricCardProps {
 }
 
 const toneClasses: Record<NonNullable<MetricCardProps['tone']>, string> = {
-    emerald: 'border-emerald-200/70 bg-emerald-50/50 dark:border-emerald-500/25 dark:bg-emerald-500/10',
-    blue: 'border-blue-200/70 bg-blue-50/50 dark:border-blue-500/25 dark:bg-blue-500/10',
-    amber: 'border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-500/10',
-    violet: 'border-violet-200/70 bg-violet-50/50 dark:border-violet-500/25 dark:bg-violet-500/10',
+    emerald: 'border-emerald-200/70 bg-emerald-50/50',
+    blue: 'border-blue-200/70 bg-blue-50/50',
+    amber: 'border-amber-200/70 bg-amber-50/50',
+    violet: 'border-violet-200/70 bg-violet-50/50',
 };
 
 export default function MetricCard({ label, value, valueClassName, tone = 'emerald' }: MetricCardProps) {
