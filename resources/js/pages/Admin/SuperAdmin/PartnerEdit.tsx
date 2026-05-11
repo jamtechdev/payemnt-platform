@@ -89,7 +89,7 @@ export default function PartnerEdit({ partner }: { partner: any }) {
                     </div>
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
-                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
                     </div>
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>

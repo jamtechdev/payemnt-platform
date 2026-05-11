@@ -27,6 +27,16 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
     const { flash } = usePage<PageProps>().props;
     const flashAny = flash as any;
 
+    const selectStyles = () => ({
+        control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', minHeight: '40px', backgroundColor: 'white', color: '#1e293b' }),
+        menu: (base: any) => ({ ...base, borderRadius: '0.5rem', zIndex: 40, backgroundColor: 'white' }),
+        menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+        option: (base: any, state: any) => ({ ...base, backgroundColor: state.isSelected ? '#10b981' : state.isFocused ? '#f0fdf4' : 'white', color: state.isSelected ? 'white' : '#1e293b', fontSize: '0.875rem' }),
+        singleValue: (base: any) => ({ ...base, color: '#1e293b' }),
+        input: (base: any) => ({ ...base, color: '#1e293b' }),
+        placeholder: (base: any) => ({ ...base, color: '#9ca3af' }),
+    });
+
     const currencyOptions = currencies.map((c) => ({
         value: String(c.id),
         label: `${c.code} — ${c.name}${c.symbol ? ` (${c.symbol})` : ''}`,
@@ -133,7 +143,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
 
     return (
         <AdminLayout title="Assign Partners">
-            <div className="space-y-5">
+            <div className="space-y-5" style={{ colorScheme: 'light' }}>
 
                 <Link href={route('admin.products.index')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
                     <ArrowLeft className="h-4 w-4" /> Back to Products
@@ -222,7 +232,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                             <p className="text-sm font-semibold text-slate-700">{row.name}</p>
 
                                             <div className="space-y-1.5">
-                                                <Label>Currency</Label>
+                                                <Label className="text-slate-700">Currency</Label>
                                                 <ReactSelect
                                                     options={currencyOptions}
                                                     value={currencyOptions.find((o) => o.value === editForm.currency_id) ?? null}
@@ -231,21 +241,18 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                                     classNamePrefix="rs"
                                                     menuPortalTarget={document.body}
                                                     menuPosition="fixed"
-                                                    styles={{
-                                                        control: (base, state) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', minHeight: '40px', backgroundColor: 'white' }),
-                                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                                    }}
+                                                    styles={selectStyles()}
                                                 />
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1.5">
-                                                    <Label>Base Price</Label>
-                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.base_price} onChange={(e) => setEditForm({ ...editForm, base_price: e.target.value })} />
+                                                    <Label className="text-slate-700">Base Price</Label>
+                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.base_price} onChange={(e) => setEditForm({ ...editForm, base_price: e.target.value })} className="bg-white text-slate-900" />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label>Guide Price</Label>
-                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.guide_price} onChange={(e) => setEditForm({ ...editForm, guide_price: e.target.value })} />
+                                                    <Label className="text-slate-700">Guide Price</Label>
+                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.guide_price} onChange={(e) => setEditForm({ ...editForm, guide_price: e.target.value })} className="bg-white text-slate-900" />
                                                 </div>
                                             </div>
 
@@ -271,7 +278,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                         <p className="text-sm font-semibold text-slate-700">Assign New Partner</p>
 
                         <div className="space-y-1.5">
-                            <Label>Select Partner</Label>
+                            <Label className="text-slate-700">Select Partner</Label>
                             <ReactSelect
                                 options={availableOptions}
                                 value={selectedPartner}
@@ -280,9 +287,8 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                 isClearable
                                 classNamePrefix="rs"
                                 styles={{
-                                    control: (base, state) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', boxShadow: state.isFocused ? '0 0 0 2px rgba(16,185,129,0.2)' : 'none', '&:hover': { borderColor: '#10b981' }, minHeight: '42px' }),
-                                    option: (base, state) => ({ ...base, backgroundColor: state.isSelected ? '#10b981' : state.isFocused ? '#f0fdf4' : 'white', color: state.isSelected ? 'white' : '#1e293b', fontSize: '0.875rem' }),
-                                    menu: (base) => ({ ...base, borderRadius: '0.5rem', zIndex: 40 }),
+                                    ...selectStyles(),
+                                    control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', boxShadow: state.isFocused ? '0 0 0 2px rgba(16,185,129,0.2)' : 'none', '&:hover': { borderColor: '#10b981' }, minHeight: '42px', backgroundColor: 'white' }),
                                 }}
                             />
                         </div>
@@ -296,7 +302,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                 )}
 
                                 <div className="space-y-1.5">
-                                    <Label>Currency</Label>
+                                    <Label className="text-slate-700">Currency</Label>
                                     <ReactSelect
                                         options={currencyOptions}
                                         value={currencyOptions.find((o) => o.value === addForm.currency_id) ?? null}
@@ -305,22 +311,19 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                         classNamePrefix="rs"
                                         menuPortalTarget={document.body}
                                         menuPosition="fixed"
-                                        styles={{
-                                            control: (base, state) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', minHeight: '40px', backgroundColor: 'white' }),
-                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                                        }}
+                                        styles={selectStyles()}
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
-                                        <Label>Base Price</Label>
-                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.base_price} onChange={(e) => setAddForm({ ...addForm, base_price: e.target.value })} />
+                                        <Label className="text-slate-700">Base Price</Label>
+                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.base_price} onChange={(e) => setAddForm({ ...addForm, base_price: e.target.value })} className="bg-white text-slate-900" />
                                         <p className="text-xs text-slate-400">Internal cost</p>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <Label>Guide Price</Label>
-                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.guide_price} onChange={(e) => setAddForm({ ...addForm, guide_price: e.target.value })} />
+                                        <Label className="text-slate-700">Guide Price</Label>
+                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.guide_price} onChange={(e) => setAddForm({ ...addForm, guide_price: e.target.value })} className="bg-white text-slate-900" />
                                         <p className="text-xs text-slate-400">Partner sells at</p>
                                     </div>
                                 </div>

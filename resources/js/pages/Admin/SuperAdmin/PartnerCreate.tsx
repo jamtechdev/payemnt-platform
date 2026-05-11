@@ -94,7 +94,7 @@ export default function PartnerCreate() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
-                        <input type="url" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.website_url} onChange={(e) => setData('website_url', e.target.value)} placeholder="https://partner.com" />
+                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" value={data.website_url} onChange={(e) => setData('website_url', e.target.value)} placeholder="https://partner.com" />
                     </div>
 
                     <div>
