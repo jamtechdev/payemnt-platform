@@ -10,7 +10,7 @@ interface AuthSplitLayoutProps {
 
 export default function AuthSplitLayout({ title, subtitle, pageTitle, children }: AuthSplitLayoutProps) {
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-sky-100/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-sky-100/40">
             <Head title={pageTitle} />
             <div className="relative hidden w-[44%] flex-col justify-between overflow-hidden border-r border-border/60 p-10 text-white lg:flex">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(45,212,191,0.38)_0%,transparent_40%),radial-gradient(circle_at_82%_22%,rgba(59,130,246,0.30)_0%,transparent_35%),linear-gradient(145deg,#072a2c_0%,#0c2344_46%,#111827_100%)]" />

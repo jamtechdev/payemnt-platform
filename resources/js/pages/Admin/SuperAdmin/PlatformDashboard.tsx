@@ -64,7 +64,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <MetricCard label="Active users" value={props.activeUsers} tone="emerald" />
 
-                        <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm transition-all duration-200 hover:border-blue-300 dark:border-blue-500/25 dark:bg-blue-500/10">
+                        <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm transition-all duration-200 hover:border-blue-300">
                             <div className="text-sm font-medium text-muted-foreground">Product status count</div>
                             <div className="mt-3 grid grid-cols-1 gap-2">
                                 <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-600 p-3 text-white">
@@ -76,7 +76,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                     </div>
                                     <div className="text-2xl font-semibold">{props.activeProducts}</div>
                                 </div>
-                                <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-600 p-3 text-white dark:bg-slate-700">
+                                <div className="flex items-center justify-between gap-2 rounded-lg bg-slate-600 p-3 text-white">
                                     <div className="flex items-center gap-2">
                                         <div className="flex size-8 items-center justify-center rounded bg-white/20">
                                             <Archive className="h-4 w-4" />
@@ -88,7 +88,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm transition-all duration-200 hover:border-violet-300 dark:border-violet-500/25 dark:bg-violet-500/10">
+                        <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm transition-all duration-200 hover:border-violet-300">
                             <div className="text-sm font-medium text-muted-foreground">Customer cover summary</div>
                             <div className="mt-3 space-y-2 text-sm">
                                 <div className="flex items-center justify-between gap-2">
@@ -115,7 +115,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm transition-all duration-200 hover:border-amber-300 dark:border-amber-500/25 dark:bg-amber-500/10">
+                        <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm transition-all duration-200 hover:border-amber-300">
                             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <DollarSign className="h-4 w-4 shrink-0" />
                                 <span>Revenue (guide price)</span>

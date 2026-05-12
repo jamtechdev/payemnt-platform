@@ -1,47 +1,27 @@
 import { useEffect, useState } from 'react';
 
-export type Appearance = 'light' | 'dark' | 'system';
+/** App is light-mode only; kept for API compatibility with existing components. */
+export type Appearance = 'light';
 
-const prefersDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-const applyTheme = (appearance: Appearance) => {
-    const isDark = appearance === 'dark' || (appearance === 'system' && prefersDark());
-
-    document.documentElement.classList.toggle('dark', isDark);
+const applyLightTheme = (): void => {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('appearance', 'light');
 };
 
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-let isSystemThemeListenerBound = false;
-
-const handleSystemThemeChange = () => {
-    const currentAppearance = localStorage.getItem('appearance') as Appearance;
-    applyTheme(currentAppearance || 'system');
-};
-
-export function initializeTheme() {
-    const savedAppearance = (localStorage.getItem('appearance') as Appearance) || 'system';
-
-    applyTheme(savedAppearance);
-
-    if (!isSystemThemeListenerBound) {
-        mediaQuery.addEventListener('change', handleSystemThemeChange);
-        isSystemThemeListenerBound = true;
-    }
+export function initializeTheme(): void {
+    applyLightTheme();
 }
 
 export function useAppearance() {
-    const [appearance, setAppearance] = useState<Appearance>('system');
-
-    const updateAppearance = (mode: Appearance) => {
-        setAppearance(mode);
-        localStorage.setItem('appearance', mode);
-        applyTheme(mode);
-    };
+    const [appearance] = useState<Appearance>('light');
 
     useEffect(() => {
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-        updateAppearance(savedAppearance || 'system');
+        applyLightTheme();
     }, []);
+
+    const updateAppearance = (_mode: Appearance) => {
+        applyLightTheme();
+    };
 
     return { appearance, updateAppearance };
 }

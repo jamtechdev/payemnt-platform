@@ -27,12 +27,12 @@ export default function Login() {
                     <p className="text-sm text-muted-foreground">Use your admin email and password to continue.</p>
                 </div>
                 {flash.error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200">
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                         {flash.error}
                     </div>
                 )}
                 <form
-                    className="space-y-5 rounded-2xl border border-[#cdebe4] border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(2,6,23,0.08)] backdrop-blur dark:bg-gray-800/95"
+                    className="space-y-5 rounded-2xl border border-[#cdebe4] border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(2,6,23,0.08)] backdrop-blur"
                     onSubmit={(e) => {
                         e.preventDefault();
                         post(route('login'));

@@ -52,7 +52,7 @@ export default function ReconciliationDashboard(props: ReconciliationDashboardPr
                                     {props.customersByProduct.map((row) => (
                                         <div key={row.product_id} className="flex items-center justify-between rounded-lg border border-border px-4 py-2">
                                             <span className="text-sm font-medium text-foreground">{row.product_name}</span>
-                                            <span className="rounded-full bg-blue-100 px-3 py-0.5 text-sm font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+                                            <span className="rounded-full bg-blue-100 px-3 py-0.5 text-sm font-semibold text-blue-700">
                                                 {row.total}
                                             </span>
                                         </div>
@@ -78,7 +78,7 @@ export default function ReconciliationDashboard(props: ReconciliationDashboardPr
                                     {props.revenueByProduct.map((row) => (
                                         <div key={row.product_id} className="flex items-center justify-between rounded-lg border border-border px-4 py-2">
                                             <span className="text-sm font-medium text-foreground">Product #{row.product_id}</span>
-                                            <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                            <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-700">
                                                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(row.total_revenue))}
                                             </span>
                                         </div>

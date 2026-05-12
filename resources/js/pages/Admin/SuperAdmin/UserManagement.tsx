@@ -56,19 +56,19 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
     return (
         <AdminLayout title="User management">
             <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm dark:border-blue-500/25 dark:bg-blue-500/10">
+                <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">Total users</p>
                     <p className="mt-1 text-2xl font-semibold text-foreground">{rows.length}</p>
                 </div>
-                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 shadow-sm dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">Active users</p>
                     <p className="mt-1 text-2xl font-semibold text-emerald-600">{rows.filter((row) => row.is_active !== false).length}</p>
                 </div>
-                <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm dark:border-violet-500/25 dark:bg-violet-500/10">
+                <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">Role options</p>
                     <p className="mt-1 text-2xl font-semibold text-foreground">{roleOptions.length}</p>
                 </div>
-                <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10">
+                <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm">
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">Access control</p>
                     <p className="mt-1 text-sm font-medium text-muted-foreground">Role-based permissions in one place</p>
                 </div>
@@ -88,9 +88,9 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                             <div className="space-y-4">
                                 <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
                                     <div>
-                                        <p className="font-medium text-slate-900 dark:text-slate-100">{String(row.name ?? 'Unknown')}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{String(row.email ?? '-')}</p>
-                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Role: {roleName || '-'}</p>
+                                        <p className="font-medium text-slate-900">{String(row.name ?? 'Unknown')}</p>
+                                        <p className="text-sm text-slate-500">{String(row.email ?? '-')}</p>
+                                        <p className="mt-1 text-xs text-slate-500">Role: {roleName || '-'}</p>
                                     </div>
                                     <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
                                     <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
@@ -146,19 +146,19 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                 )}
 
                                 {openPermissionUserId === userId && (
-                                    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700 dark:bg-slate-700/40">
-                                        <p className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-100">Effective permissions</p>
-                                        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                                    <div className="rounded-lg border border-slate-200 p-3">
+                                        <p className="mb-2 text-sm font-medium text-slate-800">Effective permissions</p>
+                                        <p className="mb-3 text-xs text-slate-500">
                                             Showing permissions for role <span className="font-semibold">{roleName || '-'}</span>.
                                         </p>
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full border-collapse text-sm">
                                                 <thead>
-                                                    <tr className="bg-slate-50 dark:bg-slate-900/40">
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                                    <tr className="bg-slate-50">
+                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">
                                                             Permission
                                                         </th>
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">
                                                             Function
                                                         </th>
                                                     </tr>
@@ -167,12 +167,12 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                                     {rolePermissions.map((permission) => (
                                                         <tr
                                                             key={`${userId}-${permission}`}
-                                                            className="odd:bg-white even:bg-slate-50/50 dark:odd:bg-slate-800 dark:even:bg-slate-800/60"
+                                                            className="odd:bg-white even:bg-slate-50/50"
                                                         >
-                                                            <td className="border border-slate-200 px-3 py-2 text-slate-800 dark:border-slate-700 dark:text-slate-100">
+                                                            <td className="border border-slate-200 px-3 py-2 text-slate-800">
                                                                 {permission}
                                                             </td>
-                                                            <td className="border border-slate-200 px-3 py-2 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                                                            <td className="border border-slate-200 px-3 py-2 text-slate-600">
                                                                 {permission.replaceAll('.', ' ').replaceAll('_', ' ')}
                                                             </td>
                                                         </tr>
@@ -181,7 +181,7 @@ export default function UserManagement({ users, roles, permissionMatrix }: { use
                                                         <tr>
                                                             <td
                                                                 colSpan={2}
-                                                                className="border border-slate-200 px-3 py-2 text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                                                                className="border border-slate-200 px-3 py-2 text-slate-500"
                                                             >
                                                                 No permissions found for this role.
                                                             </td>
