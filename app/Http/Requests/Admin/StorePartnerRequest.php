@@ -8,10 +8,15 @@ class StorePartnerRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        // Backward compatibility for older forms still sending `email`/`phone`.
+        $websiteUrl = trim((string) $this->input('website_url', ''));
+        if ($websiteUrl !== '' && !preg_match('#^https?://#i', $websiteUrl)) {
+            $websiteUrl = 'https://' . $websiteUrl;
+        }
+
         $this->merge([
             'contact_email' => $this->input('contact_email', $this->input('email')),
             'contact_phone' => $this->input('contact_phone', $this->input('phone')),
+            'website_url'   => $websiteUrl ?: null,
         ]);
     }
 

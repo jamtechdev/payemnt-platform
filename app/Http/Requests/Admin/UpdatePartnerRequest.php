@@ -11,6 +11,15 @@ class UpdatePartnerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $websiteUrl = trim((string) $this->input('website_url', ''));
+        if ($websiteUrl !== '' && !preg_match('#^https?://#i', $websiteUrl)) {
+            $websiteUrl = 'https://' . $websiteUrl;
+        }
+        $this->merge(['website_url' => $websiteUrl ?: null]);
+    }
+
     public function rules(): array
     {
         $partnerId = $this->route('partner')?->id;

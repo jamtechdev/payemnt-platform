@@ -1,6 +1,5 @@
 import AdminLayout from '@/layouts/AdminLayout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/Types';
@@ -23,12 +22,14 @@ interface Props {
     currencies: Currency[];
 }
 
+const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 [color-scheme:light]';
+
 export default function ProductAssignPartners({ product, allPartners, assignedPartners, disabledPartners, currencies }: Props) {
     const { flash } = usePage<PageProps>().props;
     const flashAny = flash as any;
 
     const selectStyles = () => ({
-        control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', minHeight: '40px', backgroundColor: 'white', color: '#1e293b' }),
+        control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#cbd5e1', boxShadow: state.isFocused ? '0 0 0 2px rgba(16,185,129,0.2)' : 'none', minHeight: '40px', backgroundColor: 'white', color: '#1e293b' }),
         menu: (base: any) => ({ ...base, borderRadius: '0.5rem', zIndex: 40, backgroundColor: 'white' }),
         menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
         option: (base: any, state: any) => ({ ...base, backgroundColor: state.isSelected ? '#10b981' : state.isFocused ? '#f0fdf4' : 'white', color: state.isSelected ? 'white' : '#1e293b', fontSize: '0.875rem' }),
@@ -51,11 +52,9 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
         }))
     );
 
-    // Which row is being edited
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState<{ currency_id: string; base_price: string; guide_price: string }>({ currency_id: '', base_price: '', guide_price: '' });
 
-    // New partner add form
     const [selectedPartner, setSelectedPartner] = useState<{ value: number; label: string } | null>(null);
     const [addForm, setAddForm] = useState({ currency_id: '', base_price: '', guide_price: '' });
 
@@ -143,7 +142,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
 
     return (
         <AdminLayout title="Assign Partners">
-            <div className="space-y-5" style={{ colorScheme: 'light' }}>
+            <div className="space-y-5">
 
                 <Link href={route('admin.products.index')} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
                     <ArrowLeft className="h-4 w-4" /> Back to Products
@@ -203,7 +202,6 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                             return (
                                 <div key={row.id} className="px-5 py-4">
                                     {!isEditing ? (
-                                        /* View mode */
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
@@ -227,7 +225,6 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                             </div>
                                         </div>
                                     ) : (
-                                        /* Edit mode */
                                         <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
                                             <p className="text-sm font-semibold text-slate-700">{row.name}</p>
 
@@ -248,11 +245,11 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1.5">
                                                     <Label className="text-slate-700">Base Price</Label>
-                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.base_price} onChange={(e) => setEditForm({ ...editForm, base_price: e.target.value })} className="bg-white text-slate-900" />
+                                                    <input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.base_price} onChange={(e) => setEditForm({ ...editForm, base_price: e.target.value })} className={inputCls} />
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <Label className="text-slate-700">Guide Price</Label>
-                                                    <Input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.guide_price} onChange={(e) => setEditForm({ ...editForm, guide_price: e.target.value })} className="bg-white text-slate-900" />
+                                                    <input type="number" min="0" step="0.01" placeholder="0.00" value={editForm.guide_price} onChange={(e) => setEditForm({ ...editForm, guide_price: e.target.value })} className={inputCls} />
                                                 </div>
                                             </div>
 
@@ -288,7 +285,7 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                 classNamePrefix="rs"
                                 styles={{
                                     ...selectStyles(),
-                                    control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#e2e8f0', boxShadow: state.isFocused ? '0 0 0 2px rgba(16,185,129,0.2)' : 'none', '&:hover': { borderColor: '#10b981' }, minHeight: '42px', backgroundColor: 'white' }),
+                                    control: (base: any, state: any) => ({ ...base, borderRadius: '0.5rem', borderColor: state.isFocused ? '#10b981' : '#cbd5e1', boxShadow: state.isFocused ? '0 0 0 2px rgba(16,185,129,0.2)' : 'none', '&:hover': { borderColor: '#10b981' }, minHeight: '42px', backgroundColor: 'white' }),
                                 }}
                             />
                         </div>
@@ -318,12 +315,12 @@ export default function ProductAssignPartners({ product, allPartners, assignedPa
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
                                         <Label className="text-slate-700">Base Price</Label>
-                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.base_price} onChange={(e) => setAddForm({ ...addForm, base_price: e.target.value })} className="bg-white text-slate-900" />
+                                        <input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.base_price} onChange={(e) => setAddForm({ ...addForm, base_price: e.target.value })} className={inputCls} />
                                         <p className="text-xs text-slate-400">Internal cost</p>
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label className="text-slate-700">Guide Price</Label>
-                                        <Input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.guide_price} onChange={(e) => setAddForm({ ...addForm, guide_price: e.target.value })} className="bg-white text-slate-900" />
+                                        <input type="number" min="0" step="0.01" placeholder="0.00" value={addForm.guide_price} onChange={(e) => setAddForm({ ...addForm, guide_price: e.target.value })} className={inputCls} />
                                         <p className="text-xs text-slate-400">Partner sells at</p>
                                     </div>
                                 </div>

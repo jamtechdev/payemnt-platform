@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useForm } from '@inertiajs/react';
 import React from 'react';
+import { toast } from 'sonner';
 
 export default function PartnerEdit({ partner }: { partner: any }) {
     const { data, setData, patch, processing, errors } = useForm({
@@ -16,7 +17,12 @@ export default function PartnerEdit({ partner }: { partner: any }) {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        patch(route('admin.partners.update', partner.id));
+        patch(route('admin.partners.update', partner.id), {
+            onError: (errs) => {
+                const messages = Object.values(errs).join('\n');
+                toast.error(messages, { id: 'validation-error' });
+            },
+        });
     };
 
     return (
@@ -89,7 +95,18 @@ export default function PartnerEdit({ partner }: { partner: any }) {
                     </div>
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Website URL</label>
-                        <input type="text" className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white" value={data.website_url} onChange={(e) => setData('website_url', e.target.value as any)} />
+                        <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            value={data.website_url}
+                            onChange={(e) => setData('website_url', e.target.value)}
+                            onBlur={(e) => {
+                                const v = e.target.value.trim();
+                                if (v && !/^https?:\/\//i.test(v)) setData('website_url', 'https://' + v);
+                            }}
+                            placeholder="e.g. www.partner.com"
+                        />
+                        {errors.website_url && <p className="mt-1 text-sm text-red-500">{errors.website_url}</p>}
                     </div>
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
