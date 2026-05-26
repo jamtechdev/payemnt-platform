@@ -45,6 +45,10 @@ class HandleInertiaRequests extends Middleware
             $avatarUrl = Storage::disk('public')->url($avatarPath);
         }
 
+        // Derive modules dynamically from actual permissions
+        $permissions = $user ? $user->getAllPermissions()->pluck('name')->unique()->values()->all() : [];
+        $modules = $this->deriveModules($permissions, $role);
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -55,8 +59,8 @@ class HandleInertiaRequests extends Middleware
                     'avatar_url' => $avatarUrl,
                 ] : null,
                 'role' => $role,
-                'permissions' => $user ? $user->getPermissionsViaRoles()->pluck('name')->unique()->values()->all() : [],
-                'modules' => $role ? config("admin_portal.modules.{$role}", []) : [],
+                'permissions' => $permissions,
+                'modules' => $modules,
             ],
             'flash' => [
                 'success'          => fn () => $request->session()->get('success'),
@@ -66,5 +70,17 @@ class HandleInertiaRequests extends Middleware
                 'show_api_key_modal' => fn () => $request->session()->get('show_api_key_modal'),
             ],
         ];
+    }
+
+    private function deriveModules(array $permissions, ?string $role): array
+    {
+        $roleModules = config('admin_portal.modules', []);
+
+        // Super admin sees everything
+        if ($role === 'super_admin') {
+            return $roleModules['super_admin'] ?? ['dashboard', 'customers', 'products', 'partners', 'users', 'reports', 'audit_logs', 'settings'];
+        }
+
+        return $roleModules[$role] ?? ['dashboard'];
     }
 }

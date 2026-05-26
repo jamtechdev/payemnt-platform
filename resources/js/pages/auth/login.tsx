@@ -2,13 +2,11 @@ import AuthSplitLayout from '@/components/auth/AuthSplitLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PageProps } from '@/Types';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Login() {
-    const { flash } = usePage<PageProps>().props;
     const { data, setData, post, processing, errors } = useForm({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
 
@@ -16,21 +14,16 @@ export default function Login() {
         <AuthSplitLayout
             pageTitle="Sign in"
             title="Partner-distributed product sales"
-            subtitle="Monitor partners, customers, and revenue in one secure admin workspace."
+            subtitle="Sign in to manage partners, customers, and revenue."
         >
             <div className="w-full max-w-md space-y-6">
                 <div className="space-y-2 text-center lg:text-left">
                     <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
-                        Admin Portal
+                        PartnerSales
                     </span>
                     <h2 className="text-2xl font-bold text-foreground">Sign in</h2>
-                    <p className="text-sm text-muted-foreground">Use your admin email and password to continue.</p>
+                    <p className="text-sm text-muted-foreground">Use your email and password to continue.</p>
                 </div>
-                {flash.error && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                        {flash.error}
-                    </div>
-                )}
                 <form
                     className="space-y-5 rounded-2xl border border-[#cdebe4] border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(2,6,23,0.08)] backdrop-blur"
                     onSubmit={(e) => {

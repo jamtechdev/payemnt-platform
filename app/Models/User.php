@@ -34,6 +34,7 @@ class User extends Authenticatable
         'locked_until',
         'last_login_at',
         'metadata',
+        'preferred_currency',
     ];
 
     protected $hidden = [

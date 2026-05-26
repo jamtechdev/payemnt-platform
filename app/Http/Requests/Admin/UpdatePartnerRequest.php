@@ -34,6 +34,7 @@ class UpdatePartnerRequest extends FormRequest
             'notes' => ['sometimes', 'nullable', 'string', 'max:3000'],
             'product_ids' => ['nullable', 'array'],
             'product_ids.*' => ['integer', 'exists:products,id'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ];
     }
 }

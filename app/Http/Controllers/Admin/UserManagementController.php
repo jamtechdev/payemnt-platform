@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Notifications\UserCreated;
 use App\Support\PortalPassword;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,8 @@ use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
+    private const ALLOWED_ROLES = ['super_admin', 'reconciliation_admin', 'customer_service'];
+
     public function index(): Response
     {
         $roles = Role::query()->with('permissions:id,name')->orderBy('name')->get(['id', 'name']);
@@ -31,15 +34,55 @@ class UserManagementController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Admin/SuperAdmin/UserCreate');
+    }
+
+    public function edit(User $user): Response
+    {
+        $roles = Role::query()->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('Admin/SuperAdmin/UserEdit', [
+            'user' => $user->load('roles'),
+            'roles' => $roles->map(fn (Role $role) => ['id' => $role->id, 'name' => $role->name]),
+        ]);
+    }
+
+    public function show(User $user): Response
+    {
+        $permissions = collect(config('admin_portal.permissions', []))
+            ->filter(fn ($permission): bool => is_string($permission) && $permission !== '')
+            ->values();
+
+        $rolePermissions = $user->roles()->with('permissions')->get()
+            ->pluck('permissions')
+            ->flatten()
+            ->pluck('name')
+            ->unique()
+            ->values();
+
+        return Inertia::render('Admin/SuperAdmin/UserShow', [
+            'user' => $user->load('roles'),
+            'permissions' => $permissions,
+            'rolePermissions' => $rolePermissions,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $this->ensureAdminActor($request);
 
+        // Only one super_admin allowed
+        if (($role = $request->input('role')) === 'super_admin' && User::query()->role('super_admin')->exists()) {
+            return back()->with('error', 'A super admin already exists. Only one super admin is allowed.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(Role::query()->pluck('name')->all())],
-            'password' => ['nullable', 'string', PortalPassword::defaults()],
+            'role' => ['required', Rule::in(self::ALLOWED_ROLES)],
+            'password' => ['required', 'string', PortalPassword::defaults()],
         ]);
         $actor = $request->user();
         if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
@@ -49,12 +92,15 @@ class UserManagementController extends Controller
         $user = User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password'] ?? 'ChangeMe12345!'),
+            'password' => Hash::make($validated['password']),
         ]);
+        Role::firstOrCreate(['name' => $validated['role']]);
         $user->syncRoles([$validated['role']]);
+        $user->notify(new UserCreated($validated['password']));
         AuditLog::record('created', $user, [], $user->toArray(), $request->user());
 
-        return back()->with('success', 'User invited.');
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User created. Password: ' . $validated['password']);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -68,15 +114,19 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
+            'role' => ['nullable', Rule::in(self::ALLOWED_ROLES)],
             'is_active' => ['nullable', 'boolean'],
         ]);
         if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
             return back()->with('error', 'Admins cannot assign the super_admin role.');
         }
+        if (($validated['role'] ?? null) === 'super_admin' && ! $user->hasRole('super_admin') && User::role('super_admin')->exists()) {
+            return back()->with('error', 'A super admin already exists. Only one super admin is allowed.');
+        }
 
         $user->update(collect($validated)->except(['role'])->all());
         if (! empty($validated['role'])) {
+            Role::firstOrCreate(['name' => $validated['role']]);
             $user->syncRoles([$validated['role']]);
         }
 
@@ -102,23 +152,25 @@ class UserManagementController extends Controller
         }
 
         $validated = $request->validate([
-            'role' => ['nullable', Rule::in(Role::query()->pluck('name')->all())],
+            'role' => ['nullable', Rule::in(self::ALLOWED_ROLES)],
         ]);
         if ($this->isAdminButNotSuperAdmin($actor) && ($validated['role'] ?? null) === 'super_admin') {
             return back()->with('error', 'Admins cannot assign the super_admin role.');
         }
+        if (($validated['role'] ?? null) === 'super_admin' && ! $user->hasRole('super_admin') && User::role('super_admin')->exists()) {
+            return back()->with('error', 'A super admin already exists. Only one super admin is allowed.');
+        }
 
         if (! empty($validated['role'])) {
+            Role::firstOrCreate(['name' => $validated['role']]);
             $user->syncRoles([$validated['role']]);
         }
-        $user->syncPermissions([]);
 
         AuditLog::record('web_user_access_control_updated', $user, [], [
             'role' => $user->getRoleNames()->first(),
-            'permissions' => $user->roles()->with('permissions')->get()->pluck('permissions')->flatten()->pluck('name')->unique()->values()->all(),
         ], $request->user());
 
-        return back()->with('success', 'Role updated. Permissions are inherited from the assigned role.');
+        return back()->with('success', 'Access control updated.');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse

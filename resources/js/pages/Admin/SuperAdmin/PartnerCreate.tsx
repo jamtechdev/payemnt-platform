@@ -13,6 +13,8 @@ export default function PartnerCreate() {
         company_name: '',
         website_url: '',
         notes: '',
+        password: '',
+        password_confirmation: '',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -30,7 +32,7 @@ export default function PartnerCreate() {
             <div className="mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-md">
                 <h2 className="mb-2 text-xl font-semibold text-gray-800">Create New Partner</h2>
                 <p className="mb-6 text-sm text-gray-500">
-                    Partners authenticate via API key — no password needed. Generate an API key from the partner detail page after creation.
+                    Create a partner account. Partner can login via email and password set below. API key can be generated from the partner detail page after creation.
                 </p>
 
                 <form onSubmit={submit} className="space-y-5">
@@ -108,8 +110,36 @@ export default function PartnerCreate() {
                         <textarea className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]" value={data.notes} onChange={(e) => setData('notes', e.target.value)} rows={3} />
                     </div>
 
+                    {/* Password */}
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            placeholder="Min 6 characters"
+                        />
+                        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Confirm Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="password"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#0e9f84]"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            placeholder="Re-enter password"
+                        />
+                    </div>
+
                     <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                        💡 After creating the partner, go to partner detail to assign products and generate API key.
+                        💡 Partner will login with email and password. After creating, go to partner detail to assign products and generate API key.
                     </div>
 
                     <div className="flex justify-end gap-3">

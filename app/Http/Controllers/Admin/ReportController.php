@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Partner;
 use App\Models\Product;
+use App\Services\CurrencyService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +20,10 @@ use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly CurrencyService $currencyService)
+    {
+    }
+
     public function customerAcquisition(Request $request): Response
     {
         $period = $request->string('period', 'monthly')->toString();
@@ -75,6 +80,9 @@ class ReportController extends Controller
             return redirect()->route('admin.reports.dashboard')->with('error', 'Access denied.');
         }
 
+        $user = $request->user();
+        $preferredCurrency = $user?->preferred_currency ?? 'USD';
+
         $period = $request->string('period', 'monthly')->toString();
         $format = match ($period) {
             'daily' => '%Y-%m-%d',
@@ -85,8 +93,9 @@ class ReportController extends Controller
         $query = Payment::query()
             ->join('products', 'payments.product_id', '=', 'products.id')
             ->join('partners', 'payments.partner_id', '=', 'partners.id')
-            ->selectRaw("payments.product_id, products.name as product_name, payments.partner_id, partners.name as partner_name, DATE_FORMAT(payments.created_at, '{$format}') as bucket, COUNT(payments.id) as customer_count, COALESCE(products.guide_price, products.price, 0) as guide_price, (COUNT(payments.id) * COALESCE(products.guide_price, products.price, 0)) as expected_revenue")
-            ->groupBy('payments.product_id', 'products.name', 'payments.partner_id', 'partners.name', 'bucket', 'products.guide_price', 'products.price');
+            ->selectRaw("payments.product_id, products.name as product_name, payments.partner_id, partners.name as partner_name, DATE_FORMAT(payments.created_at, '{$format}') as bucket, COUNT(payments.id) as customer_count, payments.currency, SUM(payments.amount) as actual_revenue")
+            ->where('payments.status', 'success')
+            ->groupBy('payments.product_id', 'products.name', 'payments.partner_id', 'partners.name', 'bucket', 'payments.currency');
 
         if ($request->filled('date_from')) {
             $query->whereDate('payments.created_at', '>=', $request->string('date_from')->toString());
@@ -101,10 +110,29 @@ class ReportController extends Controller
             $query->where('payments.product_id', $request->integer('product_id'));
         }
 
-        $rows = $query->orderBy('bucket')->get();
+        $rawRows = $query->orderBy('bucket')->get();
+
+        $rows = $rawRows->groupBy(fn ($row) => $row->bucket.$row->product_id.$row->partner_id)
+            ->map(function ($group) use ($preferredCurrency) {
+                $first = $group->first();
+                $totalInPreferred = $group->reduce(function ($carry, $row) use ($preferredCurrency) {
+                    return $carry + $this->currencyService->convert((float) $row->actual_revenue, $row->currency, $preferredCurrency);
+                }, 0.0);
+
+                return [
+                    'product_id' => $first->product_id,
+                    'product_name' => $first->product_name,
+                    'partner_id' => $first->partner_id,
+                    'partner_name' => $first->partner_name,
+                    'bucket' => $first->bucket,
+                    'customer_count' => $group->sum('customer_count'),
+                    'expected_revenue' => $totalInPreferred, // Maintain original property name for frontend compatibility
+                ];
+            })->values();
 
         return Inertia::render('Admin/Reconciliation/RevenueByProductReport', [
             'rows' => $rows,
+            'preferredCurrency' => $preferredCurrency,
             'partners' => Partner::query()->select(['id', 'name'])->orderBy('name')->get(),
             'products' => Product::query()->select(['id', 'name'])->orderBy('name')->get(),
             'filters' => $request->only(['period', 'date_from', 'date_to', 'partner_id', 'product_id']),
@@ -113,6 +141,9 @@ class ReportController extends Controller
 
     public function partnerPerformance(Request $request): Response
     {
+        $user = $request->user();
+        $preferredCurrency = $user?->preferred_currency ?? 'USD';
+
         $months = max(3, min(24, $request->integer('months', 12)));
 
         $customerRows = Payment::query()
@@ -121,12 +152,26 @@ class ReportController extends Controller
             ->groupBy('partner_id', 'bucket')
             ->get();
 
-        $revenueRows = Payment::query()
-            ->join('products', 'payments.product_id', '=', 'products.id')
-            ->selectRaw("payments.partner_id, DATE_FORMAT(payments.created_at, '%Y-%m') as bucket, COALESCE(sum(COALESCE(products.guide_price, products.price, 0)),0) as total_revenue")
-            ->where('payments.created_at', '>=', now()->subMonths($months - 1)->startOfMonth())
-            ->groupBy('partner_id', 'bucket')
+        $revenueRowsRaw = Payment::query()
+            ->selectRaw("partner_id, currency, DATE_FORMAT(created_at, '%Y-%m') as bucket, SUM(amount) as amount_sum")
+            ->where('status', 'success')
+            ->where('created_at', '>=', now()->subMonths($months - 1)->startOfMonth())
+            ->groupBy('partner_id', 'currency', 'bucket')
             ->get();
+
+        $revenueRows = $revenueRowsRaw->groupBy(fn ($row) => $row->partner_id.$row->bucket)
+            ->map(function ($group) use ($preferredCurrency) {
+                $first = $group->first();
+                $totalInPreferred = $group->reduce(function ($carry, $row) use ($preferredCurrency) {
+                    return $carry + $this->currencyService->convert((float) $row->amount_sum, $row->currency, $preferredCurrency);
+                }, 0.0);
+
+                return (object) [
+                    'partner_id' => $first->partner_id,
+                    'bucket' => $first->bucket,
+                    'total_revenue' => $totalInPreferred,
+                ];
+            })->values();
 
         $partnerNames = Partner::query()->pluck('name', 'id');
 
@@ -170,6 +215,7 @@ class ReportController extends Controller
         return Inertia::render('Admin/SuperAdmin/PartnerPerformance', [
             'months' => $months,
             'series' => $series,
+            'preferredCurrency' => $preferredCurrency,
         ]);
     }
 

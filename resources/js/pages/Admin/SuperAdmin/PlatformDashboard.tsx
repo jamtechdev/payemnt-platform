@@ -30,6 +30,8 @@ interface PlatformDashboardProps {
     dbHealth: Record<string, string | number | boolean>;
     allRevenue: number;
     monthlyRevenue: number;
+    preferredCurrency?: string;
+    revenueBreakdown?: { currency: string; total: number }[];
     apiHealth?: {
         requests_24h: number;
         failed_24h: number;
@@ -54,6 +56,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
     const recentAuditLogs = Array.isArray(props.recentAuditLogs) ? props.recentAuditLogs : [];
     const dbHealth = props.dbHealth && typeof props.dbHealth === 'object' ? props.dbHealth : {};
     const apiHealth = props.apiHealth ?? { requests_24h: 0, failed_24h: 0, avg_latency_ms_24h: 0 };
+    const currency = props.preferredCurrency || 'USD';
 
     return (
         <AdminLayout title="Platform overview">
@@ -118,21 +121,33 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                         <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm transition-all duration-200 hover:border-amber-300">
                             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <DollarSign className="h-4 w-4 shrink-0" />
-                                <span>Revenue (guide price)</span>
+                                <span>Revenue (converted to {currency})</span>
                             </div>
                             <div className="mt-3 space-y-2 text-sm">
                                 <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground">This month</span>
                                     <span className="font-semibold text-emerald-600">
-                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(props.monthlyRevenue ?? 0)}
+                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(props.monthlyRevenue ?? 0)}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-muted-foreground">All time</span>
                                     <span className="font-semibold text-foreground">
-                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(props.allRevenue ?? 0)}
+                                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(props.allRevenue ?? 0)}
                                     </span>
                                 </div>
+                                {props.revenueBreakdown && props.revenueBreakdown.length > 1 && (
+                                    <div className="mt-2 border-t border-dashed border-amber-200 pt-2">
+                                        <div className="mb-1 text-[10px] font-medium text-muted-foreground">By currency (original)</div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {props.revenueBreakdown.map((b, i) => (
+                                                <span key={i} className="rounded bg-white/60 px-1.5 py-0.5 text-[10px] font-mono text-amber-800">
+                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: b.currency, maximumFractionDigits: 0 }).format(b.total)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="mt-3 h-20">
                                 <Chart
@@ -145,7 +160,7 @@ export default function PlatformDashboard(props: PlatformDashboardProps) {
                                         fill: { type: 'gradient', gradient: { opacityFrom: 0.3, opacityTo: 0.05 } },
                                         xaxis: { categories: monthlyPayments.map((e) => e.label) },
                                         colors: ['#10b981'],
-                                        tooltip: { x: { show: true }, y: { formatter: (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v) } },
+                                        tooltip: { x: { show: true }, y: { formatter: (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(v) } },
                                     }}
                                 />
                             </div>

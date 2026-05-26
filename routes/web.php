@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminPasswordController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -49,14 +52,19 @@ Route::prefix('admin')
     ->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'superAdminDashboard'])->middleware('role:super_admin')->name('platform.dashboard');
         Route::get('/customer-service/dashboard', [DashboardController::class, 'customerServiceDashboard'])->middleware('role:customer_service|super_admin')->name('cs.dashboard');
+        Route::get('/partner/dashboard', [DashboardController::class, 'partnerDashboard'])->middleware('role:partner|super_admin')->name('partner.dashboard');
+        Route::get('/partner/products', [DashboardController::class, 'partnerProducts'])->middleware('role:partner|super_admin')->name('partner.products');
+        Route::get('/partner/profile', [DashboardController::class, 'partnerProfile'])->middleware('role:partner|super_admin')->name('partner.profile');
+        Route::patch('/partner/profile', [DashboardController::class, 'partnerUpdateProfile'])->middleware('role:partner|super_admin')->name('partner.profile.update');
+        Route::get('/partner/audit-logs', [DashboardController::class, 'partnerAuditLogs'])->middleware('role:partner|super_admin')->name('partner.audit-logs');
         Route::get('/reports', [DashboardController::class, 'reconciliationDashboard'])->middleware('role:reconciliation_admin|super_admin')->name('reports.dashboard');
         Route::get('/reports/customer-acquisition', [ReportController::class, 'customerAcquisition'])->middleware('role:reconciliation_admin|super_admin')->name('reports.customer-acquisition');
         Route::get('/reports/revenue', [ReportController::class, 'revenueByProduct'])->middleware('role:reconciliation_admin|super_admin')->name('reports.revenue');
         Route::get('/customers', [CustomerController::class, 'index'])->middleware('role:customer_service|super_admin')->name('customers.index');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->middleware('role:customer_service|super_admin')->name('customers.show');
-        Route::post('/customers/export', [CustomerController::class, 'export'])->middleware(['role:customer_service|super_admin', 'permission:customers.export'])->name('customers.export');
-        Route::get('/customers/export/{jobId}/download', [CustomerController::class, 'downloadExport'])->middleware(['role:customer_service|super_admin', 'permission:customers.export'])->name('customers.download-export');
-        Route::get('/customers/export/expiring', [CustomerController::class, 'exportExpiring'])->middleware(['role:customer_service|super_admin', 'permission:customers.export'])->name('customers.export-expiring');
+        Route::post('/customers/export', [CustomerController::class, 'export'])->middleware('role:customer_service|super_admin')->name('customers.export');
+        Route::get('/customers/export/{jobId}/download', [CustomerController::class, 'downloadExport'])->middleware('role:customer_service|super_admin')->name('customers.download-export');
+        Route::get('/customers/export/expiring', [CustomerController::class, 'exportExpiring'])->middleware('role:customer_service|super_admin')->name('customers.export-expiring');
 
         Route::prefix('/super-admin')->middleware('role:super_admin')->group(function (): void {
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -95,5 +103,22 @@ Route::prefix('admin')
             Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
             Route::patch('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
             Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+
+            Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+            Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create');
+            Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+            Route::get('/users/{user}', [UserManagementController::class, 'show'])->name('users.show');
+            Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit');
+            Route::patch('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+            Route::post('/users/{user}/deactivate', [UserManagementController::class, 'deactivate'])->name('users.deactivate');
+            Route::post('/users/{user}/access-control', [UserManagementController::class, 'updateAccessControl'])->name('users.access-control');
+            Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+
+            Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+            Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('audit-logs.show');
+
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+            Route::post('/settings/email', [SettingsController::class, 'updateEmail'])->name('settings.email.update');
+            Route::post('/settings/daily-report', [SettingsController::class, 'updateDailyReport'])->name('settings.daily-report.update');
         });
     });

@@ -57,5 +57,7 @@ return [
     ],
     'modules' => [
         'super_admin' => ['dashboard', 'customers', 'products', 'partners', 'users', 'reports', 'audit_logs', 'settings'],
+        'reconciliation_admin' => ['dashboard', 'reports'],
+        'customer_service' => ['dashboard', 'customers'],
     ],
 ];

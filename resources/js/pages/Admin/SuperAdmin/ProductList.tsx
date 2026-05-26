@@ -10,6 +10,7 @@ import { Pencil, Trash2, ToggleLeft, ToggleRight, Users, Eye } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { router } from '@inertiajs/react';
 import ActionBtn from '@/components/shared/ActionBtn';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type LooseRecord = Record<string, unknown>;
 
@@ -47,26 +48,36 @@ export default function ProductList({ products }: { products: unknown }) {
                 if (pivotPartners.length === 0) return <span className="text-xs text-slate-400">—</span>;
                 const visible = pivotPartners.slice(0, 2);
                 const rest = pivotPartners.slice(2);
+                const allNames = pivotPartners.map((p) => String(p.name ?? '-')).join(', ');
                 return (
-                    <div className="flex flex-wrap items-center gap-1">
-                        {visible.map((p) => (
-                            <span
-                                key={String(p.id)}
-                                className="inline-block max-w-[120px] truncate rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200"
-                                title={String(p.name ?? '')}
-                            >
-                                {String(p.name ?? '-')}
-                            </span>
-                        ))}
-                        {rest.length > 0 && (
-                            <span
-                                className="inline-block cursor-default rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200"
-                                title={rest.map((p) => String(p.name)).join(', ')}
-                            >
-                                +{rest.length} more
-                            </span>
-                        )}
-                    </div>
+                    <TooltipProvider>
+                        <div className="flex flex-wrap items-center gap-1">
+                            {visible.map((p) => (
+                                <Tooltip key={String(p.id)}>
+                                    <TooltipTrigger asChild>
+                                        <span className="inline-block max-w-[120px] truncate rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 cursor-help">
+                                            {String(p.name ?? '-')}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-xs">{String(p.name ?? '-')}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            ))}
+                            {rest.length > 0 && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className="inline-block cursor-default rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+                                            +{rest.length}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-xs">{allNames}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
+                    </TooltipProvider>
                 );
             },
         }),

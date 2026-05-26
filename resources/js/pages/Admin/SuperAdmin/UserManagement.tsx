@@ -1,202 +1,170 @@
-import EntityListCard from '@/components/admin/EntityListCard';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/AdminLayout';
+import DataTable from '@/components/shared/DataTable';
+import { createColumnHelper } from '@tanstack/react-table';
+import { router, usePage, Link } from '@inertiajs/react';
 import { PageProps } from '@/Types';
-import { router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Eye, Trash2, UserX, Plus } from 'lucide-react';
 
-type LooseRecord = Record<string, unknown>;
-
-function asArray(input: unknown): LooseRecord[] {
-    if (Array.isArray(input)) return input as LooseRecord[];
-    if (input && typeof input === 'object' && Array.isArray((input as { data?: unknown }).data)) {
-        return (input as { data: LooseRecord[] }).data;
-    }
-    return [];
+interface UserRow {
+    id: number;
+    name: string;
+    email: string;
+    is_active: boolean;
+    roles: { id: number; name: string }[];
+    preferred_currency?: string;
 }
 
-export default function UserManagement({ users, roles, permissionMatrix }: { users: unknown; roles: unknown; permissionMatrix?: unknown }) {
-    const rows = asArray(users);
-    const roleRows = asArray(roles);
-    const matrix = (permissionMatrix && typeof permissionMatrix === 'object' ? (permissionMatrix as LooseRecord) : {}) as LooseRecord;
-    const matrixRoles = asArray(matrix.roles);
-    const matrixRows = asArray(matrix.rows);
+interface PaginatedUsers {
+    data: UserRow[];
+    current_page: number;
+    last_page: number;
+    from: number;
+    to: number;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
+}
+
+const ROLE_OPTIONS = ['super_admin', 'reconciliation_admin', 'customer_service'];
+
+const ROLE_COLORS: Record<string, string> = {
+    super_admin: 'bg-purple-100 text-purple-700 ring-purple-200',
+    reconciliation_admin: 'bg-blue-100 text-blue-700 ring-blue-200',
+    customer_service: 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+};
+
+export default function UserManagement({ users }: { users: PaginatedUsers; roles: unknown; permissionMatrix?: unknown }) {
+    const rows = users?.data ?? [];
     const { auth } = usePage<PageProps>().props;
-    const isSuperAdmin = auth.role === 'super_admin';
-    const canManageUsers = isSuperAdmin || (auth.permissions.includes('users.edit') && ['admin', 'super_admin'].includes(auth.role ?? ''));
-    const roleOptions = useMemo(() => roleRows.map((r) => String(r.name ?? '')).filter(Boolean), [roleRows]);
-    const [openPermissionUserId, setOpenPermissionUserId] = useState<number | null>(null);
-    const [openRoleUserId, setOpenRoleUserId] = useState<number | null>(null);
 
-    const currentRoleName = (row: LooseRecord): string =>
-        Array.isArray(row.roles) && row.roles[0] && typeof row.roles[0] === 'object' ? String((row.roles[0] as LooseRecord).name ?? '') : '';
+    const columnHelper = createColumnHelper<UserRow>();
 
-    const canManageTargetUser = (target: LooseRecord): boolean => {
-        if (!canManageUsers) return false;
-        const actorId = Number(auth.user?.id ?? 0);
-        const targetId = Number(target.id ?? 0);
-        if (actorId > 0 && targetId > 0 && actorId === targetId) return false;
+    const currentRoleName = (row: UserRow): string =>
+        Array.isArray(row.roles) && row.roles[0] ? row.roles[0].name : '';
 
-        const actorRole = auth.role ?? '';
-        const targetRole = currentRoleName(target);
-        if (actorRole === 'admin' && targetRole === 'super_admin') return false;
-        return true;
-    };
+    const columns = [
+        columnHelper.accessor((row) => row.name, {
+            id: 'name', header: 'Name',
+            cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+        }),
+        columnHelper.accessor((row) => row.email, {
+            id: 'email', header: 'Email',
+            cell: (info) => <span className="text-xs text-muted-foreground">{info.getValue()}</span>,
+        }),
+        columnHelper.accessor((row) => currentRoleName(row), {
+            id: 'role', header: 'Role',
+            cell: (info) => {
+                const role = info.getValue();
+                return (
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${ROLE_COLORS[role] || 'bg-slate-100 text-slate-600 ring-slate-200'}`}>
+                        {role.replaceAll('_', ' ')}
+                    </span>
+                );
+            },
+        }),
+        columnHelper.accessor((row) => row.is_active, {
+            id: 'status', header: 'Status',
+            cell: (info) => {
+                const active = info.getValue();
+                return active !== false ? (
+                    <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">Active</span>
+                ) : (
+                    <span className="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-200">Inactive</span>
+                );
+            },
+        }),
+        columnHelper.display({
+            id: 'actions', header: 'Actions',
+            cell: (info) => {
+                const row = info.row.original;
+                const userId = row.id;
+                const isSelf = Number(auth.user?.id ?? 0) === userId;
 
-    const effectivePermissionsForRole = (roleName: string): string[] =>
-        matrixRows
-            .filter((item) => {
-                const allowed = (item.allowed && typeof item.allowed === 'object' ? (item.allowed as LooseRecord) : {}) as LooseRecord;
-                return Boolean(allowed[roleName]);
-            })
-            .map((item) => String(item.permission ?? ''))
-            .filter(Boolean);
+                return (
+                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <Link href={route('admin.users.show', userId)}>
+                            <Button size="sm" variant="ghost">
+                                <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                        </Link>
+                        {!isSelf && (
+                            <Button size="sm" variant="ghost" onClick={() => {
+                                if (confirm('Deactivate this user?')) {
+                                    router.post(route('admin.users.deactivate', userId), {}, { preserveScroll: true });
+                                }
+                            }}>
+                                <UserX className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                        {!isSelf && (
+                            <Button size="sm" variant="ghost" onClick={() => {
+                                if (confirm('Delete this user? This cannot be undone.')) {
+                                    router.delete(route('admin.users.destroy', userId), { preserveScroll: true });
+                                }
+                            }}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                    </div>
+                );
+            },
+        }),
+    ];
 
     return (
         <AdminLayout title="User management">
-            <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl border border-blue-200/70 bg-blue-50/50 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Total users</p>
-                    <p className="mt-1 text-2xl font-semibold text-foreground">{rows.length}</p>
+            <div className="mb-4 flex items-center justify-between">
+                <div className="grid flex-1 gap-4 md:grid-cols-4">
+                    <Card className="border-blue-200/70 bg-blue-50/50">
+                        <CardContent className="pt-4">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Total users</p>
+                            <p className="mt-1 text-2xl font-semibold">{users.total ?? rows.length}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-emerald-200/70 bg-emerald-50/50">
+                        <CardContent className="pt-4">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Active</p>
+                            <p className="mt-1 text-2xl font-semibold text-emerald-600">{rows.filter((r) => r.is_active !== false).length}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-red-200/70 bg-red-50/50">
+                        <CardContent className="pt-4">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Inactive</p>
+                            <p className="mt-1 text-2xl font-semibold text-red-600">{rows.filter((r) => r.is_active === false).length}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-violet-200/70 bg-violet-50/50">
+                        <CardContent className="pt-4">
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Roles</p>
+                            <p className="mt-1 text-2xl font-semibold">{ROLE_OPTIONS.length}</p>
+                        </CardContent>
+                    </Card>
                 </div>
-                <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Active users</p>
-                    <p className="mt-1 text-2xl font-semibold text-emerald-600">{rows.filter((row) => row.is_active !== false).length}</p>
-                </div>
-                <div className="rounded-xl border border-violet-200/70 bg-violet-50/50 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Role options</p>
-                    <p className="mt-1 text-2xl font-semibold text-foreground">{roleOptions.length}</p>
-                </div>
-                <div className="rounded-xl border border-amber-200/70 bg-amber-50/50 p-4 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Access control</p>
-                    <p className="mt-1 text-sm font-medium text-muted-foreground">Role-based permissions in one place</p>
+                <div className="ml-4 shrink-0">
+                    <Link href={route('admin.users.create')}>
+                        <Button>
+                            <Plus className="mr-1 h-4 w-4" /> Add User
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
-            <EntityListCard
-                title="Admin users"
-                emptyText="No users found."
-                items={rows.map((row, idx) => {
-                    const userId = Number(row.id ?? 0);
-                    const roleName = currentRoleName(row);
-                    const rolePermissions = effectivePermissionsForRole(roleName);
+            <DataTable columns={columns} data={rows} showHeader showRowCount stripedRows clickableRows={false} emptyMessage="No users found." stickyHeader compact />
 
-                    return {
-                        key: String(row.id ?? idx),
-                        content: (
-                            <div className="space-y-4">
-                                <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-                                    <div>
-                                        <p className="font-medium text-slate-900">{String(row.name ?? 'Unknown')}</p>
-                                        <p className="text-sm text-slate-500">{String(row.email ?? '-')}</p>
-                                        <p className="mt-1 text-xs text-slate-500">Role: {roleName || '-'}</p>
-                                    </div>
-                                    <Badge variant="outline">{String(row.is_active === false ? 'inactive' : 'active')}</Badge>
-                                    <div className="flex flex-col items-start gap-2 md:flex-row md:items-center">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setOpenPermissionUserId((prev) => (prev === userId ? null : userId))}
-                                        >
-                                            View Permissions
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setOpenRoleUserId((prev) => (prev === userId ? null : userId))}
-                                            disabled={!canManageTargetUser(row)}
-                                        >
-                                            Manage Role
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => {
-                                                const ok = window.confirm('Are you sure you want to delete this user? This action cannot be undone.');
-                                                if (!ok) return;
-
-                                                router.delete(route('admin.users.destroy', userId));
-                                            }}
-                                            disabled={!canManageTargetUser(row)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {openRoleUserId === userId && (
-                                    <div className="rounded-lg border border-border p-3 bg-background/60">
-                                        <p className="mb-2 text-xs text-muted-foreground">Change role using quick buttons:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {roleOptions.map((option) => (
-                                                <Button
-                                                    key={`${userId}-${option}`}
-                                                    type="button"
-                                                    variant={option === roleName ? 'default' : 'outline'}
-                                                    size="sm"
-                                                    onClick={() => router.patch(route('admin.users.access-control.update', userId), { role: option })}
-                                                    disabled={!canManageTargetUser(row)}
-                                                >
-                                                    {option}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {openPermissionUserId === userId && (
-                                    <div className="rounded-lg border border-slate-200 p-3">
-                                        <p className="mb-2 text-sm font-medium text-slate-800">Effective permissions</p>
-                                        <p className="mb-3 text-xs text-slate-500">
-                                            Showing permissions for role <span className="font-semibold">{roleName || '-'}</span>.
-                                        </p>
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full border-collapse text-sm">
-                                                <thead>
-                                                    <tr className="bg-slate-50">
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">
-                                                            Permission
-                                                        </th>
-                                                        <th className="border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">
-                                                            Function
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {rolePermissions.map((permission) => (
-                                                        <tr
-                                                            key={`${userId}-${permission}`}
-                                                            className="odd:bg-white even:bg-slate-50/50"
-                                                        >
-                                                            <td className="border border-slate-200 px-3 py-2 text-slate-800">
-                                                                {permission}
-                                                            </td>
-                                                            <td className="border border-slate-200 px-3 py-2 text-slate-600">
-                                                                {permission.replaceAll('.', ' ').replaceAll('_', ' ')}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {rolePermissions.length === 0 && (
-                                                        <tr>
-                                                            <td
-                                                                colSpan={2}
-                                                                className="border border-slate-200 px-3 py-2 text-slate-500"
-                                                            >
-                                                                No permissions found for this role.
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ),
-                    };
-                })}
-            />
+            {users.last_page > 1 && (
+                <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Showing {users.from ?? 0}–{users.to ?? 0} of {users.total ?? 0}</span>
+                    <div className="flex gap-1">
+                        {users.links.map((link, i) => (
+                            <button key={i} disabled={!link.url}
+                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true })}
+                                className={`rounded px-3 py-1 text-xs border ${link.active ? 'bg-primary text-primary-foreground border-primary' : 'border-input hover:bg-accent disabled:opacity-40'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }} />
+                        ))}
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

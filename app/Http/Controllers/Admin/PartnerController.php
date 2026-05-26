@@ -7,7 +7,9 @@ use App\Http\Requests\Admin\StorePartnerRequest;
 use App\Http\Requests\Admin\UpdatePartnerRequest;
 use App\Models\AuditLog;
 use App\Models\Partner;
+use App\Models\User;
 use App\Support\SortSanitizer;
+use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -130,9 +132,19 @@ class PartnerController extends Controller
             ]);
         }
 
+        // Create a user account so partner can login via web
+        Role::firstOrCreate(['name' => 'partner', 'guard_name' => 'web']);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->contact_email,
+            'password' => Hash::make($request->password),
+            'is_active' => true,
+        ]);
+        $user->syncRoles(['partner']);
+
         return redirect()
             ->route('admin.partners.index')
-            ->with('success', 'Partner created successfully.');
+            ->with('success', 'Partner created successfully. Login credentials have been set up.');
     }
 
     public function show(Partner $partner): Response
@@ -206,6 +218,30 @@ class PartnerController extends Controller
             'notes' => $request->input('notes', $partner->notes),
             'status'        => $request->status ?? $partner->status,
         ]);
+
+        // Update or create linked user account
+        Role::firstOrCreate(['name' => 'partner', 'guard_name' => 'web']);
+        $user = User::query()->where('email', $partner->getOriginal('contact_email'))->first();
+        if ($user) {
+            $user->update([
+                'name' => $request->name ?? $user->name,
+                'email' => $request->contact_email ?? $user->email,
+            ]);
+            $user->syncRoles(['partner']);
+        } elseif ($request->filled('password')) {
+            $user = User::create([
+                'name' => $partner->name,
+                'email' => $partner->contact_email,
+                'password' => Hash::make($request->password),
+                'is_active' => true,
+            ]);
+            $user->syncRoles(['partner']);
+        }
+
+        // Reset password if provided
+        if ($request->filled('password') && $user) {
+            $user->update(['password' => Hash::make($request->password)]);
+        }
 
         return redirect()
             ->route('admin.partners.index')

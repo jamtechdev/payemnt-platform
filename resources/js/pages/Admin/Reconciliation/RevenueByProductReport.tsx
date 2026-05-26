@@ -29,17 +29,19 @@ interface OptionItem { id: number; name: string; }
 
 const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
 
-const fmt = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
+const fmt = (v: number, currency = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(v);
 
 export default function RevenueByProductReport({
-    rows, filters, partners = [], products = [],
+    rows, filters, partners = [], products = [], preferredCurrency = 'USD'
 }: {
     rows: RevenueRow[];
     filters?: Filters;
     partners?: OptionItem[];
     products?: OptionItem[];
+    preferredCurrency?: string;
 }) {
     const [form, setForm] = useState<Filters>(filters ?? {});
+    const currency = preferredCurrency || 'USD';
 
     useEffect(() => {
         const id = window.setInterval(() => {
@@ -110,10 +112,10 @@ export default function RevenueByProductReport({
                                         textAnchor="end"
                                         interval={0}
                                     />
-                                    <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11 }} width={90} />
+                                    <YAxis tickFormatter={(v) => fmt(v, currency)} tick={{ fontSize: 11 }} width={90} />
                                     <Tooltip
                                         formatter={(value: number, name: string) => [
-                                            name === 'revenue' ? fmt(value) : value,
+                                            name === 'revenue' ? fmt(value, currency) : value,
                                             name === 'revenue' ? 'Expected Revenue' : 'Customers',
                                         ]}
                                     />
@@ -134,7 +136,7 @@ export default function RevenueByProductReport({
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base">Expected revenue by partner/product</CardTitle>
-                            <span className="text-sm font-semibold text-emerald-600">Total: {fmt(totalRevenue)}</span>
+                            <span className="text-sm font-semibold text-emerald-600">Total: {fmt(totalRevenue, currency)}</span>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -160,8 +162,8 @@ export default function RevenueByProductReport({
                                                 <td className="py-2">{row.partner_name}</td>
                                                 <td className="py-2">{row.bucket}</td>
                                                 <td className="py-2 text-right">{row.customer_count}</td>
-                                                <td className="py-2 text-right">{fmt(Number(row.guide_price))}</td>
-                                                <td className="py-2 text-right font-semibold text-emerald-600">{fmt(Number(row.expected_revenue))}</td>
+                                                <td className="py-2 text-right">{fmt(Number(row.guide_price), currency)}</td>
+                                                <td className="py-2 text-right font-semibold text-emerald-600">{fmt(Number(row.expected_revenue), currency)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -171,7 +173,7 @@ export default function RevenueByProductReport({
                                             <td /><td />
                                             <td className="py-2 text-right font-bold">{rows.reduce((s, r) => s + Number(r.customer_count), 0)}</td>
                                             <td />
-                                            <td className="py-2 text-right font-bold text-emerald-600">{fmt(totalRevenue)}</td>
+                                            <td className="py-2 text-right font-bold text-emerald-600">{fmt(totalRevenue, currency)}</td>
                                         </tr>
                                     </tfoot>
                                 </table>

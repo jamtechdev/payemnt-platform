@@ -13,9 +13,10 @@ class AuditLogController extends Controller
     public function index(Request $request): Response
     {
         $logs = AuditLog::query()
-            ->when($request->filled('user_id'), fn ($q) => $q->where('user_id', $request->integer('user_id')))
+            ->with('actor:id,name')
+            ->when($request->filled('user_id'), fn ($q) => $q->where('actor_user_id', $request->integer('user_id')))
             ->when($request->filled('action'), fn ($q) => $q->where('action', $request->string('action')->toString()))
-            ->when($request->filled('model_type'), fn ($q) => $q->where('model_type', $request->string('model_type')->toString()))
+            ->when($request->filled('model_type'), fn ($q) => $q->where('entity_type', $request->string('model_type')->toString()))
             ->whereBetween('created_at', [
                 $request->input('date_from', now()->subDays(30)->toDateString()),
                 $request->input('date_to', now()->toDateString()),

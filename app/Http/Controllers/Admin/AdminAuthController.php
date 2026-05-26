@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\LoginRequest;
 use App\Models\AuditLog;
+use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class AdminAuthController extends Controller
 {
@@ -19,7 +21,7 @@ class AdminAuthController extends Controller
      *
      * @var list<string>
      */
-    private const ALLOWED_LOGIN_ROLES = ['super_admin', 'customer_service', 'reconciliation_admin'];
+    private const ALLOWED_LOGIN_ROLES = ['super_admin', 'customer_service', 'reconciliation_admin', 'partner'];
 
     public function showLogin(): Response
     {
@@ -31,6 +33,15 @@ class AdminAuthController extends Controller
         $credentials = $request->validated();
 
         $user = User::query()->where('email', $credentials['email'])->first();
+
+        if ($user && ! $user->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
+            // Auto-assign partner role if user email matches a partner
+            $isPartner = Partner::query()->where('contact_email', $user->email)->exists();
+            if ($isPartner) {
+                Role::firstOrCreate(['name' => 'partner', 'guard_name' => 'web']);
+                $user->syncRoles(['partner']);
+            }
+        }
 
         if (! $user || ! $user->hasAnyRole(self::ALLOWED_LOGIN_ROLES)) {
             if ($user) {
@@ -76,6 +87,9 @@ class AdminAuthController extends Controller
         }
         if ($loggedUser->hasRole('reconciliation_admin')) {
             return redirect()->route('admin.reports.dashboard');
+        }
+        if ($loggedUser->hasRole('partner')) {
+            return redirect()->route('admin.partner.dashboard');
         }
 
         return redirect()->route('admin.platform.dashboard');

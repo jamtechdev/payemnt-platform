@@ -8,6 +8,7 @@ import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Eye, Search } from 'lucide-react';
 import ActionBtn from '@/components/shared/ActionBtn';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TransactionRow {
     id: number;
@@ -65,7 +66,24 @@ export default function TransactionList({ transactions, filters }: { transaction
         columnHelper.accessor((row) => row.transaction_number ?? '-', {
             id: 'transaction_number',
             header: 'Transaction #',
-            cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+            cell: (info) => {
+                const val = info.getValue();
+                const truncated = val.length > 10 ? val.slice(0, 10) + '...' : val;
+                return val.length > 10 ? (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="font-mono text-xs cursor-help">{truncated}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="font-mono text-xs">{val}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                ) : (
+                    <span className="font-mono text-xs">{val}</span>
+                );
+            },
         }),
         columnHelper.accessor((row) => `${row.customer?.first_name ?? ''} ${row.customer?.last_name ?? ''}`.trim() || '-', {
             id: 'customer',

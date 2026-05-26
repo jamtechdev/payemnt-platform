@@ -17,6 +17,8 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
             items.push({ href: route('admin.platform.dashboard'), label: 'Dashboard' });
         } else if (role === 'reconciliation_admin') {
             items.push({ href: route('admin.reports.dashboard'), label: 'Dashboard' });
+        } else if (role === 'partner') {
+            items.push({ href: route('admin.partner.dashboard'), label: 'Dashboard' });
         } else {
             items.push({ href: route('admin.cs.dashboard'), label: 'Dashboard' });
         }
@@ -24,6 +26,16 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
 
     if (role === 'super_admin' || permissions.includes('transactions.view')) {
         items.push({ href: route('admin.transactions.index'), label: 'Transactions' });
+    }
+
+    if (role === 'partner') {
+        items.push({ href: route('admin.partner.products'), label: 'Products' });
+        items.push({ href: route('admin.partner.audit-logs'), label: 'Audit logs' });
+        items.push({ href: route('admin.partner.profile'), label: 'Profile' });
+    }
+
+    if (modules.includes('customers') && permissions.includes('customers.view_list')) {
+        items.push({ href: route('admin.customers.index'), label: 'Customers' });
     }
 
     if (modules.includes('products') && (permissions.includes('products.view') || permissions.includes('products.manage'))) {
@@ -36,6 +48,9 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
 
     if (role === 'super_admin') {
         items.push({ href: route('admin.currencies.index'), label: 'Currencies' });
+        items.push({ href: route('admin.users.index'), label: 'Users' });
+        items.push({ href: route('admin.audit-logs.index'), label: 'Audit logs' });
+        items.push({ href: route('admin.settings.index'), label: 'Settings' });
     }
 
     if (modules.includes('reports')) {
@@ -50,7 +65,7 @@ function buildNavItems(auth: PageProps['auth']): NavItem[] {
         }
     }
 
-    if (role === 'super_admin') {
+    if (role === 'super_admin' || role === 'partner') {
         items.push({ href: route('partner.api-documentation'), label: 'API Guide' });
     }
 
