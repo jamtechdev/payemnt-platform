@@ -32,10 +32,7 @@ class PlatformSeeder extends Seeder
         $allPermissions = Permission::query()->pluck('name')->all();
         $rolesConfig = config('admin_portal.roles');
 
-        foreach (['super_admin'] as $roleName) {
-            if (! isset($rolesConfig[$roleName])) {
-                continue;
-            }
+        foreach (array_keys($rolesConfig) as $roleName) {
             $role = Role::query()->firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
             $rolePermissions = $rolesConfig[$roleName]['permissions'] ?? [];
             $role->syncPermissions($rolePermissions === ['*'] ? $allPermissions : $rolePermissions);

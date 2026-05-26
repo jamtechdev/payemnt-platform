@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\V1\PartnerApiGuideController;
 use App\Http\Controllers\Api\V1\PartnerProductController;
 use App\Http\Controllers\Api\V1\ProductDistributionController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\VerifyController;
 use Illuminate\Support\Facades\Route;
 

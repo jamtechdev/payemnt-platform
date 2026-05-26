@@ -77,7 +77,7 @@ class ReportController extends Controller
     public function revenueByProduct(Request $request): Response
     {
         if (! $request->user()->can('reports.revenue_by_product')) {
-            return redirect()->route('admin.reports.dashboard')->with('error', 'Access denied.');
+            return redirect()->route('admin.reconciliation.dashboard')->with('error', 'Access denied.');
         }
 
         $user = $request->user();

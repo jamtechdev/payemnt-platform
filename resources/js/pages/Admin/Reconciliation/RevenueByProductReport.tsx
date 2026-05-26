@@ -51,7 +51,7 @@ export default function RevenueByProductReport({
     }, []);
 
     const applyFilters = () => {
-        router.get(route('admin.reports.revenue'), form as Record<string, string>, { preserveState: true });
+        router.get(route('admin.reconciliation.reports.revenue'), form as Record<string, string>, { preserveState: true });
     };
 
     const totalRevenue = rows.reduce((sum, r) => sum + Number(r.expected_revenue), 0);

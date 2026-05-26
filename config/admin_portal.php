@@ -8,6 +8,31 @@ return [
             'label' => 'Super Admin',
             'permissions' => ['*'],
         ],
+        'reconciliation_admin' => [
+            'label' => 'Reconciliation Admin',
+            'permissions' => [
+                'dashboard.metrics_overview',
+                'dashboard.customer_overview',
+                'reports.view',
+                'reports.revenue_by_product',
+                'reports.customer_acquisition',
+                'reports.partner_performance',
+                'reports.export',
+                'customers.view_list',
+            ],
+        ],
+        'customer_service' => [
+            'label' => 'Customer Service',
+            'permissions' => [
+                'dashboard.customer_overview',
+                'dashboard.metrics_overview',
+                'customers.view_list',
+                'customers.search',
+                'customers.view_detail',
+                'customers.view_submitted_data',
+                'customers.export',
+            ],
+        ],
     ],
     'permissions' => [
         'customers.view_list',

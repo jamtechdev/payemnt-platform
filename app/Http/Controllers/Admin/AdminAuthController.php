@@ -86,7 +86,7 @@ class AdminAuthController extends Controller
             return redirect()->route('admin.cs.dashboard');
         }
         if ($loggedUser->hasRole('reconciliation_admin')) {
-            return redirect()->route('admin.reports.dashboard');
+            return redirect()->route('admin.reconciliation.dashboard');
         }
         if ($loggedUser->hasRole('partner')) {
             return redirect()->route('admin.partner.dashboard');

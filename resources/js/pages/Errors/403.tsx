@@ -4,7 +4,7 @@ import { PageProps } from '@/Types';
 
 export default function Error403() {
     const { auth } = usePage<PageProps>().props;
-    const dashboardHref = auth.role === 'super_admin' ? route('admin.platform.dashboard') : auth.role === 'reconciliation_admin' ? route('admin.reports.dashboard') : route('admin.cs.dashboard');
+    const dashboardHref = auth.role === 'super_admin' ? route('admin.platform.dashboard') : auth.role === 'reconciliation_admin' ? route('admin.reconciliation.dashboard') : route('admin.cs.dashboard');
 
     const content = (
         <div className="mx-auto max-w-xl rounded bg-white p-8 text-center shadow">

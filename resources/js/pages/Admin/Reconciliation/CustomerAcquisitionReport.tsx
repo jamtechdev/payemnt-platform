@@ -51,7 +51,7 @@ export default function CustomerAcquisitionReport({
     }, []);
 
     const applyFilters = () => {
-        router.get(route('admin.reports.customer-acquisition'), form as Record<string, string>, { preserveState: true });
+        router.get(route('admin.reconciliation.reports.customer-acquisition'), form as Record<string, string>, { preserveState: true });
     };
 
     return (

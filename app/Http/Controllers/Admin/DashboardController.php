@@ -61,6 +61,20 @@ class DashboardController extends Controller
                 'product_name' => $c->product?->name,
             ]);
 
+        $recentActivity = AuditLog::query()
+            ->whereIn('entity_type', [Customer::class, Payment::class])
+            ->with(['actor:id,name'])
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (AuditLog $log) => [
+                'id' => $log->id,
+                'action' => $log->action,
+                'actor_name' => $log->actor?->name ?? 'System',
+                'entity_type' => class_basename($log->entity_type),
+                'created_at' => $log->created_at->toDateTimeString(),
+            ]);
+
         return Inertia::render('Admin/CustomerService/Dashboard', [
             'totalCustomers' => Customer::query()->count(),
             'activeCustomers' => Customer::query()->active()->count(),
@@ -68,6 +82,7 @@ class DashboardController extends Controller
             'customersByPartner' => $customersByPartner,
             'expiringSoon' => $expiringSoon,
             'expiringSoonCount' => $expiringSoon->count(),
+            'recentActivity' => $recentActivity,
         ]);
     }
 
@@ -122,6 +137,42 @@ class DashboardController extends Controller
             return $carry + $this->currencyService->convert((float) $row->total, $row->currency, $preferredCurrency);
         }, 0.0);
 
+        $recentPayments = Payment::query()
+            ->where('status', 'success')
+            ->with(['partner:id,name', 'product:id,name'])
+            ->latest('paid_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (Payment $p) => [
+                'id' => $p->id,
+                'transaction_number' => $p->transaction_number,
+                'amount' => (float) $p->amount,
+                'currency' => $p->currency,
+                'paid_at' => $p->paid_at?->toDateTimeString(),
+                'partner_name' => $p->partner?->name,
+                'product_name' => $p->product?->name,
+                'customer_name' => $p->customer_name,
+            ]);
+
+        $revenueTrendRaw = Payment::query()
+            ->selectRaw("DATE_FORMAT(paid_at, '%b %Y') as month, currency, SUM(amount) as total")
+            ->where('status', 'success')
+            ->where('paid_at', '>=', now()->subMonths(6)->startOfMonth())
+            ->groupBy('month', 'currency')
+            ->orderByRaw('MIN(paid_at)')
+            ->get();
+
+        $revenueTrend = $revenueTrendRaw->groupBy('month')->map(function ($rows, $month) use ($preferredCurrency) {
+            $totalInPreferred = $rows->reduce(function ($carry, $row) use ($preferredCurrency) {
+                return $carry + $this->currencyService->convert((float) $row->total, $row->currency, $preferredCurrency);
+            }, 0.0);
+
+            return [
+                'label' => $month,
+                'total' => $totalInPreferred,
+            ];
+        })->values();
+
         return Inertia::render('Admin/Reconciliation/Dashboard', [
             'monthlyCustomers' => Customer::query()->whereMonth('created_at', now()->month)->count(),
             'monthlyRevenue' => (float) $monthlyRevenue,
@@ -129,6 +180,8 @@ class DashboardController extends Controller
             'customersByProduct' => $customersByProduct,
             'revenueByProduct' => $revenueByProduct,
             'revenueBreakdown' => $monthlyRevenueByCurrency,
+            'recentPayments' => $recentPayments,
+            'revenueTrend' => $revenueTrend,
         ]);
     }
 

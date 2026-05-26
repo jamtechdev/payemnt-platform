@@ -19,6 +19,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (Auth::check()) {
+        $user = Auth::user();
+        if ($user->hasRole('customer_service')) {
+            return redirect()->route('admin.cs.dashboard');
+        }
+        if ($user->hasRole('reconciliation_admin')) {
+            return redirect()->route('admin.reconciliation.dashboard');
+        }
+        if ($user->hasRole('partner')) {
+            return redirect()->route('admin.partner.dashboard');
+        }
+
         return redirect()->route('admin.platform.dashboard');
     }
 
@@ -57,14 +68,19 @@ Route::prefix('admin')
         Route::get('/partner/profile', [DashboardController::class, 'partnerProfile'])->middleware('role:partner|super_admin')->name('partner.profile');
         Route::patch('/partner/profile', [DashboardController::class, 'partnerUpdateProfile'])->middleware('role:partner|super_admin')->name('partner.profile.update');
         Route::get('/partner/audit-logs', [DashboardController::class, 'partnerAuditLogs'])->middleware('role:partner|super_admin')->name('partner.audit-logs');
-        Route::get('/reports', [DashboardController::class, 'reconciliationDashboard'])->middleware('role:reconciliation_admin|super_admin')->name('reports.dashboard');
-        Route::get('/reports/customer-acquisition', [ReportController::class, 'customerAcquisition'])->middleware('role:reconciliation_admin|super_admin')->name('reports.customer-acquisition');
-        Route::get('/reports/revenue', [ReportController::class, 'revenueByProduct'])->middleware('role:reconciliation_admin|super_admin')->name('reports.revenue');
-        Route::get('/customers', [CustomerController::class, 'index'])->middleware('role:customer_service|super_admin')->name('customers.index');
-        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->middleware('role:customer_service|super_admin')->name('customers.show');
-        Route::post('/customers/export', [CustomerController::class, 'export'])->middleware('role:customer_service|super_admin')->name('customers.export');
-        Route::get('/customers/export/{jobId}/download', [CustomerController::class, 'downloadExport'])->middleware('role:customer_service|super_admin')->name('customers.download-export');
-        Route::get('/customers/export/expiring', [CustomerController::class, 'exportExpiring'])->middleware('role:customer_service|super_admin')->name('customers.export-expiring');
+
+        Route::prefix('reconciliation')->middleware('role:reconciliation_admin|super_admin')->group(function (): void {
+            Route::get('/dashboard', [DashboardController::class, 'reconciliationDashboard'])->name('reconciliation.dashboard');
+            Route::get('/reports/customer-acquisition', [ReportController::class, 'customerAcquisition'])->name('reconciliation.reports.customer-acquisition');
+            Route::get('/reports/revenue', [ReportController::class, 'revenueByProduct'])->name('reconciliation.reports.revenue');
+            Route::get('/reports/partner-performance', [ReportController::class, 'partnerPerformance'])->name('reconciliation.reports.partner-performance');
+        });
+
+        Route::get('/customers', [CustomerController::class, 'index'])->middleware('role:customer_service|reconciliation_admin|super_admin')->name('customers.index');
+        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->middleware('role:customer_service|reconciliation_admin|super_admin')->name('customers.show');
+        Route::post('/customers/export', [CustomerController::class, 'export'])->middleware('role:customer_service|reconciliation_admin|super_admin')->name('customers.export');
+        Route::get('/customers/export/{jobId}/download', [CustomerController::class, 'downloadExport'])->middleware('role:customer_service|reconciliation_admin|super_admin')->name('customers.download-export');
+        Route::get('/customers/export/expiring', [CustomerController::class, 'exportExpiring'])->middleware('role:customer_service|reconciliation_admin|super_admin')->name('customers.export-expiring');
 
         Route::prefix('/super-admin')->middleware('role:super_admin')->group(function (): void {
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -87,7 +103,6 @@ Route::prefix('admin')
 
             Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
             Route::get('/partners/create', [PartnerController::class, 'create'])->name('partners.create');
-            Route::get('/partners/performance', [ReportController::class, 'partnerPerformance'])->name('partners.performance');
             Route::post('/partners', [PartnerController::class, 'store'])->name('partners.store');
             Route::get('/partners/{partner}', [PartnerController::class, 'show'])->name('partners.show');
             Route::get('/partners/{partner}/edit', [PartnerController::class, 'edit'])->name('partners.edit');

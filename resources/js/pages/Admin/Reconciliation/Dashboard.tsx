@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { usePage, Link } from '@inertiajs/react';
 import { PageProps } from '@/Types';
-import { BarChart2, DollarSign, ArrowUpRight, Users, TrendingUp, FileText } from 'lucide-react';
+import { BarChart2, DollarSign, ArrowUpRight, Users, TrendingUp, FileText, Receipt, Activity } from 'lucide-react';
+import Chart from 'react-apexcharts';
 
 interface ProductCount {
     product_id: number;
@@ -24,6 +25,22 @@ interface RevenueBreakdown {
     total: number;
 }
 
+interface RecentPayment {
+    id: number;
+    transaction_number: string;
+    amount: number;
+    currency: string;
+    paid_at: string;
+    partner_name?: string;
+    product_name?: string;
+    customer_name?: string;
+}
+
+interface RevenueTrendPoint {
+    label: string;
+    total: number;
+}
+
 interface ReconciliationDashboardProps {
     monthlyCustomers: number;
     monthlyRevenue: number;
@@ -31,6 +48,8 @@ interface ReconciliationDashboardProps {
     customersByProduct: ProductCount[];
     revenueByProduct: ProductRevenue[];
     revenueBreakdown?: RevenueBreakdown[];
+    recentPayments: RecentPayment[];
+    revenueTrend: RevenueTrendPoint[];
 }
 
 export default function ReconciliationDashboard(props: ReconciliationDashboardProps) {
@@ -53,12 +72,12 @@ export default function ReconciliationDashboard(props: ReconciliationDashboardPr
                     <div className="flex flex-wrap gap-2">
                         {canViewReports && (
                             <>
-                                <Link href={route('admin.reports.customer-acquisition')}>
+                                <Link href={route('admin.reconciliation.reports.customer-acquisition')}>
                                     <Button variant="outline" size="sm" className="gap-1.5">
                                         <TrendingUp className="h-4 w-4" /> Acquisition <ArrowUpRight className="h-3 w-3" />
                                     </Button>
                                 </Link>
-                                <Link href={route('admin.reports.revenue')}>
+                                <Link href={route('admin.reconciliation.reports.revenue')}>
                                     <Button variant="outline" size="sm" className="gap-1.5">
                                         <DollarSign className="h-4 w-4" /> Revenue <ArrowUpRight className="h-3 w-3" />
                                     </Button>
@@ -108,32 +127,32 @@ export default function ReconciliationDashboard(props: ReconciliationDashboardPr
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                    {canViewCustomers && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <BarChart2 className="h-4 w-4" />
-                                    Customers by product
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {props.customersByProduct.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">No data available.</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {props.customersByProduct.map((row) => (
-                                            <div key={row.product_id} className="flex items-center justify-between rounded-lg border border-border px-4 py-2">
-                                                <span className="text-sm font-medium text-foreground">{row.product_name}</span>
-                                                <span className="rounded-full bg-blue-100 px-3 py-0.5 text-sm font-semibold text-blue-700">
-                                                    {row.total}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <TrendingUp className="h-4 w-4" />
+                                Revenue trend (Last 6 months)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="h-[250px]">
+                                <Chart
+                                    type="area"
+                                    height="100%"
+                                    series={[{ name: 'Revenue', data: props.revenueTrend.map((p) => p.total) }]}
+                                    options={{
+                                        chart: { toolbar: { show: false } },
+                                        stroke: { curve: 'smooth', width: 2 },
+                                        fill: { type: 'gradient', gradient: { opacityFrom: 0.45, opacityTo: 0.05 } },
+                                        xaxis: { categories: props.revenueTrend.map((p) => p.label) },
+                                        colors: ['#10b981'],
+                                        dataLabels: { enabled: false },
+                                        yaxis: { labels: { formatter: (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency, maximumFractionDigits: 0 }).format(v) } },
+                                    }}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     <Card>
                         <CardHeader>
@@ -172,44 +191,116 @@ export default function ReconciliationDashboard(props: ReconciliationDashboardPr
                     </Card>
                 </div>
 
-                {canViewReports && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <FileText className="h-4 w-4" />
-                                Reports
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-3 sm:grid-cols-3">
-                                {perms.includes('reports.customer_acquisition') && (
-                                    <Link href={route('admin.reports.customer-acquisition')}>
-                                        <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
-                                            <span className="text-sm font-medium">Customer acquisition</span>
-                                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                    </Link>
-                                )}
-                                {perms.includes('reports.revenue_by_product') && (
-                                    <Link href={route('admin.reports.revenue')}>
-                                        <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
-                                            <span className="text-sm font-medium">Revenue by product</span>
-                                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                    </Link>
-                                )}
-                                {canViewPartnerPerformance && (
-                                    <Link href={route('admin.partners.performance')}>
-                                        <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
-                                            <span className="text-sm font-medium">Partner performance</span>
-                                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                    </Link>
-                                )}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <Receipt className="h-4 w-4" />
+                            Recent successful payments
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {props.recentPayments.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No recent payments found.</p>
+                        ) : (
+                            <div className="overflow-auto">
+                                <table className="w-full min-w-[700px] text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border text-muted-foreground">
+                                            <th className="py-2 text-left font-medium">Transaction #</th>
+                                            <th className="py-2 text-left font-medium">Customer</th>
+                                            <th className="py-2 text-left font-medium">Partner</th>
+                                            <th className="py-2 text-left font-medium">Product</th>
+                                            <th className="py-2 text-left font-medium">Amount</th>
+                                            <th className="py-2 text-left font-medium">Paid At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {props.recentPayments.map((p) => (
+                                            <tr key={p.id} className="border-b border-border/80 last:border-b-0">
+                                                <td className="py-2.5 font-mono text-xs">{p.transaction_number}</td>
+                                                <td className="py-2.5">{p.customer_name || '-'}</td>
+                                                <td className="py-2.5">{p.partner_name || '-'}</td>
+                                                <td className="py-2.5">{p.product_name || '-'}</td>
+                                                <td className="py-2.5 font-medium text-emerald-600">
+                                                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: p.currency }).format(p.amount)}
+                                                </td>
+                                                <td className="py-2.5 text-xs text-muted-foreground">{new Date(p.paid_at).toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        )}
+                    </CardContent>
+                </Card>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                    {canViewCustomers && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <BarChart2 className="h-4 w-4" />
+                                    Customers by product
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {props.customersByProduct.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">No data available.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {props.customersByProduct.map((row) => (
+                                            <div key={row.product_id} className="flex items-center justify-between rounded-lg border border-border px-4 py-2">
+                                                <span className="text-sm font-medium text-foreground">{row.product_name}</span>
+                                                <span className="rounded-full bg-blue-100 px-3 py-0.5 text-sm font-semibold text-blue-700">
+                                                    {row.total}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {canViewReports && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <FileText className="h-4 w-4" />
+                                    Reports
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-3 sm:grid-cols-1">
+                                    {perms.includes('reports.customer_acquisition') && (
+                                        <Link href={route('admin.reconciliation.reports.customer-acquisition')}>
+                                            <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
+                                                <span className="text-sm font-medium">Customer acquisition</span>
+                                                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        </Link>
+                                    )}
+                                    {perms.includes('reports.revenue_by_product') && (
+                                        <Link href={route('admin.reconciliation.reports.revenue')}>
+                                            <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
+                                                <span className="text-sm font-medium">Revenue by product</span>
+                                                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        </Link>
+                                    )}
+                                    {canViewPartnerPerformance && (
+                                        <Link href={route('admin.reconciliation.reports.partner-performance')}>
+                                            <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition hover:bg-accent/50">
+                                                <span className="text-sm font-medium">Partner performance</span>
+                                                <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        </Link>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             </div>
         </AdminLayout>
     );
