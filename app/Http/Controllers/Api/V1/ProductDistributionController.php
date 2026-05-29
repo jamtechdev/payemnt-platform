@@ -11,6 +11,8 @@ use App\Models\Product;
 use App\Services\PartnerTransactionIngestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
 
 class ProductDistributionController extends BaseApiController
@@ -60,11 +62,6 @@ class ProductDistributionController extends BaseApiController
     public function submit(Request $request, string $productCode): JsonResponse
     {
         $partner = $request->attributes->get('partner');
-        $product = $this->resolvePartnerProduct($partner, $productCode);
-        if (! $product) {
-            return $this->error('NOT_FOUND', 'Product not found or not assigned to partner.', [], 404);
-        }
-
         $validated = $request->validate([
             'transaction_number' => ['required', 'string', 'max:100'],
             'customer_name' => ['required', 'string', 'max:255'],
@@ -77,7 +74,20 @@ class ProductDistributionController extends BaseApiController
             'notes' => ['nullable', 'string', 'max:1000'],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'string', 'size:3'],
+            'product' => ['nullable', 'array'],
+            'product.name' => ['nullable', 'string', 'max:255'],
+            'product.description' => ['nullable', 'string'],
+            'product.price' => ['nullable', 'numeric', 'min:0'],
+            'product.currency' => ['nullable', 'string', 'size:3'],
+            'product.image_url' => ['nullable', 'string', 'max:2048'],
+            'product.status' => ['nullable', 'in:active,inactive'],
         ]);
+
+        $product = $this->resolvePartnerProduct($partner, $productCode)
+            ?? $this->createPartnerProductFromSubmittedSnapshot($partner, $productCode, $validated['product'] ?? [], $validated);
+        if (! $product) {
+            return $this->error('NOT_FOUND', 'Product not found or not assigned to partner.', [], 404);
+        }
 
         $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
         if ($idempotencyKey === '') {
@@ -317,5 +327,99 @@ class ProductDistributionController extends BaseApiController
                 ->where('partners.id', $partner->id)
                 ->where('partner_product.is_enabled', true))
             ->first();
+    }
+
+    private function createPartnerProductFromSubmittedSnapshot(?Partner $partner, string $productCode, array $snapshot, array $salePayload): ?Product
+    {
+        if (! $partner || trim($productCode) === '' || trim((string) ($snapshot['name'] ?? '')) === '') {
+            return null;
+        }
+
+        $name = trim((string) $snapshot['name']);
+        $currency = strtoupper((string) ($snapshot['currency'] ?? $salePayload['currency'] ?? 'NGN'));
+        $amount = (float) ($snapshot['price'] ?? $salePayload['amount'] ?? 0);
+
+        $product = Product::withTrashed()->firstOrNew(['product_code' => $productCode]);
+        $product->fill([
+            'product_code' => $productCode,
+            'partner_id' => $partner->id,
+            'partner_code' => $partner->partner_code,
+            'name' => $name,
+            'product_name' => $name,
+            'slug' => $product->slug ?: $this->uniqueProductSlug($name, $productCode),
+            'description' => (string) ($snapshot['description'] ?? ''),
+            'price' => $amount,
+            'base_price' => $amount,
+            'guide_price' => $amount,
+            'image' => (string) ($snapshot['image_url'] ?? ''),
+            'cover_duration_mode' => 'custom',
+            'default_cover_duration_days' => $this->coverDurationDays((string) ($salePayload['cover_duration'] ?? '')),
+            'cover_duration_options' => [30, 90, 365],
+            'status' => Product::STATUS_ACTIVE,
+        ]);
+
+        if ($product->trashed()) {
+            $product->restore();
+        }
+
+        $product->save();
+        $this->attachProductToPartner($partner, $product, $amount, $currency);
+
+        return $product;
+    }
+
+    private function attachProductToPartner(Partner $partner, Product $product, float $amount, string $currency): void
+    {
+        $pivot = [
+            'is_enabled' => true,
+            'updated_at' => now(),
+        ];
+
+        if (Schema::hasColumn('partner_product', 'base_price')) {
+            $pivot['base_price'] = $amount;
+        }
+
+        if (Schema::hasColumn('partner_product', 'guide_price')) {
+            $pivot['guide_price'] = $amount;
+        }
+
+        if (Schema::hasColumn('partner_product', 'currency_id')) {
+            $currencyId = \App\Models\Currency::query()->where('code', $currency)->value('id');
+            if ($currencyId) {
+                $pivot['currency_id'] = $currencyId;
+            }
+        }
+
+        \Illuminate\Support\Facades\DB::table('partner_product')->updateOrInsert(
+            ['partner_id' => $partner->id, 'product_id' => $product->id],
+            array_merge(['created_at' => now()], $pivot)
+        );
+    }
+
+    private function uniqueProductSlug(string $name, string $productCode): string
+    {
+        $base = Str::slug($name . '-' . $productCode);
+        $slug = $base;
+        $counter = 2;
+
+        while (Product::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $counter++;
+        }
+
+        return $slug;
+    }
+
+    private function coverDurationDays(string $coverDuration): int
+    {
+        $value = strtolower($coverDuration);
+        if (str_contains($value, '365') || str_contains($value, 'annual') || str_contains($value, 'year')) {
+            return 365;
+        }
+
+        if (str_contains($value, '90')) {
+            return 90;
+        }
+
+        return 30;
     }
 }
