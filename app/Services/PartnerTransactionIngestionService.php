@@ -47,12 +47,21 @@ class PartnerTransactionIngestionService
                     'start_date' => now()->toDateString(),
                     'cover_duration_days' => 30,
                     'customer_since' => now()->toDateString(),
-                    'status' => 'Active',
+                    'status' => 'active',
                 ]
             );
 
             if ((int) $customer->product_id !== (int) $product->id) {
                 $customer->update(['product_id' => $product->id]);
+            }
+
+            if (! empty($payload['kyc']) && is_array($payload['kyc'])) {
+                $customer->update([
+                    'customer_data' => array_merge(
+                        is_array($customer->customer_data) ? $customer->customer_data : [],
+                        ['kyc' => $payload['kyc']]
+                    ),
+                ]);
             }
 
             $payment = Payment::query()->updateOrCreate(

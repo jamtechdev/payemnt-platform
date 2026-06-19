@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\PartnerRequestIdempotency;
 use App\Models\Product;
 use App\Services\PartnerTransactionIngestionService;
+use App\Services\ProductSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -18,8 +19,28 @@ use OpenApi\Attributes as OA;
 class ProductDistributionController extends BaseApiController
 {
     public function __construct(
-        private readonly PartnerTransactionIngestionService $ingestionService
+        private readonly PartnerTransactionIngestionService $ingestionService,
+        private readonly ProductSchemaService $productSchemaService,
     ) {
+    }
+
+    public function getProductFields(Request $request, string $productCode): JsonResponse
+    {
+        $partner = $request->attributes->get('partner');
+        $product = $this->resolvePartnerProduct($partner, $productCode);
+
+        if (! $product) {
+            return $this->error('NOT_FOUND', 'Product not found or not assigned to partner.', [], 404);
+        }
+
+        $schema = $product->api_schema ?: $this->productSchemaService->generate($product);
+
+        return $this->success([
+            'product_code' => $product->product_code,
+            'fields' => $schema['product_fields'] ?? [],
+            'transaction_payload' => $schema['transaction_payload'] ?? [],
+            'endpoint_base' => $schema['endpoint_base'] ?? "/api/v1/products/{$product->product_code}",
+        ]);
     }
 
     #[OA\Post(
@@ -199,6 +220,15 @@ class ProductDistributionController extends BaseApiController
         }
 
         $payment->update(['kyc_data' => $validated['kyc']]);
+
+        if ($payment->customer) {
+            $payment->customer->update([
+                'customer_data' => array_merge(
+                    is_array($payment->customer->customer_data) ? $payment->customer->customer_data : [],
+                    ['kyc' => $validated['kyc']]
+                ),
+            ]);
+        }
 
         return $this->success(['transaction_number' => $payment->transaction_number, 'kyc_saved' => true]);
     }

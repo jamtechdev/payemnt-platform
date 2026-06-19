@@ -6,6 +6,7 @@ use App\Http\Requests\Admin\CustomerFilterRequest;
 use App\Jobs\GenerateCustomerExportJob;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Support\CustomerSubmittedDataPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -81,20 +82,27 @@ class CustomerController extends Controller
             ->where('uuid', $uuid)
             ->firstOrFail();
 
-        $paymentHistory = $customer->payments->map(function ($payment) use ($canViewPaymentAmount): array {
+        $paymentHistory = $customer->payments
+            ->sortByDesc('paid_at')
+            ->values()
+            ->map(function ($payment) use ($canViewPaymentAmount): array {
             return [
                 'uuid' => $payment->uuid,
                 'payment_date' => optional($payment->payment_date)->toDateTimeString(),
                 'currency' => $payment->currency,
-                'transaction_reference' => $payment->transaction_reference,
-                'payment_status' => $payment->payment_status,
+                'transaction_reference' => $payment->transaction_reference ?: $payment->transaction_number,
+                'payment_status' => $payment->status,
                 'amount' => $canViewPaymentAmount ? $payment->amount : null,
                 'restricted' => ! $canViewPaymentAmount,
             ];
         })->values();
 
+        $customerPayload = $customer->toArray();
+        $customerPayload['submitted_data'] = CustomerSubmittedDataPresenter::forCustomer($customer);
+        $customerPayload['full_name'] = $customer->full_name;
+
         return Inertia::render('Admin/CustomerService/CustomerDetail', [
-            'customer' => $customer,
+            'customer' => $customerPayload,
             'payment_history' => $paymentHistory,
             'can_view_payment_amount' => $canViewPaymentAmount,
         ]);

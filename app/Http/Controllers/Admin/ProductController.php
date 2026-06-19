@@ -144,7 +144,12 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         return Inertia::render('Admin/SuperAdmin/ProductForm', [
-            'product' => $product->load('fields'),
+            'product' => $product->load(['fields', 'partners:id']),
+            'partners' => Partner::query()
+                ->select(['id', 'name'])
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -161,6 +166,8 @@ class ProductController extends Controller
             'base_price'  => ['nullable', 'numeric', 'min:0'],
             'price'       => ['nullable', 'numeric', 'min:0'],
             'guide_price' => ['nullable', 'numeric', 'min:0'],
+            'cover_duration_options'   => ['nullable', 'array'],
+            'cover_duration_options.*' => ['integer', 'min:1'],
             'features' => ['nullable', 'array'],
             'validation_rules' => ['nullable', 'array'],
             'terms_and_conditions' => ['nullable', 'string'],
@@ -174,6 +181,9 @@ class ProductController extends Controller
         ]);
 
         $updateData = collect($validated)->except(['fields', 'image', 'partner_ids'])->all();
+        if (! empty($validated['cover_duration_options'])) {
+            $updateData['default_cover_duration_days'] = (int) $validated['cover_duration_options'][0];
+        }
         if ($request->hasFile('image')) {
             $updateData['image'] = $request->file('image')->store('products', 'public');
         }

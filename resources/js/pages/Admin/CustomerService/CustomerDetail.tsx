@@ -11,7 +11,12 @@ function asRecord(input: unknown): LooseRecord {
 
 function fmt(value: unknown): string {
     if (value === null || value === undefined || value === '') return '—';
+    if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
+}
+
+function normalizeStatus(value: unknown): string {
+    return String(value ?? '').trim().toLowerCase();
 }
 
 function InfoRow({ label, value, hidden }: { label: string; value: unknown; hidden?: boolean }) {
@@ -44,6 +49,7 @@ export default function CustomerDetail({
     const submitted = asRecord(model.submitted_data);
     const partner = asRecord(model.partner);
     const product = asRecord(model.product);
+    const status = normalizeStatus(model.status);
 
     const latestPayment = payments.length > 0 ? asRecord(payments[0]) : null;
 
@@ -66,9 +72,9 @@ export default function CustomerDetail({
                     <CardContent>
                         <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                model.status === 'active'
+                                status === 'active'
                                     ? 'bg-emerald-100 text-emerald-700'
-                                    : model.status === 'expired'
+                                    : status === 'expired'
                                       ? 'bg-amber-100 text-amber-700'
                                       : 'bg-red-100 text-red-700'
                             }`}
@@ -112,10 +118,18 @@ export default function CustomerDetail({
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Submitted data</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                            KYC and policy fields received from the partner API (submit + KYC endpoints).
+                        </p>
                     </CardHeader>
                     <CardContent>
                         {Object.keys(submitted).length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No submitted data.</p>
+                            <p className="text-sm text-muted-foreground">
+                                No submitted data yet. The partner should POST to{' '}
+                                <code className="rounded bg-muted px-1 text-xs">/api/v1/products/&#123;code&#125;/submit</code>{' '}
+                                and/or{' '}
+                                <code className="rounded bg-muted px-1 text-xs">.../transactions/&#123;txn&#125;/kyc</code>.
+                            </p>
                         ) : (
                             Object.entries(submitted).map(([key, value]) => (
                                 <InfoRow key={key} label={key} value={value} />
