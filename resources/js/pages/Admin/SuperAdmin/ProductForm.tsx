@@ -96,12 +96,24 @@ function parseCoverDurations(raw: string): number[] {
         .filter((n) => !Number.isNaN(n) && n > 0);
 }
 
+interface PartnerApiContractPayload {
+    summary?: string;
+    submit_endpoint?: string;
+    kyc_endpoint?: string;
+    required_on_every_sale?: { field: string; type: string; notes?: string }[];
+    optional_on_sale?: { field: string; type: string; notes?: string }[];
+    kyc_object_example?: Record<string, string>;
+    headers?: Record<string, string>;
+}
+
 export default function ProductForm({
     product,
     partners = [],
+    partner_api_contract,
 }: {
     product?: ProductPayload;
     partners?: PartnerOption[];
+    partner_api_contract?: PartnerApiContractPayload;
 }) {
     const { auth } = usePage<PageProps>().props;
     const isSuperAdmin = auth.role === 'super_admin';
@@ -209,6 +221,42 @@ export default function ProductForm({
     return (
         <AdminLayout title={product ? 'Edit Product' : 'Create Product'}>
             <div className="space-y-6">
+                {partner_api_contract && (
+                    <Card className="rounded-3xl border-amber-200/80 bg-amber-50/40 shadow-sm">
+                        <CardHeader className="space-y-2">
+                            <CardTitle className="text-lg text-amber-950">What the partner must send when they sell this product</CardTitle>
+                            <p className="text-sm text-amber-900/80">{partner_api_contract.summary}</p>
+                        </CardHeader>
+                        <CardContent className="grid gap-6 lg:grid-cols-2">
+                            <div>
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-800">Required on every sale (POST submit)</p>
+                                <ul className="space-y-1.5 text-sm text-amber-950">
+                                    {(partner_api_contract.required_on_every_sale ?? []).map((row) => (
+                                        <li key={row.field}>
+                                            <code className="rounded bg-white/80 px-1 text-xs">{row.field}</code>
+                                            <span className="text-amber-800"> — {row.type}</span>
+                                            {row.notes && <span className="block text-xs text-amber-700">{row.notes}</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="mt-4 mb-2 text-xs font-semibold uppercase tracking-wide text-amber-800">Plus your custom fields below</p>
+                                <p className="text-sm text-amber-900/80">
+                                    Define fields in <strong>Dynamic fields</strong>. Partner fetches schema via{' '}
+                                    <code className="rounded bg-white/80 px-1 text-xs">GET /api/v1/products/&#123;code&#125;/fields</code> and returns values in submit body or KYC object.
+                                </p>
+                            </div>
+                            <div>
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-800">KYC object (submit or separate KYC call)</p>
+                                <pre className="overflow-x-auto rounded-xl border border-amber-200 bg-white/80 p-3 text-xs text-slate-800">
+{JSON.stringify(partner_api_contract.kyc_object_example ?? {}, null, 2)}
+                                </pre>
+                                <p className="mt-3 font-mono text-xs text-amber-900">{partner_api_contract.submit_endpoint}</p>
+                                <p className="font-mono text-xs text-amber-900">{partner_api_contract.kyc_endpoint}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card className="rounded-3xl border-slate-200/80 shadow-sm">
                     <CardHeader className="space-y-2">
                         <div className="flex items-center gap-3">

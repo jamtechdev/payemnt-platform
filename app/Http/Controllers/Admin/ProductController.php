@@ -8,6 +8,7 @@ use App\Models\Partner;
 use App\Models\Currency;
 use App\Models\Product;
 use App\Services\ProductSchemaService;
+use App\Support\PartnerApiContract;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -53,6 +54,7 @@ class ProductController extends Controller
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get(),
+            'partner_api_contract' => PartnerApiContract::salePayload(),
         ]);
     }
 
@@ -150,6 +152,7 @@ class ProductController extends Controller
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get(),
+            'partner_api_contract' => PartnerApiContract::salePayload(),
         ]);
     }
 
